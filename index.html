@@ -7,17 +7,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
-html{
-    width:100%;min-height:100%;
-    background:#0a0e1a;
-    overflow-x:hidden;
-}
+html{width:100%;min-height:100%;background:#0a0e1a;overflow-x:hidden;}
 body{
     width:100%;min-height:100vh;min-height:100dvh;
     font-family:'Cairo','Segoe UI',sans-serif;
-    color:#fff;
-    overflow-x:hidden;
-    position:relative;
+    color:#fff;overflow-x:hidden;position:relative;
     background:
         linear-gradient(180deg, rgba(10,14,26,0.82) 0%, rgba(15,21,36,0.78) 50%, rgba(8,11,20,0.88) 100%),
         url('https://i.ibb.co/cS43HTCF/5.jpg') center/cover no-repeat fixed;
@@ -36,16 +30,13 @@ body::before{
 @keyframes stars{0%,100%{opacity:0.6}50%{opacity:1}}
 
 .app{
-    width:100%;max-width:600px;
-    margin:0 auto;
+    width:100%;max-width:600px;margin:0 auto;
     display:flex;flex-direction:column;align-items:center;
-    gap:10px;padding:12px 10px 30px;
-    position:relative;z-index:1;
+    gap:10px;padding:12px 10px 30px;position:relative;z-index:1;
 }
 .logo{text-align:center;margin:4px 0;width:100%;position:relative;padding:8px 0}
 .logo h1{
-    font-size:clamp(1.3rem,5.5vw,2rem);
-    font-weight:900;
+    font-size:clamp(1.3rem,5.5vw,2rem);font-weight:900;
     background:linear-gradient(135deg,#ffd700 0%,#fff8dc 25%,#ffd700 50%,#c9a87b 75%,#ffd700 100%);
     background-size:200% 200%;
     -webkit-background-clip:text;background-clip:text;
@@ -60,29 +51,20 @@ body::before{
     text-transform:uppercase;margin-top:2px;font-weight:700;
     text-shadow:0 0 10px rgba(201,168,123,0.7);
 }
-
-/* ====== زر القائمة ====== */
 .menu-icon{
-    position:fixed;
-    top:calc(12px + env(safe-area-inset-top));
-    right:12px;font-size:20px;
+    position:fixed;top:calc(12px + env(safe-area-inset-top));right:12px;font-size:20px;
     background:linear-gradient(145deg,rgba(30,41,59,0.92),rgba(15,23,42,0.92));
-    color:#ffd700;width:46px;height:46px;
-    border-radius:50%;display:flex;align-items:center;justify-content:center;
-    cursor:pointer;border:2px solid rgba(201,168,123,0.7);
-    z-index:9999;
+    color:#ffd700;width:46px;height:46px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    border:2px solid rgba(201,168,123,0.7);z-index:9999;
     box-shadow:0 4px 25px rgba(255,215,0,0.3),inset 0 1px 0 rgba(255,255,255,0.1);
     transition:transform 0.2s, box-shadow 0.2s;
-    backdrop-filter:blur(10px);
-    -webkit-backdrop-filter:blur(10px);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
     will-change:transform;
 }
 .menu-icon:active{transform:scale(0.9);box-shadow:0 0 30px rgba(255,215,0,0.6)}
-
-/* ====== القائمة الجانبية - محسّنة للأداء ====== */
 .side-menu{
-    position:fixed;top:0;right:0;
-    width:290px;max-width:88vw;
+    position:fixed;top:0;right:0;width:290px;max-width:88vw;
     height:100vh;height:100dvh;
     background:linear-gradient(180deg,rgba(20,26,42,0.98),rgba(10,15,26,0.99));
     border-left:2px solid rgba(201,168,123,0.6);
@@ -90,40 +72,26 @@ body::before{
     z-index:10000;overflow-y:auto;-webkit-overflow-scrolling:touch;
     display:flex;flex-direction:column;gap:8px;
     box-shadow:-15px 0 60px rgba(0,0,0,0.9);
-    backdrop-filter:blur(20px);
-    -webkit-backdrop-filter:blur(20px);
-    /* استخدام transform للأداء السلس */
+    backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
     transform:translate3d(100%,0,0);
     transition:transform 0.32s cubic-bezier(0.22,1,0.36,1);
-    will-change:transform;
-    backface-visibility:hidden;
-    -webkit-backface-visibility:hidden;
+    will-change:transform;backface-visibility:hidden;-webkit-backface-visibility:hidden;
     contain:layout style paint;
 }
 .side-menu.open{transform:translate3d(0,0,0)}
 .side-menu button{
     background:linear-gradient(145deg,rgba(44,58,74,0.85),rgba(30,40,54,0.85));
-    border:1px solid rgba(201,168,123,0.3);
-    padding:13px 14px;border-radius:12px;
-    color:#f0e6d3;font-weight:700;font-size:0.88rem;
-    cursor:pointer;width:100%;text-align:center;
+    border:1px solid rgba(201,168,123,0.3);padding:13px 14px;border-radius:12px;
+    color:#f0e6d3;font-weight:700;font-size:0.88rem;cursor:pointer;
+    width:100%;text-align:center;
     transition:background 0.15s, transform 0.15s;
-    font-family:'Cairo',sans-serif;
-    flex-shrink:0;
+    font-family:'Cairo',sans-serif;flex-shrink:0;
 }
-.side-menu button:active{
-    background:linear-gradient(145deg,#c9772e,#a05a1e);
-    transform:scale(0.97);
-}
-.side-menu .active{
-    background:linear-gradient(145deg,#c9772e,#a05a1e)!important;
-    border-color:#ffd700!important;
-    box-shadow:0 0 20px rgba(255,215,0,0.5);
-}
+.side-menu button:active{background:linear-gradient(145deg,#c9772e,#a05a1e);transform:scale(0.97)}
+.side-menu .active{background:linear-gradient(145deg,#c9772e,#a05a1e)!important;border-color:#ffd700!important;box-shadow:0 0 20px rgba(255,215,0,0.5)}
 .side-menu hr{border:none;border-top:1px solid rgba(201,168,123,0.2);margin:4px 0;flex-shrink:0}
 .close-btn{
-    position:absolute;top:14px;left:14px;
-    font-size:18px;
+    position:absolute;top:14px;left:14px;font-size:18px;
     background:rgba(255,215,0,0.1)!important;
     border:1px solid rgba(201,168,123,0.5)!important;
     color:#ffdfa5;width:38px!important;height:38px;
@@ -132,27 +100,17 @@ body::before{
 }
 #colorMenu .color-opt{padding:10px 6px;font-size:0.75rem}
 #colorMenu .color-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
-
 .overlay{
-    position:fixed;inset:0;background:rgba(0,0,0,0.75);
-    z-index:9998;display:none;
-    backdrop-filter:blur(6px);
-    -webkit-backdrop-filter:blur(6px);
-    opacity:0;
-    transition:opacity 0.28s ease;
-    will-change:opacity;
+    position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9998;display:none;
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    opacity:0;transition:opacity 0.28s ease;will-change:opacity;
 }
 .overlay.show{display:block;opacity:1}
 
 .game-container{
     background:linear-gradient(145deg,rgba(42,36,24,0.95),rgba(26,21,16,0.95));
-    padding:12px;border-radius:22px;
-    border:2px solid transparent;background-clip:padding-box;
-    box-shadow:
-        0 25px 60px rgba(0,0,0,0.9),
-        0 0 0 2px rgba(255,215,0,0.3),
-        inset 0 1px 0 rgba(255,215,0,0.2),
-        inset 0 -2px 8px rgba(0,0,0,0.6);
+    padding:12px;border-radius:22px;border:2px solid transparent;background-clip:padding-box;
+    box-shadow:0 25px 60px rgba(0,0,0,0.9),0 0 0 2px rgba(255,215,0,0.3),inset 0 1px 0 rgba(255,215,0,0.2),inset 0 -2px 8px rgba(0,0,0,0.6);
     width:100%;position:relative;
 }
 .board-wrapper{position:relative;width:100%;aspect-ratio:1/1;border-radius:12px;overflow:hidden;box-shadow:inset 0 0 30px rgba(0,0,0,0.6)}
@@ -177,143 +135,68 @@ body::before{
 .status{text-align:center;margin:12px 0 6px;font-weight:700;color:#ffefcf;background:linear-gradient(145deg,rgba(0,0,0,0.65),rgba(0,0,0,0.35));padding:11px 14px;border-radius:30px;font-size:clamp(0.8rem,3.5vw,0.95rem);min-height:44px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(201,168,123,0.4);box-shadow:inset 0 2px 10px rgba(0,0,0,0.5);text-shadow:0 1px 3px rgba(0,0,0,0.5)}
 .thinking{display:inline-block;animation:blink 1s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
-
-/* ====== لوحة الأونلاين ====== */
 .online-panel{
-    display:none;
-    margin-top:10px;width:100%;
+    display:none;margin-top:10px;width:100%;
     background:linear-gradient(145deg,rgba(30,41,59,0.9),rgba(15,23,42,0.9));
-    padding:12px;border-radius:14px;
-    border:1px solid rgba(201,168,123,0.4);
+    padding:12px;border-radius:14px;border:1px solid rgba(201,168,123,0.4);
 }
 .online-panel.hidden{display:none!important}
-.online-panel .row-input{
-    display:flex;gap:8px;align-items:center;
-}
+.online-panel .row-input{display:flex;gap:8px;align-items:center;}
 .online-panel input{
-    padding:12px;border-radius:12px;
-    border:2px solid rgba(201,168,123,0.5);
-    background:rgba(15,23,42,0.95);color:#ffd700;
-    flex:1;min-width:0;text-align:center;
-    font-size:1.4rem;font-family:'Courier New',monospace;
-    font-weight:900;letter-spacing:8px;
+    padding:12px;border-radius:12px;border:2px solid rgba(201,168,123,0.5);
+    background:rgba(15,23,42,0.95);color:#ffd700;flex:1;min-width:0;text-align:center;
+    font-size:1.4rem;font-family:'Courier New',monospace;font-weight:900;letter-spacing:8px;
 }
 .online-panel input:focus{outline:none;border-color:#ffd700;box-shadow:0 0 20px rgba(255,215,0,0.4)}
 .online-panel input::placeholder{color:#4a5a6a;letter-spacing:2px;font-size:0.9rem}
 .online-panel button{
-    background:linear-gradient(145deg,#2c5f6e,#1a3a4a);
-    border:1px solid rgba(201,168,123,0.4);
-    padding:12px 16px;border-radius:12px;
-    color:white;font-weight:700;cursor:pointer;
-    font-size:0.85rem;font-family:'Cairo',sans-serif;
-    transition:all 0.15s;
-    display:flex;align-items:center;justify-content:center;
-    gap:4px;
-    white-space:nowrap;
+    background:linear-gradient(145deg,#2c5f6e,#1a3a4a);border:1px solid rgba(201,168,123,0.4);
+    padding:12px 16px;border-radius:12px;color:white;font-weight:700;cursor:pointer;
+    font-size:0.85rem;font-family:'Cairo',sans-serif;transition:all 0.15s;
+    display:flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;
 }
 .online-panel button:active{transform:scale(0.95)}
 .online-panel button:disabled{opacity:0.4;cursor:not-allowed}
-.online-panel .status-text{
-    color:#ffd700;font-size:0.75rem;
-    text-align:center;font-weight:700;
-    word-break:break-all;
-    margin-top:8px;
-    min-height:16px;
-}
+.online-panel .status-text{color:#ffd700;font-size:0.75rem;text-align:center;font-weight:700;word-break:break-all;margin-top:8px;min-height:16px;}
 
-/* ====== زر المأكولات + القائمة المنسدلة ====== */
-.captured-wrapper{
-    position:relative;
-    width:100%;
-    display:flex;
-    justify-content:center;
-    margin-top:10px;
-}
+.captured-wrapper{position:relative;width:100%;display:flex;justify-content:center;margin-top:10px;}
 .captured-btn{
     background:linear-gradient(145deg,rgba(30,41,59,0.95),rgba(15,23,42,0.95));
-    border:1px solid rgba(201,168,123,0.6);
-    color:#ffd700;
-    padding:10px 22px;
-    border-radius:30px;
-    font-family:'Cairo',sans-serif;
-    font-weight:700;
-    font-size:0.85rem;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    gap:8px;
+    border:1px solid rgba(201,168,123,0.6);color:#ffd700;
+    padding:10px 22px;border-radius:30px;font-family:'Cairo',sans-serif;
+    font-weight:700;font-size:0.85rem;cursor:pointer;
+    display:flex;align-items:center;gap:8px;
     box-shadow:0 4px 20px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.08);
-    transition:transform 0.15s, box-shadow 0.2s;
-    will-change:transform;
+    transition:transform 0.15s, box-shadow 0.2s;will-change:transform;
 }
 .captured-btn:active{transform:scale(0.95)}
 .captured-btn .badge{
-    background:linear-gradient(145deg,#c9772e,#a05a1e);
-    color:#fff;
-    font-size:0.68rem;
-    min-width:18px;height:18px;
-    padding:0 5px;
-    border-radius:9px;
-    display:inline-flex;
-    align-items:center;justify-content:center;
-    font-weight:900;
+    background:linear-gradient(145deg,#c9772e,#a05a1e);color:#fff;
+    font-size:0.68rem;min-width:18px;height:18px;padding:0 5px;border-radius:9px;
+    display:inline-flex;align-items:center;justify-content:center;font-weight:900;
 }
-.captured-btn .caret{
-    font-size:0.7rem;
-    transition:transform 0.28s ease;
-    display:inline-block;
-}
+.captured-btn .caret{font-size:0.7rem;transition:transform 0.28s ease;display:inline-block;}
 .captured-btn.open .caret{transform:rotate(180deg)}
-
 .captured-dropdown{
-    position:absolute;
-    top:calc(100% + 8px);
-    left:50%;
+    position:absolute;top:calc(100% + 8px);left:50%;
     transform:translateX(-50%) translateY(-8px) scale(0.96);
-    transform-origin:top center;
-    width:min(92vw,420px);
+    transform-origin:top center;width:min(92vw,420px);
     background:linear-gradient(145deg,rgba(26,30,44,0.98),rgba(15,20,32,0.98));
-    border:1px solid rgba(201,168,123,0.55);
-    border-radius:16px;
+    border:1px solid rgba(201,168,123,0.55);border-radius:16px;
     box-shadow:0 15px 50px rgba(0,0,0,0.8),0 0 30px rgba(255,215,0,0.15);
-    padding:10px 12px;
-    opacity:0;
-    pointer-events:none;
+    padding:10px 12px;opacity:0;pointer-events:none;
     transition:opacity 0.22s ease, transform 0.22s cubic-bezier(0.22,1,0.36,1);
-    z-index:500;
-    backdrop-filter:blur(12px);
-    -webkit-backdrop-filter:blur(12px);
+    z-index:500;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
     will-change:transform, opacity;
 }
-.captured-dropdown.open{
-    opacity:1;
-    pointer-events:auto;
-    transform:translateX(-50%) translateY(0) scale(1);
-}
-.captured-dropdown .section{
-    padding:6px 4px;
-}
-.captured-dropdown .section + .section{
-    border-top:1px solid rgba(201,168,123,0.18);
-    margin-top:4px;
-    padding-top:10px;
-}
-.captured-dropdown .label{
-    color:#c9a87b;font-size:0.72rem;font-weight:700;
-    margin-bottom:6px;display:block;
-}
-.captured-dropdown .row{
-    display:flex;flex-wrap:wrap;gap:3px;min-height:26px;align-items:center;
-}
-.captured-dropdown .row svg{
-    width:26px;height:26px;
-    filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));
-}
-.captured-dropdown .empty{
-    color:#5a6a7a;font-size:0.72rem;font-style:italic;
-}
+.captured-dropdown.open{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0) scale(1);}
+.captured-dropdown .section{padding:6px 4px;}
+.captured-dropdown .section + .section{border-top:1px solid rgba(201,168,123,0.18);margin-top:4px;padding-top:10px;}
+.captured-dropdown .label{color:#c9a87b;font-size:0.72rem;font-weight:700;margin-bottom:6px;display:block;}
+.captured-dropdown .row{display:flex;flex-wrap:wrap;gap:3px;min-height:26px;align-items:center;}
+.captured-dropdown .row svg{width:26px;height:26px;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));}
+.captured-dropdown .empty{color:#5a6a7a;font-size:0.72rem;font-style:italic;}
 
-/* ====== نافذة الترقية ====== */
 .promotion-overlay{
     position:fixed;inset:0;background:rgba(0,0,0,0.88);
     display:flex;justify-content:center;align-items:center;
@@ -321,9 +204,8 @@ body::before{
 }
 .promotion-box{
     background:linear-gradient(145deg,#2d2a24,#1a1814);
-    padding:22px 20px;border-radius:22px;
-    text-align:center;border:2px solid #ffd700;
-    max-width:360px;width:100%;
+    padding:22px 20px;border-radius:22px;text-align:center;
+    border:2px solid #ffd700;max-width:360px;width:100%;
     box-shadow:0 0 60px rgba(255,215,0,0.4);
 }
 .promotion-box h3{color:#ffdfa5;margin-bottom:16px;font-size:1.05rem}
@@ -333,7 +215,6 @@ body::before{
 .promotion-btn span{font-size:0.75rem;font-weight:700;color:#ffd700}
 .promotion-btn:active{transform:scale(0.95);background:#c9772e}
 
-/* ====== شاشة الفائز ====== */
 .winner-overlay{
     position:fixed;inset:0;background:rgba(0,0,0,0.92);
     display:flex;justify-content:center;align-items:center;
@@ -341,9 +222,8 @@ body::before{
 }
 .winner-box{
     background:linear-gradient(145deg,#2d2a24,#1a1814);
-    padding:32px 24px;border-radius:24px;
-    text-align:center;border:3px solid #ffd700;
-    max-width:360px;width:100%;
+    padding:32px 24px;border-radius:24px;text-align:center;
+    border:3px solid #ffd700;max-width:360px;width:100%;
     box-shadow:0 0 80px rgba(255,215,0,0.5);
     animation:winnerPop 0.6s cubic-bezier(0.34,1.56,0.64,1);
 }
@@ -352,10 +232,9 @@ body::before{
 @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-15px)}}
 .winner-box h2{color:#ffd700;font-size:1.6rem;margin-bottom:20px;text-shadow:0 0 20px rgba(255,215,0,0.5)}
 .winner-box button{
-    background:linear-gradient(145deg,#c9772e,#a05a1e);
-    border:none;padding:13px 30px;border-radius:30px;
-    color:white;font-weight:700;font-size:0.95rem;
-    cursor:pointer;font-family:'Cairo',sans-serif;
+    background:linear-gradient(145deg,#c9772e,#a05a1e);border:none;
+    padding:13px 30px;border-radius:30px;color:white;font-weight:700;
+    font-size:0.95rem;cursor:pointer;font-family:'Cairo',sans-serif;
     box-shadow:0 4px 20px rgba(201,119,46,0.5);
 }
 .winner-box button:active{transform:scale(0.95)}
@@ -368,8 +247,7 @@ body::before{
     border:1px solid #ffd700;font-weight:700;font-size:0.85rem;
     box-shadow:0 10px 40px rgba(0,0,0,0.8);
     transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
-    z-index:13000;max-width:90vw;text-align:center;
-    will-change:transform;
+    z-index:13000;max-width:90vw;text-align:center;will-change:transform;
 }
 .toast.show{transform:translateX(-50%) translateY(0)}
 
@@ -432,7 +310,6 @@ body::before{
         </div>
         <div class="status" id="statusMsg">♔ الأبيض يبدأ</div>
 
-        <!-- لوحة الأونلاين -->
         <div class="online-panel" id="onlinePanel">
             <div class="row-input">
                 <input type="text" id="roomInput" placeholder="123" maxlength="3" inputmode="numeric" pattern="[0-9]*" />
@@ -443,7 +320,6 @@ body::before{
         </div>
     </div>
 
-    <!-- زر المأكولات + القائمة المنسدلة -->
     <div class="captured-wrapper">
         <button class="captured-btn" id="capturedBtn">
             🍽️ المأكولات
@@ -516,6 +392,23 @@ function showToast(msg,duration=2200){
     requestAnimationFrame(()=>setTimeout(()=>t.classList.add('show'),10));
     setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),400)},duration);
 }
+
+// ========== تحديد اللون الذي يتحكم به اللاعب ==========
+function getPlayerColor(){
+    if(gameMode==='computer') return 'white';
+    if(gameMode==='online') return myColor;
+    return turn; // local: اللاعب الحالي
+}
+
+// هل يمكن للاعب الحالي تحريك قطعة من هذا اللون؟
+function canPlayerMove(color){
+    if(gameOver) return false;
+    if(gameMode==='computer') return color==='white' && turn==='white';
+    if(gameMode==='online') return color===myColor && isMyTurn && turn===myColor;
+    // local: أي دور يقدر يحرك اللون المطابق لدوره فقط
+    return color===turn;
+}
+
 function initBoard(){
     let b=Array(8).fill().map(()=>Array(8).fill(null));
     for(let i=0;i<8;i++){b[1][i]='black_pawn';b[6][i]='white_pawn';}
@@ -558,18 +451,23 @@ function isValidCastling(color,kFrom,kTo,rFrom,rTo,b){
         if(kTo[1]===6&&blackRookMoved.right)return false;
         if(kTo[1]===2&&blackRookMoved.left)return false;
     }
+    // التحقق من أن الملك والقلعة في الصف الصحيح
+    let kingRow=color==='white'?7:0;
+    if(kFrom[0]!==kingRow || rFrom[0]!==kingRow) return false;
+    // التحقق من عدم وجود قطع بين الملك والقلعة
     let step=kTo[1]>kFrom[1]?1:-1;
     for(let c=kFrom[1]+step;c!==kTo[1];c+=step)if(b[kFrom[0]][c])return false;
+    // التحقق من أن الملك ليس تحت الهجوم في المسار
     if(isSquareUnderAttack(kFrom[0],kFrom[1],b,color))return false;
     if(isSquareUnderAttack(kFrom[0],kFrom[1]+step,b,color))return false;
     if(isSquareUnderAttack(kTo[0],kTo[1],b,color))return false;
     return true;
 }
-function executeCastling(color,kingRow,kingCol,rookRow,rookCol,newKingCol,newRookCol){
-    board[kingRow][kingCol]=null;
-    board[rookRow][rookCol]=null;
+function executeCastling(color,kingRow,rookCol,newKingCol,newRookCol){
+    board[kingRow][4]=null; // موقع الملك الأصلي
+    board[kingRow][rookCol]=null;
     board[kingRow][newKingCol]=`${color}_king`;
-    board[rookRow][newRookCol]=`${color}_rook`;
+    board[kingRow][newRookCol]=`${color}_rook`;
     if(color==='white')whiteKingMoved=true;else blackKingMoved=true;
 }
 function isValidMoveBasic(piece,fromR,fromC,toR,toC,b){
@@ -596,8 +494,9 @@ function isValidMoveBasic(piece,fromR,fromC,toR,toC,b){
             let rookCol=dc===2?7:0;
             let rookPiece=b[fromR][rookCol];
             if(rookPiece&&rookPiece===`${color}_rook`){
-                let newRookCol=fromC+(dc>0?1:-1);
-                return isValidCastling(color,[fromR,fromC],[toR,toC],[fromR,rookCol],[fromR,newRookCol],b);
+                let newKingCol=fromC+(dc>0?2:-2);
+                let newRookCol=dc>0?fromC+1:fromC-1;
+                return isValidCastling(color,[fromR,fromC],[fromR,newKingCol],[fromR,rookCol],[fromR,newRookCol],b);
             }
         }
         return false;
@@ -686,11 +585,14 @@ function showPromotionDialog(row,col,color){
             board[row][col]=`${color}_${type}`;
             dialog.remove();
             pendingPromotion=null;
+            // الدور تم تبديله مسبقاً في makeMove، لذا لا نغيره هنا
             let state=getGameState(board,turn);
             if(state==='checkmate')setGameOver(turn==='white'?'الأسود':'الأبيض');
             else if(state==='stalemate'){gameOver=true;winner='تعادل';updateStatus();setTimeout(showWinnerScreen,500);}
             renderBoard();updateStatus();
+            // تشغيل الكمبيوتر إذا كان دوره
             if(gameMode==='computer'&&turn==='black'&&!gameOver)scheduleComputerMove();
+            // إرسال الحالة أونلاين
             if(gameMode==='online')sendGameState();
         });
     });
@@ -737,6 +639,7 @@ function makeMove(fromR,fromC,toR,toC,fromAI=false){
     if(target&&target.split('_')[0]===turn)return false;
     if(!isValidMoveFull(piece,fromR,fromC,toR,toC,board,turn))return false;
 
+    // حفظ معلومات الاستيلاء
     if(target){
         let color=target.split('_')[0],type=target.split('_')[1];
         if(color==='white')capturedBlack.push(type); else capturedWhite.push(type);
@@ -744,14 +647,22 @@ function makeMove(fromR,fromC,toR,toC,fromAI=false){
     let color=turn;
     let isKing=piece.split('_')[1]==='king';
     let isRook=piece.split('_')[1]==='rook';
+    let isCastling=isKing&&Math.abs(toC-fromC)===2;
 
     isAnimating=true;
     animateMove(fromR,fromC,toR,toC,piece,()=>{
-        if(isKing&&Math.abs(toC-fromC)===2){
+        if(isCastling){
+            // التبييت: نقل الملك والقلعة
+            let kingRow=fromR;
             let rookCol=toC>fromC?7:0;
-            let newKingCol=(fromC+toC)/2;
-            let newRookCol=newKingCol+(toC>fromC?-1:1);
-            executeCastling(color,toR,fromC,toR,rookCol,newKingCol,newRookCol);
+            let newKingCol=toC;
+            let newRookCol=toC>fromC?5:3;
+            board[kingRow][fromC]=null;
+            board[kingRow][rookCol]=null;
+            board[kingRow][newKingCol]=`${color}_king`;
+            board[kingRow][newRookCol]=`${color}_rook`;
+            if(color==='white'){whiteKingMoved=true;if(toC>fromC)whiteRookMoved.right=true;else whiteRookMoved.left=true;}
+            else{blackKingMoved=true;if(toC>fromC)blackRookMoved.right=true;else blackRookMoved.left=true;}
         }else{
             board[toR][toC]=piece;
             board[fromR][fromC]=null;
@@ -765,15 +676,16 @@ function makeMove(fromR,fromC,toR,toC,fromAI=false){
         let isPawn=piece.split('_')[1]==='pawn';
         let reachedEnd=isPawn&&((turn==='white'&&toR===0)||(turn==='black'&&toR===7));
         let originalTurn=turn;
+        // تبديل الدور فوراً
         turn=turn==='white'?'black':'white';
         selectedRow=null;
         selectedCol=null;
         isAnimating=false;
 
         if(reachedEnd){
+            // نعرض الترقية، والدور الآن للخصم بالفعل
             renderBoard();
             showPromotionDialog(toR,toC,originalTurn);
-            turn=originalTurn;
             updateStatus();
             return;
         }
@@ -782,7 +694,7 @@ function makeMove(fromR,fromC,toR,toC,fromAI=false){
         else if(state==='stalemate'){gameOver=true;winner='تعادل';updateStatus();setTimeout(showWinnerScreen,500);}
         renderBoard();
         updateStatus();
-        if(gameMode==='computer'&&turn==='black'&&!gameOver&&!pendingPromotion&&!reachedEnd)scheduleComputerMove();
+        if(gameMode==='computer'&&turn==='black'&&!gameOver&&!pendingPromotion)scheduleComputerMove();
         if(gameMode==='online'&&!fromAI)sendGameState();
     });
     return true;
@@ -921,23 +833,49 @@ function updateCapturedDisplay(){
     }
     if(badge) badge.textContent=(capturedWhite.length+capturedBlack.length);
 }
+
+// ========== التحقق من صلاحية لعب اللاعب الحالي ==========
+function isPlayerAllowedToMove(){
+    if(gameOver) return false;
+    if(gameMode==='computer') return turn==='white';
+    if(gameMode==='online') return isMyTurn && turn===myColor;
+    return true; // local: أي دور
+}
+
 function onCellClick(row,col){
     if(gameOver){showToast("اللعبة انتهت!");return;}
     if(pendingPromotion){showToast("أكمل الترقية أولاً");return;}
     if(isAnimating) return;
-    if(gameMode==='computer'&&turn==='black'){showToast("الكمبيوتر يفكر...");return;}
-    if(gameMode==='online'&&!isMyTurn){showToast("ليس دورك");return;}
+
+    // منع اللاعب من التحريك خارج دوره
+    if(!isPlayerAllowedToMove()){
+        if(gameMode==='computer') showToast("انتظر دورك (الكمبيوتر يلعب)");
+        else if(gameMode==='online') showToast("ليس دورك");
+        return;
+    }
+
+    // منع تحريك قطع الخصم
+    let piece=board[row][col];
     if(selectedRow===null){
-        let piece=board[row][col];
-        if(piece&&piece.split('_')[0]===turn){
+        if(piece){
+            let pieceColor=piece.split('_')[0];
+            // التحقق من أن القطعة تخص دور اللاعب الحالي
+            if(!canPlayerMove(pieceColor)){
+                showToast("لا يمكنك تحريك قطع الخصم");
+                return;
+            }
             selectedRow=row;selectedCol=col;
             renderBoard();
         }
     }else{
-        let clicked=board[row][col];
-        if(clicked&&clicked.split('_')[0]===turn){
-            selectedRow=row;selectedCol=col;renderBoard();
-            return;
+        // إذا نقر على قطعة من نفس لون اللاعب الحالي -> تحديدها
+        if(piece){
+            let pieceColor=piece.split('_')[0];
+            if(canPlayerMove(pieceColor)){
+                selectedRow=row;selectedCol=col;
+                renderBoard();
+                return;
+            }
         }
         makeMove(selectedRow,selectedCol,row,col);
     }
@@ -958,7 +896,7 @@ function updateStatus(){
 function setColors(light,dark){currentLight=light;currentDark=dark;renderBoard();}
 
 // ==========================================================
-// PeerJS - اتصال (بدون تغيير)
+// PeerJS (بدون تغيير)
 // ==========================================================
 const PEER_CONFIG={
     config:{iceServers:[
