@@ -19,10 +19,8 @@ body{
     overflow-x:hidden;
     position:relative;
     background:
-        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(120,80,200,0.25), transparent),
-        radial-gradient(ellipse 60% 40% at 100% 100%, rgba(200,120,50,0.15), transparent),
-        radial-gradient(ellipse 60% 40% at 0% 100%, rgba(50,120,200,0.15), transparent),
-        linear-gradient(180deg,#0a0e1a 0%,#0f1524 50%,#080b14 100%);
+        linear-gradient(180deg, rgba(10,14,26,0.82) 0%, rgba(15,21,36,0.78) 50%, rgba(8,11,20,0.88) 100%),
+        url('https://i.ibb.co/cS43HTCF/5.jpg') center/cover no-repeat fixed;
 }
 body::before{
     content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
@@ -44,7 +42,7 @@ body::before{
     gap:10px;padding:12px 10px 30px;
     position:relative;z-index:1;
 }
-.logo{text-align:center;margin:4px 0;width:100%;position:relative}
+.logo{text-align:center;margin:4px 0;width:100%;position:relative;padding:8px 0}
 .logo h1{
     font-size:clamp(1.3rem,5.5vw,2rem);
     font-weight:900;
@@ -54,60 +52,65 @@ body::before{
     -webkit-text-fill-color:transparent;
     letter-spacing:2px;line-height:1.2;
     animation:shine 4s ease-in-out infinite;
-    filter:drop-shadow(0 0 20px rgba(255,215,0,0.4));
+    filter:drop-shadow(0 0 20px rgba(255,215,0,0.6));
 }
 @keyframes shine{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
 .logo .subtitle{
-    color:#8a9ab0;font-size:0.68rem;letter-spacing:5px;
+    color:#c9a87b;font-size:0.68rem;letter-spacing:5px;
     text-transform:uppercase;margin-top:2px;font-weight:700;
-    text-shadow:0 0 10px rgba(138,154,176,0.5);
+    text-shadow:0 0 10px rgba(201,168,123,0.7);
 }
+
+/* ====== زر القائمة ====== */
 .menu-icon{
     position:fixed;
     top:calc(12px + env(safe-area-inset-top));
     right:12px;font-size:20px;
-    background:linear-gradient(145deg,rgba(30,41,59,0.9),rgba(15,23,42,0.9));
+    background:linear-gradient(145deg,rgba(30,41,59,0.92),rgba(15,23,42,0.92));
     color:#ffd700;width:46px;height:46px;
     border-radius:50%;display:flex;align-items:center;justify-content:center;
-    cursor:pointer;border:2px solid rgba(201,168,123,0.6);
+    cursor:pointer;border:2px solid rgba(201,168,123,0.7);
     z-index:9999;
-    box-shadow:0 4px 25px rgba(255,215,0,0.2),inset 0 1px 0 rgba(255,255,255,0.1);
-    transition:all 0.3s;
+    box-shadow:0 4px 25px rgba(255,215,0,0.3),inset 0 1px 0 rgba(255,255,255,0.1);
+    transition:transform 0.2s, box-shadow 0.2s;
     backdrop-filter:blur(10px);
     -webkit-backdrop-filter:blur(10px);
+    will-change:transform;
 }
 .menu-icon:active{transform:scale(0.9);box-shadow:0 0 30px rgba(255,215,0,0.6)}
+
+/* ====== القائمة الجانبية - محسّنة للأداء ====== */
 .side-menu{
-    position:fixed;top:0;right:-320px;
+    position:fixed;top:0;right:0;
     width:290px;max-width:88vw;
     height:100vh;height:100dvh;
-    background:linear-gradient(180deg,rgba(20,26,42,0.98),rgba(10,15,26,0.98));
-    border-left:2px solid rgba(201,168,123,0.5);
+    background:linear-gradient(180deg,rgba(20,26,42,0.98),rgba(10,15,26,0.99));
+    border-left:2px solid rgba(201,168,123,0.6);
     padding:calc(20px + env(safe-area-inset-top)) 14px 30px;
-    transition:right 0.4s cubic-bezier(0.4,0,0.2,1);
     z-index:10000;overflow-y:auto;-webkit-overflow-scrolling:touch;
     display:flex;flex-direction:column;gap:8px;
     box-shadow:-15px 0 60px rgba(0,0,0,0.9);
     backdrop-filter:blur(20px);
     -webkit-backdrop-filter:blur(20px);
+    /* استخدام transform للأداء السلس */
+    transform:translate3d(100%,0,0);
+    transition:transform 0.32s cubic-bezier(0.22,1,0.36,1);
+    will-change:transform;
+    backface-visibility:hidden;
+    -webkit-backface-visibility:hidden;
+    contain:layout style paint;
 }
-.side-menu.open{right:0}
+.side-menu.open{transform:translate3d(0,0,0)}
 .side-menu button{
-    background:linear-gradient(145deg,rgba(44,58,74,0.8),rgba(30,40,54,0.8));
-    border:1px solid rgba(201,168,123,0.2);
+    background:linear-gradient(145deg,rgba(44,58,74,0.85),rgba(30,40,54,0.85));
+    border:1px solid rgba(201,168,123,0.3);
     padding:13px 14px;border-radius:12px;
     color:#f0e6d3;font-weight:700;font-size:0.88rem;
     cursor:pointer;width:100%;text-align:center;
-    transition:all 0.2s;font-family:'Cairo',sans-serif;
-    flex-shrink:0;position:relative;overflow:hidden;
+    transition:background 0.15s, transform 0.15s;
+    font-family:'Cairo',sans-serif;
+    flex-shrink:0;
 }
-.side-menu button::before{
-    content:'';position:absolute;top:0;left:-100%;
-    width:100%;height:100%;
-    background:linear-gradient(90deg,transparent,rgba(255,215,0,0.15),transparent);
-    transition:left 0.5s;
-}
-.side-menu button:hover::before{left:100%}
 .side-menu button:active{
     background:linear-gradient(145deg,#c9772e,#a05a1e);
     transform:scale(0.97);
@@ -117,7 +120,7 @@ body::before{
     border-color:#ffd700!important;
     box-shadow:0 0 20px rgba(255,215,0,0.5);
 }
-.side-menu hr{border:none;border-top:1px solid rgba(201,168,123,0.15);margin:4px 0;flex-shrink:0}
+.side-menu hr{border:none;border-top:1px solid rgba(201,168,123,0.2);margin:4px 0;flex-shrink:0}
 .close-btn{
     position:absolute;top:14px;left:14px;
     font-size:18px;
@@ -129,46 +132,29 @@ body::before{
 }
 #colorMenu .color-opt{padding:10px 6px;font-size:0.75rem}
 #colorMenu .color-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+
 .overlay{
     position:fixed;inset:0;background:rgba(0,0,0,0.75);
     z-index:9998;display:none;
     backdrop-filter:blur(6px);
     -webkit-backdrop-filter:blur(6px);
+    opacity:0;
+    transition:opacity 0.28s ease;
+    will-change:opacity;
 }
-.overlay.show{display:block}
-.captured-box{
-    background:linear-gradient(145deg,rgba(26,30,44,0.9),rgba(19,23,34,0.9));
-    border-radius:14px;padding:8px 14px;min-height:44px;
-    width:100%;border:1px solid rgba(201,168,123,0.3);
-    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
-    box-shadow:0 4px 20px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05);
-    backdrop-filter:blur(10px);
-    -webkit-backdrop-filter:blur(10px);
-}
-.captured-box .title{
-    color:#ffd700;font-size:0.7rem;font-weight:700;
-    white-space:nowrap;text-shadow:0 0 8px rgba(255,215,0,0.4);
-}
-.captured-box .row{display:flex;flex-wrap:wrap;gap:1px;font-size:1.1rem;line-height:1;align-items:center}
-.captured-box .row svg{width:20px;height:20px;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5))}
+.overlay.show{display:block;opacity:1}
+
 .game-container{
-    background:linear-gradient(145deg,#2a2418,#1a1510);
+    background:linear-gradient(145deg,rgba(42,36,24,0.95),rgba(26,21,16,0.95));
     padding:12px;border-radius:22px;
     border:2px solid transparent;background-clip:padding-box;
     box-shadow:
         0 25px 60px rgba(0,0,0,0.9),
-        0 0 0 2px rgba(255,215,0,0.25),
+        0 0 0 2px rgba(255,215,0,0.3),
         inset 0 1px 0 rgba(255,215,0,0.2),
         inset 0 -2px 8px rgba(0,0,0,0.6);
     width:100%;position:relative;
 }
-.game-container::before{
-    content:'';position:absolute;inset:-3px;border-radius:24px;
-    background:linear-gradient(135deg,#ffd700,#c9772e,#ffd700,#a05a1e,#ffd700);
-    background-size:300% 300%;z-index:-1;opacity:0.5;filter:blur(10px);
-    animation:borderGlow 6s ease infinite;
-}
-@keyframes borderGlow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
 .board-wrapper{position:relative;width:100%;aspect-ratio:1/1;border-radius:12px;overflow:hidden;box-shadow:inset 0 0 30px rgba(0,0,0,0.6)}
 .board{position:relative;width:100%;height:100%;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);background:#b58863;user-select:none}
 .cell{position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;aspect-ratio:1/1;transition:background-color 0.15s;overflow:visible}
@@ -186,26 +172,19 @@ body::before{
 .cell.last-move{background:rgba(255,215,0,0.15)!important;box-shadow:inset 0 0 0 2px rgba(255,215,0,0.5)}
 .cell.last-move.light{background:linear-gradient(135deg,#f0d9b5,rgba(255,215,0,0.3))!important}
 .cell.last-move.dark{background:linear-gradient(135deg,#1e1e1e,rgba(255,215,0,0.2))!important}
-.piece{width:88%;height:88%;display:flex;align-items:center;justify-content:center;pointer-events:none;will-change:transform;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.5));z-index:2;position:relative}
+.piece{width:88%;height:88%;display:flex;align-items:center;justify-content:center;pointer-events:none;will-change:opacity;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.5));z-index:2;position:relative}
 .piece svg{width:100%;height:100%;display:block}
-.status{text-align:center;margin:12px 0 6px;font-weight:700;color:#ffefcf;background:linear-gradient(145deg,rgba(0,0,0,0.6),rgba(0,0,0,0.3));padding:11px 14px;border-radius:30px;font-size:clamp(0.8rem,3.5vw,0.95rem);min-height:44px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(201,168,123,0.3);box-shadow:inset 0 2px 10px rgba(0,0,0,0.5);text-shadow:0 1px 3px rgba(0,0,0,0.5)}
+.status{text-align:center;margin:12px 0 6px;font-weight:700;color:#ffefcf;background:linear-gradient(145deg,rgba(0,0,0,0.65),rgba(0,0,0,0.35));padding:11px 14px;border-radius:30px;font-size:clamp(0.8rem,3.5vw,0.95rem);min-height:44px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(201,168,123,0.4);box-shadow:inset 0 2px 10px rgba(0,0,0,0.5);text-shadow:0 1px 3px rgba(0,0,0,0.5)}
 .thinking{display:inline-block;animation:blink 1s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
-.controls{display:flex;justify-content:center;gap:10px;margin-top:12px;flex-wrap:wrap}
-.icon-btn{background:linear-gradient(145deg,#2c3e2f,#1a2a1e);border:1px solid rgba(201,168,123,0.3);width:48px;height:48px;border-radius:50%;font-size:18px;color:white;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;transition:all 0.2s}
-.icon-btn:active{transform:scale(0.9)}
-.icon-btn.save-btn{background:linear-gradient(145deg,#2c5f6e,#1a3a4a)}
-.icon-btn.load-btn{background:linear-gradient(145deg,#6e5f2c,#4a3f1a)}
-.icon-btn:hover{box-shadow:0 6px 20px rgba(255,215,0,0.3)}
 
-/* ====== لوحة الأونلاين - مصغّرة ====== */
+/* ====== لوحة الأونلاين ====== */
 .online-panel{
     display:none;
     margin-top:10px;width:100%;
-    background:linear-gradient(145deg,rgba(30,41,59,0.85),rgba(15,23,42,0.85));
+    background:linear-gradient(145deg,rgba(30,41,59,0.9),rgba(15,23,42,0.9));
     padding:12px;border-radius:14px;
-    border:1px solid rgba(201,168,123,0.3);
-    backdrop-filter:blur(10px);
+    border:1px solid rgba(201,168,123,0.4);
 }
 .online-panel.hidden{display:none!important}
 .online-panel .row-input{
@@ -213,8 +192,8 @@ body::before{
 }
 .online-panel input{
     padding:12px;border-radius:12px;
-    border:2px solid rgba(201,168,123,0.4);
-    background:rgba(15,23,42,0.9);color:#ffd700;
+    border:2px solid rgba(201,168,123,0.5);
+    background:rgba(15,23,42,0.95);color:#ffd700;
     flex:1;min-width:0;text-align:center;
     font-size:1.4rem;font-family:'Courier New',monospace;
     font-weight:900;letter-spacing:8px;
@@ -240,6 +219,98 @@ body::before{
     word-break:break-all;
     margin-top:8px;
     min-height:16px;
+}
+
+/* ====== زر المأكولات + القائمة المنسدلة ====== */
+.captured-wrapper{
+    position:relative;
+    width:100%;
+    display:flex;
+    justify-content:center;
+    margin-top:10px;
+}
+.captured-btn{
+    background:linear-gradient(145deg,rgba(30,41,59,0.95),rgba(15,23,42,0.95));
+    border:1px solid rgba(201,168,123,0.6);
+    color:#ffd700;
+    padding:10px 22px;
+    border-radius:30px;
+    font-family:'Cairo',sans-serif;
+    font-weight:700;
+    font-size:0.85rem;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.08);
+    transition:transform 0.15s, box-shadow 0.2s;
+    will-change:transform;
+}
+.captured-btn:active{transform:scale(0.95)}
+.captured-btn .badge{
+    background:linear-gradient(145deg,#c9772e,#a05a1e);
+    color:#fff;
+    font-size:0.68rem;
+    min-width:18px;height:18px;
+    padding:0 5px;
+    border-radius:9px;
+    display:inline-flex;
+    align-items:center;justify-content:center;
+    font-weight:900;
+}
+.captured-btn .caret{
+    font-size:0.7rem;
+    transition:transform 0.28s ease;
+    display:inline-block;
+}
+.captured-btn.open .caret{transform:rotate(180deg)}
+
+.captured-dropdown{
+    position:absolute;
+    top:calc(100% + 8px);
+    left:50%;
+    transform:translateX(-50%) translateY(-8px) scale(0.96);
+    transform-origin:top center;
+    width:min(92vw,420px);
+    background:linear-gradient(145deg,rgba(26,30,44,0.98),rgba(15,20,32,0.98));
+    border:1px solid rgba(201,168,123,0.55);
+    border-radius:16px;
+    box-shadow:0 15px 50px rgba(0,0,0,0.8),0 0 30px rgba(255,215,0,0.15);
+    padding:10px 12px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.22s ease, transform 0.22s cubic-bezier(0.22,1,0.36,1);
+    z-index:500;
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    will-change:transform, opacity;
+}
+.captured-dropdown.open{
+    opacity:1;
+    pointer-events:auto;
+    transform:translateX(-50%) translateY(0) scale(1);
+}
+.captured-dropdown .section{
+    padding:6px 4px;
+}
+.captured-dropdown .section + .section{
+    border-top:1px solid rgba(201,168,123,0.18);
+    margin-top:4px;
+    padding-top:10px;
+}
+.captured-dropdown .label{
+    color:#c9a87b;font-size:0.72rem;font-weight:700;
+    margin-bottom:6px;display:block;
+}
+.captured-dropdown .row{
+    display:flex;flex-wrap:wrap;gap:3px;min-height:26px;align-items:center;
+}
+.captured-dropdown .row svg{
+    width:26px;height:26px;
+    filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+}
+.captured-dropdown .empty{
+    color:#5a6a7a;font-size:0.72rem;font-style:italic;
 }
 
 /* ====== نافذة الترقية ====== */
@@ -298,13 +369,14 @@ body::before{
     box-shadow:0 10px 40px rgba(0,0,0,0.8);
     transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
     z-index:13000;max-width:90vw;text-align:center;
+    will-change:transform;
 }
 .toast.show{transform:translateX(-50%) translateY(0)}
 
 @media (max-width:360px){
     .app{padding:8px 6px 25px;gap:8px}
     .game-container{padding:9px}
-    .icon-btn{width:42px;height:42px;font-size:16px}
+    .captured-dropdown .row svg{width:22px;height:22px}
 }
 </style>
 </head>
@@ -326,9 +398,6 @@ body::before{
     <button id="diffMediumBtn">⚡ متوسط</button>
     <button id="diffHardBtn">🔥 صعب</button>
     <button id="diffInsaneBtn">💀 مستحيل</button>
-    <hr>
-    <button id="saveMenuBtn">💾 حفظ</button>
-    <button id="loadMenuBtn">📂 استعادة</button>
     <hr>
     <button id="openColorsBtn">🎨 الألوان</button>
 </div>
@@ -357,18 +426,13 @@ body::before{
 <div class="overlay" id="overlayColor"></div>
 
 <div class="app">
-    <div class="captured-box" id="capturedWhite">
-        <span class="title">⬜ مأكولات الأبيض</span>
-        <span class="row" id="capturedWhiteList"></span>
-    </div>
-
     <div class="game-container">
         <div class="board-wrapper">
             <div class="board" id="chessboard"></div>
         </div>
         <div class="status" id="statusMsg">♔ الأبيض يبدأ</div>
 
-        <!-- لوحة الأونلاين - 3 خانات فقط -->
+        <!-- لوحة الأونلاين -->
         <div class="online-panel" id="onlinePanel">
             <div class="row-input">
                 <input type="text" id="roomInput" placeholder="123" maxlength="3" inputmode="numeric" pattern="[0-9]*" />
@@ -377,18 +441,25 @@ body::before{
             </div>
             <div class="status-text" id="roomStatus"></div>
         </div>
-
-        <div class="controls">
-            <button id="saveBtn" class="icon-btn save-btn">💾</button>
-            <button id="loadBtn" class="icon-btn load-btn">📂</button>
-            <button id="undoBtn" class="icon-btn">↩️</button>
-            <button id="resetBtn" class="icon-btn">🔄</button>
-        </div>
     </div>
 
-    <div class="captured-box" id="capturedBlack">
-        <span class="title">⬛ مأكولات الأسود</span>
-        <span class="row" id="capturedBlackList"></span>
+    <!-- زر المأكولات + القائمة المنسدلة -->
+    <div class="captured-wrapper">
+        <button class="captured-btn" id="capturedBtn">
+            🍽️ المأكولات
+            <span class="badge" id="capturedBadge">0</span>
+            <span class="caret">▼</span>
+        </button>
+        <div class="captured-dropdown" id="capturedDropdown">
+            <div class="section">
+                <span class="label">⬜ مأكولات الأبيض (القطع السوداء)</span>
+                <div class="row" id="capturedWhiteList"><span class="empty">لا يوجد</span></div>
+            </div>
+            <div class="section">
+                <span class="label">⬛ مأكولات الأسود (القطع البيضاء)</span>
+                <div class="row" id="capturedBlackList"><span class="empty">لا يوجد</span></div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -407,7 +478,7 @@ const PIECE_SVG = {
     'black_king': `<svg viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg"><g fill="#1e1e1e" stroke="#000" stroke-width="1.5" stroke-linejoin="round"><path d="M22.5 11.63V6" stroke-linecap="round"/><path d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5" fill="#1e1e1e" stroke-linecap="butt" stroke-linejoin="miter"/><path d="M12.5 37c5.5 3.5 14.5 3.5 20 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-2.5-7.5-12-10.5-16-4-3 6 6 10.5 6 10.5v7"/><path d="M12.5 30c5.5-3 14.5-3 20 0M12.5 33.5c5.5-3 14.5-3 20 0M12.5 37c5.5-3 14.5-3 20 0" fill="none" stroke="#fff" stroke-width="1"/></g></svg>`,
     'black_queen': `<svg viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg"><g fill="#1e1e1e" stroke="#000" stroke-width="1.5" stroke-linejoin="round"><path d="M9 26c8.5-1.5 21-1.5 27 0l2.5-12.5L31 25l-.3-14.1-5.2 13.6-3-14.5-3 14.5-5.2-13.6L14 25 6.5 13.5 9 26z"/><path d="M9 26c0 2 1.5 2 2.5 4 1 1.5 1 1 .5 3.5-1.5 1-1.5 2.5-1.5 2.5-1.5 1.5.5 2.5.5 2.5 6.5 1 16.5 1 23 0 0 0 1.5-1 0-2.5 0 0 .5-1.5-1-2.5-.5-2.5-.5-2 .5-3.5 1-2 2.5-2 2.5-4-8.5-1.5-18.5-1.5-27 0z" fill="#1e1e1e"/><path d="M11.5 30c3.5-1 18.5-1 22 0M12 33.5c6-1 15-1 21 0" fill="none" stroke="#fff" stroke-width="1" stroke-linecap="round"/><circle cx="6" cy="12" r="2"/><circle cx="14" cy="9" r="2"/><circle cx="22.5" cy="8" r="2"/><circle cx="31" cy="9" r="2"/><circle cx="39" cy="12" r="2"/></g></svg>`,
     'black_rook': `<svg viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg"><g fill="#1e1e1e" stroke="#000" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"><path d="M9 39h27v-3H9v3zM12.5 32l1.5-2.5h17l1.5 2.5h-20zM12 36v-4h21v4H12z" stroke-linecap="butt"/><path d="M14 29.5v-13h17v13H14z" stroke-linecap="butt" stroke-linejoin="miter"/><path d="M14 16.5L11 14h23l-3 2.5H14zM11 14V9h4v2h5V9h5v2h5V9h4v5H11z" stroke-linecap="butt"/><path d="M12 35.5h21M13 31.5h19M14 29.5h17M14 16.5h17M11 14h23" fill="none" stroke="#fff" stroke-width="1" stroke-linejoin="miter"/></g></svg>`,
-    'black_bishop': `<svg viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg"><g fill="#1e1e1e" stroke="#000" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"><g fill="#1e1e1e" stroke-linecap="butt"><path d="M9 36c3.39-.97 10.11.43 13.5-2 3.39 2.43 10.11 1.03 13.5 2 0 0 1.65.54 3 2-.68.97-1.65.99-3 .5-3.39-.97-10.11.46-13.5-1-3.39 1.46-10.11.03-13.5 1-1.354.49-2.323.47-3-.5 1.354-1.94 3-2 3-2z"/><path d="M15 32c2.5 2.5 12.5 2.5 15 0 .5-1.5 0-2 0-2 0-2.5-2.5-4-2.5-4 5.5-1.5 6-11.5-5-15.5-11 4-10.5 14-5 15.5 0 0-2.5 1.5-2.5 4 0 0 .5.5 0 2z"/><path d="M25 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 1 1 5 0z"/></g><path d="M17.5 26h10M15 30h15m-7.5-14.5v5M20 18h5" stroke="#fff" stroke-width="1" stroke-linejoin="miter"/></g></svg>`,
+    'black_bishop': `<svg viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg"><g fill="#1e1e1e" stroke="#000" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"><g fill="#1e1e1e" stroke-linecap="butt"><path d="M9 36c3.39-.97 10.11.43 13.5-2 3.39 2.43 10.11 1.03 13.5 2 0 0 1.65.54 3 2-.68.97-1.65.99-3 .5-3.39-.97-10.11.46-13.5-1-3.39 1.46-10.11.03-13.5 1-1.354.49-2.323.47-3-.5 1.354-1.94 3-2 3-2z"/><path d="M15 32c2.5 2.5 12.5 2.5 15 0 .5-1.5 0-2 0-2 0-2.5-2.5-4-2.5-4 5.5-1.5 6-11.5-5-15.5-11 4-10.5 14-5 15.5 0 0-2.5 1.5-2.5 4 0 0-.5.5 0 2z"/><path d="M25 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 1 1 5 0z"/></g><path d="M17.5 26h10M15 30h15m-7.5-14.5v5M20 18h5" stroke="#fff" stroke-width="1" stroke-linejoin="miter"/></g></svg>`,
     'black_knight': `<svg viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg"><g fill="#1e1e1e" stroke="#000" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"><path d="M22 10c10.5 1 16.5 8 16 29H15c0-9 10-6.5 8-21"/><path d="M24 18c.38 2.91-5.55 7.37-8 9-3 2-2.82 4.34-5 4-1.042-.94 1.41-3.04 0-3-1 0 .19 1.23-1 2-1 0-4.003 1-4-4 0-2 6-12 6-12s1.89-1.9 2-3.5c-.73-.994-.5-2-.5-3 1-1 3 2.5 3 2.5h2s.78-1.992 2.5-3c1 0 1 3 1 3"/><circle cx="9" cy="25.5" r="0.5" fill="#fff" stroke="#fff"/><ellipse cx="14.5" cy="15.5" rx="0.5" ry="1.5" fill="#fff" stroke="#fff" transform="rotate(30 14.5 15.5)"/></g></svg>`,
     'black_pawn': `<svg viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg"><path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill="#1e1e1e" stroke="#000" stroke-width="1.5" stroke-linecap="round"/></svg>`
 };
@@ -418,7 +489,6 @@ let turn = 'white';
 let gameMode = 'computer';
 let difficulty = 'medium';
 let selectedRow = null, selectedCol = null;
-let history = [];
 let gameOver = false;
 let winner = null;
 let pendingPromotion = null;
@@ -435,6 +505,9 @@ let computerTimeout=null;
 let myColor='white';
 
 const pieceValue={pawn:1,knight:3,bishop:3,rook:5,queen:9,king:100};
+
+let cellElements=[];
+let isAnimating=false;
 
 function showToast(msg,duration=2200){
     let t=document.createElement('div');
@@ -455,15 +528,6 @@ function initBoard(){
     return b;
 }
 function copyBoard(b){return b.map(r=>[...r]);}
-function saveState(){
-    history.push({
-        board:copyBoard(board),turn,whiteKingMoved,blackKingMoved,
-        whiteRookMoved:{...whiteRookMoved},blackRookMoved:{...blackRookMoved},
-        capturedWhite:[...capturedWhite],capturedBlack:[...capturedBlack],
-        lastMove:lastMove?{...lastMove}:null
-    });
-    if(history.length>50)history.shift();
-}
 function findKing(b,color){
     for(let i=0;i<8;i++)for(let j=0;j<8;j++)
         if(b[i][j]===`${color}_king`)return[i,j];
@@ -666,44 +730,48 @@ function scheduleComputerMove(){
     },350);
 }
 function makeMove(fromR,fromC,toR,toC,fromAI=false){
-    if(gameOver)return false;
+    if(gameOver||isAnimating)return false;
     let piece=board[fromR][fromC];
     if(!piece||piece.split('_')[0]!==turn)return false;
     let target=board[toR][toC];
     if(target&&target.split('_')[0]===turn)return false;
     if(!isValidMoveFull(piece,fromR,fromC,toR,toC,board,turn))return false;
 
-    saveState();
     if(target){
         let color=target.split('_')[0],type=target.split('_')[1];
-        if(color==='white')capturedWhite.push(type);else capturedBlack.push(type);
+        if(color==='white')capturedBlack.push(type); else capturedWhite.push(type);
     }
     let color=turn;
     let isKing=piece.split('_')[1]==='king';
     let isRook=piece.split('_')[1]==='rook';
-    if(isKing&&Math.abs(toC-fromC)===2){
-        let rookCol=toC>fromC?7:0;
-        let newKingCol=(fromC+toC)/2;
-        let newRookCol=newKingCol+(toC>fromC?-1:1);
-        executeCastling(color,toR,fromC,toR,rookCol,newKingCol,newRookCol);
-    }else{
-        board[toR][toC]=piece;
-        board[fromR][fromC]=null;
-        if(isKing){if(color==='white')whiteKingMoved=true;else blackKingMoved=true;}
-        if(isRook){
-            if(color==='white'){if(fromC===0)whiteRookMoved.left=true;if(fromC===7)whiteRookMoved.right=true;}
-            else{if(fromC===0)blackRookMoved.left=true;if(fromC===7)blackRookMoved.right=true;}
-        }
-    }
-    lastMove={from:[fromR,fromC],to:[toR,toC]};
-    let isPawn=piece.split('_')[1]==='pawn';
-    let reachedEnd=isPawn&&((turn==='white'&&toR===0)||(turn==='black'&&toR===7));
-    let originalTurn=turn;
-    turn=turn==='white'?'black':'white';
-    selectedRow=null;
 
+    isAnimating=true;
     animateMove(fromR,fromC,toR,toC,piece,()=>{
+        if(isKing&&Math.abs(toC-fromC)===2){
+            let rookCol=toC>fromC?7:0;
+            let newKingCol=(fromC+toC)/2;
+            let newRookCol=newKingCol+(toC>fromC?-1:1);
+            executeCastling(color,toR,fromC,toR,rookCol,newKingCol,newRookCol);
+        }else{
+            board[toR][toC]=piece;
+            board[fromR][fromC]=null;
+            if(isKing){if(color==='white')whiteKingMoved=true;else blackKingMoved=true;}
+            if(isRook){
+                if(color==='white'){if(fromC===0)whiteRookMoved.left=true;if(fromC===7)whiteRookMoved.right=true;}
+                else{if(fromC===0)blackRookMoved.left=true;if(fromC===7)blackRookMoved.right=true;}
+            }
+        }
+        lastMove={from:[fromR,fromC],to:[toR,toC]};
+        let isPawn=piece.split('_')[1]==='pawn';
+        let reachedEnd=isPawn&&((turn==='white'&&toR===0)||(turn==='black'&&toR===7));
+        let originalTurn=turn;
+        turn=turn==='white'?'black':'white';
+        selectedRow=null;
+        selectedCol=null;
+        isAnimating=false;
+
         if(reachedEnd){
+            renderBoard();
             showPromotionDialog(toR,toC,originalTurn);
             turn=originalTurn;
             updateStatus();
@@ -712,90 +780,151 @@ function makeMove(fromR,fromC,toR,toC,fromAI=false){
         let state=getGameState(board,turn);
         if(state==='checkmate')setGameOver(turn==='white'?'الأسود':'الأبيض');
         else if(state==='stalemate'){gameOver=true;winner='تعادل';updateStatus();setTimeout(showWinnerScreen,500);}
+        renderBoard();
         updateStatus();
         if(gameMode==='computer'&&turn==='black'&&!gameOver&&!pendingPromotion&&!reachedEnd)scheduleComputerMove();
         if(gameMode==='online'&&!fromAI)sendGameState();
     });
-    if(gameMode==='online'&&!fromAI)sendGameState();
     return true;
 }
 function animateMove(fromR,fromC,toR,toC,piece,callback){
     let boardEl=document.getElementById('chessboard');
+    if(!boardEl) { if(callback) callback(); return; }
     let fromCell=boardEl.children[fromR*8+fromC];
     let toCell=boardEl.children[toR*8+toC];
+
+    if(!fromCell || !toCell) { if(callback) callback(); return; }
+
     let fromRect=fromCell.getBoundingClientRect();
     let toRect=toCell.getBoundingClientRect();
     let dx=toRect.left-fromRect.left;
     let dy=toRect.top-fromRect.top;
+
+    let origPieceEl=fromCell.querySelector('.piece');
+    let capturedEl=toCell.querySelector('.piece');
+    if(origPieceEl) origPieceEl.style.opacity='0';
+    if(capturedEl) capturedEl.style.opacity='0';
+
     let flyingPiece=document.createElement('div');
     flyingPiece.style.cssText=`
-        position:fixed;left:${fromRect.left}px;top:${fromRect.top}px;
-        width:${fromRect.width}px;height:${fromRect.height}px;
-        z-index:100;pointer-events:none;
-        display:flex;align-items:center;justify-content:center;
-        transition:transform 0.32s cubic-bezier(0.34,1.2,0.64,1), filter 0.32s;
-        will-change:transform;padding:6%;
+        position:fixed;
+        left:${fromRect.left}px;
+        top:${fromRect.top}px;
+        width:${fromRect.width}px;
+        height:${fromRect.height}px;
+        z-index:999;
+        pointer-events:none;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        transform:translate3d(0,0,0);
+        transition:transform 0.2s cubic-bezier(0.3,0.7,0.4,1);
+        will-change:transform;
+        backface-visibility:hidden;
+        -webkit-backface-visibility:hidden;
     `;
-    flyingPiece.innerHTML=`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 8px 12px rgba(0,0,0,0.6)) drop-shadow(0 0 15px rgba(255,215,0,0.5));">${PIECE_SVG[piece]}</div>`;
+    flyingPiece.innerHTML=`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:6%;filter:drop-shadow(0 8px 12px rgba(0,0,0,0.5));">${PIECE_SVG[piece]}</div>`;
     document.body.appendChild(flyingPiece);
-    let origPieceEl=fromCell.querySelector('.piece');
-    if(origPieceEl) origPieceEl.style.opacity='0';
-    let capturedEl=toCell.querySelector('.piece');
-    if(capturedEl) capturedEl.style.opacity='0';
+
     requestAnimationFrame(()=>{
-        flyingPiece.style.transform=`translate(${dx}px,${dy}px) scale(1.08)`;
+        flyingPiece.style.transform=`translate3d(${dx}px,${dy}px,0)`;
     });
+
     setTimeout(()=>{
         flyingPiece.remove();
-        if(origPieceEl)origPieceEl.style.opacity='1';
-        if(capturedEl)capturedEl.style.opacity='1';
-        renderBoard();
         if(callback)callback();
-    },330);
+    },200);
 }
 function renderBoard(){
     let container=document.getElementById('chessboard');
-    container.innerHTML='';
+    if(container.children.length!==64){
+        container.innerHTML='';
+        cellElements=[];
+        for(let i=0;i<8;i++){
+            for(let j=0;j<8;j++){
+                let cell=document.createElement('div');
+                let isLight=(i+j)%2===0;
+                cell.className=`cell ${isLight?'light':'dark'}`;
+                cell.addEventListener('click',(function(r,c){return function(){onCellClick(r,c);};})(i,j));
+                container.appendChild(cell);
+                cellElements.push(cell);
+            }
+        }
+    }
     let inCheck=!gameOver&&isKingInCheck(board,turn);
     let kingPos=findKing(board,turn);
+
     for(let i=0;i<8;i++){
         for(let j=0;j<8;j++){
             let piece=board[i][j];
-            let cell=document.createElement('div');
+            let cell=cellElements[i*8+j];
             let isLight=(i+j)%2===0;
-            cell.className=`cell ${isLight?'light':'dark'}`;
-            cell.style.backgroundColor=isLight?currentLight:currentDark;
-            if(selectedRow===i&&selectedCol===j)cell.classList.add('selected');
-            if(inCheck&&kingPos&&kingPos[0]===i&&kingPos[1]===j)cell.classList.add('check');
-            if(lastMove&&((lastMove.from[0]===i&&lastMove.from[1]===j)||(lastMove.to[0]===i&&lastMove.to[1]===j)))
-                cell.classList.add('last-move');
+            let cls=`cell ${isLight?'light':'dark'}`;
+            if(selectedRow===i&&selectedCol===j)cls+=' selected';
+            if(inCheck&&kingPos&&kingPos[0]===i&&kingPos[1]===j)cls+=' check';
+            if(lastMove&&((lastMove.from[0]===i&&lastMove.from[1]===j)||(lastMove.to[0]===i&&lastMove.to[1]===j)))cls+=' last-move';
             if(selectedRow!==null&&selectedCol!==null&&!gameOver){
                 let sel=board[selectedRow][selectedCol];
                 if(sel&&isValidMoveFull(sel,selectedRow,selectedCol,i,j,board,turn)){
-                    cell.classList.add('valid-move');
-                    if(board[i][j])cell.classList.add('capture');
+                    cls+=' valid-move';
+                    if(board[i][j])cls+=' capture';
                 }
             }
+            if(cell.className!==cls) cell.className=cls;
+            let targetBg=isLight?currentLight:currentDark;
+            if(cell.style.backgroundColor!==targetBg) cell.style.backgroundColor=targetBg;
+
+            let existingPiece=cell.firstChild;
             if(piece){
-                let pieceEl=document.createElement('div');
-                pieceEl.className='piece';
-                pieceEl.innerHTML=PIECE_SVG[piece];
-                cell.appendChild(pieceEl);
+                if(existingPiece&&existingPiece.classList&&existingPiece.classList.contains('piece')){
+                    if(existingPiece.dataset.piece!==piece){
+                        existingPiece.dataset.piece=piece;
+                        existingPiece.innerHTML=PIECE_SVG[piece];
+                    }
+                    if(existingPiece.style.opacity!=='1') existingPiece.style.opacity='1';
+                }else{
+                    if(existingPiece) existingPiece.remove();
+                    let pieceEl=document.createElement('div');
+                    pieceEl.className='piece';
+                    pieceEl.dataset.piece=piece;
+                    pieceEl.innerHTML=PIECE_SVG[piece];
+                    cell.appendChild(pieceEl);
+                }
+            }else{
+                if(existingPiece) existingPiece.remove();
             }
-            cell.addEventListener('click',(function(r,c){return function(){onCellClick(r,c);};})(i,j));
-            container.appendChild(cell);
         }
     }
-    document.getElementById('capturedWhiteList').innerHTML=capturedWhite.map(t=>
-        `<span style="display:inline-block;width:20px;height:20px;margin:1px;">${PIECE_SVG['black_'+t]}</span>`
-    ).join('');
-    document.getElementById('capturedBlackList').innerHTML=capturedBlack.map(t=>
-        `<span style="display:inline-block;width:20px;height:20px;margin:1px;">${PIECE_SVG['white_'+t]}</span>`
-    ).join('');
+    updateCapturedDisplay();
+}
+function updateCapturedDisplay(){
+    let wl=document.getElementById('capturedWhiteList');
+    let bl=document.getElementById('capturedBlackList');
+    let badge=document.getElementById('capturedBadge');
+    if(wl){
+        if(capturedWhite.length===0){
+            wl.innerHTML='<span class="empty">لا يوجد</span>';
+        }else{
+            wl.innerHTML=capturedWhite.map(t=>
+                `<span style="display:inline-block;width:26px;height:26px;">${PIECE_SVG['black_'+t]}</span>`
+            ).join('');
+        }
+    }
+    if(bl){
+        if(capturedBlack.length===0){
+            bl.innerHTML='<span class="empty">لا يوجد</span>';
+        }else{
+            bl.innerHTML=capturedBlack.map(t=>
+                `<span style="display:inline-block;width:26px;height:26px;">${PIECE_SVG['white_'+t]}</span>`
+            ).join('');
+        }
+    }
+    if(badge) badge.textContent=(capturedWhite.length+capturedBlack.length);
 }
 function onCellClick(row,col){
     if(gameOver){showToast("اللعبة انتهت!");return;}
     if(pendingPromotion){showToast("أكمل الترقية أولاً");return;}
+    if(isAnimating) return;
     if(gameMode==='computer'&&turn==='black'){showToast("الكمبيوتر يفكر...");return;}
     if(gameMode==='online'&&!isMyTurn){showToast("ليس دورك");return;}
     if(selectedRow===null){
@@ -805,15 +934,12 @@ function onCellClick(row,col){
             renderBoard();
         }
     }else{
-        let success=makeMove(selectedRow,selectedCol,row,col);
-        if(success){
-            selectedRow=null;
-        }else{
-            let clicked=board[row][col];
-            if(clicked&&clicked.split('_')[0]===turn){
-                selectedRow=row;selectedCol=col;renderBoard();
-            }else{selectedRow=null;renderBoard();}
+        let clicked=board[row][col];
+        if(clicked&&clicked.split('_')[0]===turn){
+            selectedRow=row;selectedCol=col;renderBoard();
+            return;
         }
+        makeMove(selectedRow,selectedCol,row,col);
     }
 }
 function updateStatus(){
@@ -829,40 +955,10 @@ function updateStatus(){
     if(gameMode==='online')msg+=isMyTurn?' - 🟢 دورك':' - ⏳ انتظر';
     el.innerHTML=msg;
 }
-function saveGame(){
-    try{
-        const data={board,turn,whiteKingMoved,blackKingMoved,whiteRookMoved,blackRookMoved,
-            gameMode,difficulty,gameOver,winner,capturedWhite,capturedBlack,
-            history:history.slice(0,30),currentLight,currentDark,lastMove};
-        localStorage.setItem('chessMasterSave',JSON.stringify(data));
-        showToast('✅ تم الحفظ');
-    }catch(e){showToast('❌ فشل الحفظ');}
-}
-function loadGame(){
-    try{
-        const raw=localStorage.getItem('chessMasterSave');
-        if(!raw){showToast('لا يوجد حفظ');return;}
-        const data=JSON.parse(raw);
-        board=data.board;turn=data.turn;
-        whiteKingMoved=data.whiteKingMoved;blackKingMoved=data.blackKingMoved;
-        whiteRookMoved=data.whiteRookMoved;blackRookMoved=data.blackRookMoved;
-        gameMode=data.gameMode||'computer';difficulty=data.difficulty||'medium';
-        gameOver=data.gameOver||false;winner=data.winner||null;
-        capturedWhite=data.capturedWhite||[];capturedBlack=data.capturedBlack||[];
-        history=data.history||[];
-        currentLight=data.currentLight||'#f0d9b5';
-        currentDark=data.currentDark||'#1e1e1e';
-        lastMove=data.lastMove||null;
-        selectedRow=null;pendingPromotion=null;
-        renderBoard();updateStatus();updateMenuStates();
-        if(gameMode==='computer'&&turn==='black'&&!gameOver)scheduleComputerMove();
-        showToast('📂 تم الاستعادة');
-    }catch(e){showToast('❌ فشل');}
-}
 function setColors(light,dark){currentLight=light;currentDark=dark;renderBoard();}
 
 // ==========================================================
-// PeerJS - اتصال بكود 3 خانات
+// PeerJS - اتصال (بدون تغيير)
 // ==========================================================
 const PEER_CONFIG={
     config:{iceServers:[
@@ -876,14 +972,11 @@ const PEER_CONFIG={
     debug:1
 };
 
-// إخفاء لوحة الأونلاين
 function hideOnlinePanel(){
     let panel = document.getElementById('onlinePanel');
     panel.classList.add('hidden');
     panel.style.display = 'none';
 }
-
-// إظهار لوحة الأونلاين
 function showOnlinePanel(){
     let panel = document.getElementById('onlinePanel');
     panel.classList.remove('hidden');
@@ -894,39 +987,29 @@ function showOnlinePanel(){
     document.getElementById('joinRoomBtn').disabled = false;
     document.getElementById('roomInput').disabled = false;
 }
-
-// قفل عناصر التحكم في الأونلاين
 function lockOnlineControls(){
     document.getElementById('createRoomBtn').disabled = true;
     document.getElementById('joinRoomBtn').disabled = true;
     document.getElementById('roomInput').disabled = true;
 }
-
 function initPeer(cb){
     if(peer&&!peer.destroyed){if(cb)cb();return;}
     try{
         peer=new Peer(PEER_CONFIG);
-        peer.on('open',id=>{
-            if(cb)cb();
-        });
+        peer.on('open',id=>{if(cb)cb();});
         peer.on('connection',c=>{conn=c;setupConnection(c);});
         peer.on('error',e=>{
             console.warn('Peer error:',e);
-            if(e.type==='unavailable-id'){
-                // الكود محجوز - يعني فيه خصم → ننضم كضيف
-                joinWithCode(document.getElementById('roomInput').value);
-            }
+            if(e.type==='unavailable-id'){joinWithCode(document.getElementById('roomInput').value);}
         });
         peer.on('disconnected',()=>{try{peer.reconnect();}catch(e){}});
     }catch(e){showToast('❌ فشل الاتصال');}
 }
-
 function setupConnection(c){
     conn=c;
     conn.on('open',()=>{
         document.getElementById('roomStatus').textContent='✅ متصل!';
         showToast('✅ تم الاتصال بالخصم');
-        // ✅ إخفاء لوحة الأونلاين بالكامل عند نجاح الاتصال
         hideOnlinePanel();
         if(gameMode==='online'){isMyTurn=(turn===myColor);sendGameState();}
     });
@@ -956,36 +1039,26 @@ function setupConnection(c){
         showToast('🔴 انقطع الاتصال');
         document.getElementById('roomStatus').textContent='❌ منقطع';
         conn=null;
-        // إظهار لوحة الأونلاين مرة أخرى عند الانقطاع
         showOnlinePanel();
     });
     conn.on('error',()=>{
         document.getElementById('roomStatus').textContent='⚠️ خطأ في الاتصال';
     });
 }
-
-// إنشاء غرفة بكود
 function createRoom(){
     let code = document.getElementById('roomInput').value.trim();
     if(!code || code.length !== 3){showToast('📝 أدخل كود 3 أرقام');return;}
     if(!/^\d{3}$/.test(code)){showToast('📝 الكود يجب أن يكون 3 أرقام');return;}
-
     document.getElementById('roomStatus').textContent = '⏳ جاري إنشاء الغرفة...';
     lockOnlineControls();
-
     let peerId = 'chess-room-' + code;
-
-    // تدمير أي peer قديم
     if(peer&&!peer.destroyed){try{peer.destroy();}catch(e){}}
     peer = null;
-
     myColor = 'white';
-
     peer = new Peer(peerId, PEER_CONFIG);
     peer.on('open', pid=>{
         document.getElementById('roomStatus').textContent = '⏳ انتظر الخصم...';
         showToast('🌟 تم إنشاء الغرفة - انشر الكود: ' + code);
-        // إرسال اللون للخصم بعد الاتصال
         peer.on('connection', c=>{
             conn = c;
             setupConnection(c);
@@ -1001,7 +1074,6 @@ function createRoom(){
         if(e.type === 'unavailable-id'){
             showToast('⚠️ الكود محجوز، اختر كوداً آخر');
             document.getElementById('roomStatus').textContent = '❌ الكود مستخدم';
-            // فك القفل
             document.getElementById('createRoomBtn').disabled = false;
             document.getElementById('joinRoomBtn').disabled = false;
             document.getElementById('roomInput').disabled = false;
@@ -1014,44 +1086,33 @@ function createRoom(){
         }
     });
 }
-
-// الانضمام بكود
 function joinRoom(){
     let code = document.getElementById('roomInput').value.trim();
     if(!code || code.length !== 3){showToast('📝 أدخل كود 3 أرقام');return;}
     if(!/^\d{3}$/.test(code)){showToast('📝 الكود يجب أن يكون 3 أرقام');return;}
-
     joinWithCode(code);
 }
-
 function joinWithCode(code){
     document.getElementById('roomStatus').textContent = '⏳ جاري الاتصال...';
     lockOnlineControls();
-
     myColor = 'black';
-
-    // تدمير أي peer قديم
     if(peer&&!peer.destroyed){try{peer.destroy();}catch(e){}}
     peer = null;
-
     peer = new Peer(PEER_CONFIG);
     peer.on('open', ()=>{
         let c = peer.connect('chess-room-' + code, {reliable:true});
         conn = c;
         setupConnection(c);
-
         let connected = false;
         let timeout = setTimeout(()=>{
             if(connected) return;
             showToast('❌ فشل الاتصال - تأكد من الكود');
             document.getElementById('roomStatus').textContent = '❌ فشل الاتصال';
             if(peer){try{peer.destroy();}catch(e){}peer=null;}
-            // فك القفل
             document.getElementById('createRoomBtn').disabled = false;
             document.getElementById('joinRoomBtn').disabled = false;
             document.getElementById('roomInput').disabled = false;
         }, 10000);
-
         c.on('open', ()=>{
             connected = true;
             clearTimeout(timeout);
@@ -1059,7 +1120,6 @@ function joinWithCode(code){
             isMyTurn = (turn === myColor);
             sendGameState();
         });
-
         c.on('error', ()=>{
             clearTimeout(timeout);
             if(!connected){
@@ -1080,7 +1140,6 @@ function joinWithCode(code){
         document.getElementById('roomInput').disabled = false;
     });
 }
-
 function sendGameState(){
     if(conn&&conn.open){
         try{conn.send(JSON.stringify({
@@ -1114,42 +1173,46 @@ document.querySelectorAll('.color-opt').forEach(btn=>{
     btn.addEventListener('click',()=>{setColors('#f0d9b5',btn.dataset.dark);closeMenu('colorMenu');});
 });
 
+// ========== زر المأكولات ==========
+const capturedBtn=document.getElementById('capturedBtn');
+const capturedDropdown=document.getElementById('capturedDropdown');
+let capturedOpen=false;
+
+capturedBtn.addEventListener('click',(e)=>{
+    e.stopPropagation();
+    capturedOpen=!capturedOpen;
+    capturedBtn.classList.toggle('open',capturedOpen);
+    capturedDropdown.classList.toggle('open',capturedOpen);
+});
+document.addEventListener('click',(e)=>{
+    if(capturedOpen && !capturedDropdown.contains(e.target) && e.target!==capturedBtn){
+        capturedOpen=false;
+        capturedBtn.classList.remove('open');
+        capturedDropdown.classList.remove('open');
+    }
+});
+
 // ========== الأزرار ==========
 document.getElementById('vsComputerBtn').addEventListener('click',()=>{
-    gameMode='computer';
-    hideOnlinePanel();
-    updateMenuStates();resetGame();closeMenu('sideMenu');showToast('🤖 ضد الكمبيوتر');
+    gameMode='computer';hideOnlinePanel();updateMenuStates();resetGame();closeMenu('sideMenu');showToast('🤖 ضد الكمبيوتر');
 });
 document.getElementById('vsLocalBtn').addEventListener('click',()=>{
-    gameMode='local';
-    hideOnlinePanel();
-    updateMenuStates();resetGame();closeMenu('sideMenu');showToast('👥 ضد صديق');
+    gameMode='local';hideOnlinePanel();updateMenuStates();resetGame();closeMenu('sideMenu');showToast('👥 ضد صديق');
 });
 document.getElementById('vsOnlineBtn').addEventListener('click',()=>{
-    gameMode='online';
-    showOnlinePanel();
-    updateMenuStates();resetGame();closeMenu('sideMenu');
+    gameMode='online';showOnlinePanel();updateMenuStates();resetGame();closeMenu('sideMenu');
     document.getElementById('roomStatus').textContent = '💡 أدخل كود أو أنشئ غرفة';
     showToast('📡 اتصال أونلاين');
 });
 document.getElementById('diffMediumBtn').addEventListener('click',()=>{difficulty='medium';updateMenuStates();resetGame();closeMenu('sideMenu');showToast('⚡ متوسط');});
 document.getElementById('diffHardBtn').addEventListener('click',()=>{difficulty='hard';updateMenuStates();resetGame();closeMenu('sideMenu');showToast('🔥 صعب');});
 document.getElementById('diffInsaneBtn').addEventListener('click',()=>{difficulty='insane';updateMenuStates();resetGame();closeMenu('sideMenu');showToast('💀 مستحيل');});
-document.getElementById('saveMenuBtn').addEventListener('click',()=>{saveGame();closeMenu('sideMenu');});
-document.getElementById('loadMenuBtn').addEventListener('click',()=>{loadGame();closeMenu('sideMenu');});
 document.getElementById('createRoomBtn').addEventListener('click',createRoom);
 document.getElementById('joinRoomBtn').addEventListener('click',joinRoom);
-document.getElementById('saveBtn').addEventListener('click',saveGame);
-document.getElementById('loadBtn').addEventListener('click',loadGame);
-document.getElementById('resetBtn').addEventListener('click',()=>resetGame());
-document.getElementById('undoBtn').addEventListener('click',undo);
 
-// إدخال 3 أرقام فقط تلقائياً
 document.getElementById('roomInput').addEventListener('input', (e)=>{
     e.target.value = e.target.value.replace(/\D/g,'').slice(0,3);
 });
-
-// Enter في حقل الكود = انضمام
 document.getElementById('roomInput').addEventListener('keypress', (e)=>{
     if(e.key === 'Enter') document.getElementById('joinRoomBtn').click();
 });
@@ -1157,28 +1220,13 @@ document.getElementById('roomInput').addEventListener('keypress', (e)=>{
 function resetGame(silent=false){
     if(computerTimeout)clearTimeout(computerTimeout);
     board=initBoard();
-    turn='white';selectedRow=null;history=[];
-    gameOver=false;winner=null;pendingPromotion=null;
+    turn='white';selectedRow=null;selectedCol=null;
+    gameOver=false;winner=null;pendingPromotion=null;isAnimating=false;
     document.querySelectorAll('.winner-overlay').forEach(el=>el.remove());
     document.querySelectorAll('.promotion-overlay').forEach(el=>el.remove());
     renderBoard();updateStatus();
     if(gameMode==='computer'&&turn==='black')scheduleComputerMove();
     if(gameMode==='online'&&!silent){isMyTurn=(turn===myColor);sendGameState();}
-}
-function undo(){
-    if(gameOver||pendingPromotion)return;
-    if(gameMode==='online'&&!isMyTurn){showToast("ليس دورك");return;}
-    if(!history.length){showToast('لا يوجد حركات');return;}
-    let last=history.pop();
-    board=last.board;turn=last.turn;
-    whiteKingMoved=last.whiteKingMoved;blackKingMoved=last.blackKingMoved;
-    whiteRookMoved=last.whiteRookMoved;blackRookMoved=last.blackRookMoved;
-    capturedWhite=last.capturedWhite||[];capturedBlack=last.capturedBlack||[];
-    lastMove=last.lastMove||null;
-    selectedRow=null;gameOver=false;winner=null;
-    renderBoard();updateStatus();
-    if(gameMode==='online')sendGameState();
-    if(gameMode==='computer'&&turn==='black')scheduleComputerMove();
 }
 function updateMenuStates(){
     document.querySelectorAll('#sideMenu button').forEach(b=>b.classList.remove('active'));
