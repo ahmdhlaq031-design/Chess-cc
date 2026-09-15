@@ -15,6 +15,70 @@ body{
     background:
         linear-gradient(180deg, rgba(10,14,26,0.65) 0%, rgba(15,21,36,0.55) 50%, rgba(8,11,20,0.7) 100%),
         url('https://i.ibb.co/cS43HTCF/5.jpg') center/cover no-repeat fixed;
+    transition:background 0.4s ease;
+}
+body.light-mode{
+    color:#1a1a1a;
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,250,240,0.1) 50%, rgba(255,240,220,0.2) 100%),
+        url('https://i.ibb.co/dw03cG0D/Screenshot-1.jpg') center/cover no-repeat fixed;
+}
+body.light-mode::before{opacity:0.3}
+body.light-mode .top-left h1{filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));}
+body.light-mode .top-left .by{color:#4a3020;text-shadow:0 1px 2px rgba(255,255,255,0.7);}
+body.light-mode .menu-icon{
+    background:linear-gradient(145deg,rgba(255,250,240,0.95),rgba(240,225,200,0.95));
+    color:#8b5a2b;border-color:rgba(139,90,43,0.6);
+    box-shadow:0 3px 18px rgba(139,90,43,0.3),inset 0 1px 0 rgba(255,255,255,0.6);
+}
+body.light-mode .side-menu{
+    background:linear-gradient(180deg,rgba(255,250,240,0.99),rgba(250,240,220,0.99));
+    border-left-color:rgba(139,90,43,0.5);
+    box-shadow:-15px 0 60px rgba(0,0,0,0.3);
+}
+body.light-mode .side-menu button{
+    background:linear-gradient(145deg,rgba(245,235,215,0.95),rgba(230,215,190,0.95));
+    color:#3a2410;border-color:rgba(139,90,43,0.35);
+}
+body.light-mode .side-menu .active{
+    background:linear-gradient(145deg,#d4903a,#b8732a)!important;
+    color:#fff!important;
+}
+body.light-mode .game-container{
+    background:linear-gradient(145deg,rgba(230,215,190,0.95),rgba(210,190,160,0.95));
+    box-shadow:0 20px 50px rgba(0,0,0,0.4),0 0 0 2px rgba(139,90,43,0.5),inset 0 1px 0 rgba(255,255,255,0.5);
+}
+body.light-mode .captured-btn{
+    background:linear-gradient(145deg,rgba(255,250,240,0.98),rgba(245,235,215,0.98));
+    color:#8b5a2b;border-color:rgba(139,90,43,0.6);
+}
+body.light-mode .captured-dropdown{
+    background:linear-gradient(145deg,rgba(255,250,240,0.99),rgba(245,235,215,0.99));
+    border-color:rgba(139,90,43,0.5);
+}
+body.light-mode .captured-dropdown .label{color:#8b5a2b}
+body.light-mode .captured-dropdown .section + .section{border-top-color:rgba(139,90,43,0.2)}
+body.light-mode .captured-dropdown .empty{color:#8a7a6a}
+body.light-mode .online-panel{
+    background:linear-gradient(145deg,rgba(255,250,240,0.95),rgba(245,235,215,0.95));
+    border-color:rgba(139,90,43,0.4);
+}
+body.light-mode .online-panel input{
+    background:rgba(255,255,255,0.95);color:#8b5a2b;border-color:rgba(139,90,43,0.5);
+}
+body.light-mode .online-panel .status-text{color:#8b5a2b}
+body.light-mode .player-clock.white-clock{
+    background:linear-gradient(145deg,#fffaf0,#f0e0c0);
+    border-color:#d4b080;
+}
+body.light-mode .player-clock.white-clock .time,
+body.light-mode .player-clock.white-clock .moves{color:#3a2410}
+body.light-mode .player-clock.black-clock{
+    background:linear-gradient(145deg,#3a2410,#1a1008);
+    border-color:#8b5a2b;
+}
+body.light-mode .toast{
+    background:linear-gradient(145deg,#fffaf0,#f0e0c0);color:#8b5a2b;border-color:#d4b080;
 }
 body::before{
     content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
@@ -26,140 +90,52 @@ body::before{
         radial-gradient(1px 1px at 10% 60%, rgba(255,255,255,0.4), transparent),
         radial-gradient(1.5px 1.5px at 80% 90%, rgba(200,180,255,0.6), transparent);
     animation:stars 20s linear infinite;
+    transition:opacity 0.4s;
 }
 @keyframes stars{0%,100%{opacity:0.6}50%{opacity:1}}
 
-/* ============ الشريط العلوي المنظّم ============ */
+/* ============ الشريط العلوي ============ */
 .top-bar{
-    position:fixed;
-    top:calc(10px + env(safe-area-inset-top));
-    left:10px;
-    right:10px;
-    z-index:9990;
-    display:grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items:center;
-    gap:8px;
-    pointer-events:none;
-    height:44px;
+    position:fixed;top:calc(10px + env(safe-area-inset-top));left:10px;right:10px;
+    z-index:9990;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+    gap:8px;pointer-events:none;height:44px;
 }
-/* العمود الأيسر: العنوان */
-.top-left{
-    display:flex;
-    flex-direction:column;
-    align-items:flex-start;
-    justify-content:center;
-    pointer-events:auto;
-    min-width:0;
-    overflow:hidden;
-}
+.top-left{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;pointer-events:auto;min-width:0;overflow:hidden;}
 .top-left h1{
-    font-size:0.72rem;
-    font-weight:900;
+    font-size:0.72rem;font-weight:900;
     background:linear-gradient(135deg,#ffd700 0%,#fff8dc 25%,#ffd700 50%,#c9a87b 75%,#ffd700 100%);
-    background-size:200% 200%;
-    -webkit-background-clip:text;background-clip:text;
-    -webkit-text-fill-color:transparent;
-    letter-spacing:0.3px;line-height:1.1;
-    white-space:nowrap;
-    animation:shine 4s ease-in-out infinite;
+    background-size:200% 200%;-webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;letter-spacing:0.3px;line-height:1.1;
+    white-space:nowrap;animation:shine 4s ease-in-out infinite;
     filter:drop-shadow(0 0 8px rgba(255,215,0,0.6));
 }
 @keyframes shine{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-.top-left .by{
-    color:#a8b0bc;
-    font-size:0.5rem;
-    font-weight:700;
-    letter-spacing:0.3px;
-    text-transform:lowercase;
-    opacity:0.85;
-    text-shadow:0 0 4px rgba(0,0,0,0.6);
-    white-space:nowrap;
-    line-height:1;
-    margin-top:1px;
-}
-
-/* العمود الأوسط: العدادات */
-.top-center{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:5px;
-    pointer-events:none;
-}
+.top-left .by{color:#a8b0bc;font-size:0.5rem;font-weight:700;letter-spacing:0.3px;text-transform:lowercase;opacity:0.85;white-space:nowrap;line-height:1;margin-top:1px;}
+.top-center{display:flex;align-items:center;justify-content:center;gap:5px;pointer-events:none;}
 .player-clock{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    padding:3px 8px;
-    border-radius:9px;
-    min-width:56px;
-    transition:box-shadow 0.3s, transform 0.3s;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:3px 8px;border-radius:9px;min-width:56px;transition:box-shadow 0.3s, transform 0.3s;
 }
-.player-clock.white-clock{
-    background:linear-gradient(145deg,#ffffff,#e0e0e0);
-    border:1.5px solid #ffffff;
-    box-shadow:0 2px 8px rgba(0,0,0,0.5);
-}
-.player-clock.white-clock.active{
-    box-shadow:0 0 12px rgba(255,255,255,0.95),0 0 20px rgba(255,215,0,0.55);
-    transform:scale(1.06);
-}
-.player-clock.white-clock .time,
-.player-clock.white-clock .moves{
-    color:#0a0e1a;
-}
-.player-clock.black-clock{
-    background:linear-gradient(145deg,#000000,#1a1a1a);
-    border:1.5px solid #2a2a2a;
-    box-shadow:0 2px 8px rgba(0,0,0,0.7),inset 0 0 0 1px rgba(255,255,255,0.1);
-}
-.player-clock.black-clock.active{
-    box-shadow:0 0 12px rgba(255,215,0,0.95),0 0 20px rgba(255,215,0,0.55);
-    transform:scale(1.06);
-    border-color:#ffd700;
-}
-.player-clock.black-clock .time,
-.player-clock.black-clock .moves{
-    color:#ffffff;
-}
-.player-clock .time{
-    font-family:'Courier New',monospace;
-    font-weight:900;
-    font-size:0.78rem;
-    letter-spacing:0.3px;
-    line-height:1;
-}
-.player-clock .moves{
-    font-family:'Courier New',monospace;
-    font-weight:700;
-    font-size:0.5rem;
-    line-height:1;
-    margin-top:2px;
-    opacity:0.85;
-}
+.player-clock.white-clock{background:linear-gradient(145deg,#ffffff,#e0e0e0);border:1.5px solid #ffffff;box-shadow:0 2px 8px rgba(0,0,0,0.5);}
+.player-clock.white-clock.active{box-shadow:0 0 12px rgba(255,255,255,0.95),0 0 20px rgba(255,215,0,0.55);transform:scale(1.06);}
+.player-clock.white-clock .time,.player-clock.white-clock .moves{color:#0a0e1a;}
+.player-clock.black-clock{background:linear-gradient(145deg,#000000,#1a1a1a);border:1.5px solid #2a2a2a;box-shadow:0 2px 8px rgba(0,0,0,0.7),inset 0 0 0 1px rgba(255,255,255,0.1);}
+.player-clock.black-clock.active{box-shadow:0 0 12px rgba(255,215,0,0.95),0 0 20px rgba(255,215,0,0.55);transform:scale(1.06);border-color:#ffd700;}
+.player-clock.black-clock .time,.player-clock.black-clock .moves{color:#ffffff;}
+.player-clock .time{font-family:'Courier New',monospace;font-weight:900;font-size:0.78rem;letter-spacing:0.3px;line-height:1;}
+.player-clock .moves{font-family:'Courier New',monospace;font-weight:700;font-size:0.5rem;line-height:1;margin-top:2px;opacity:0.85;}
+.player-clock.warning .time{color:#ff4444!important;animation:timeWarn 1s infinite}
+@keyframes timeWarn{0%,100%{opacity:1}50%{opacity:0.4}}
+.top-right{display:flex;align-items:center;justify-content:flex-end;pointer-events:auto;}
 
-/* العمود الأيمن: زر القائمة */
-.top-right{
-    display:flex;
-    align-items:center;
-    justify-content:flex-end;
-    pointer-events:auto;
-}
-
-/* ============ زر القائمة ============ */
 .menu-icon{
-    font-size:16px;
-    background:linear-gradient(145deg,rgba(30,41,59,0.92),rgba(15,23,42,0.92));
-    color:#ffd700;width:40px;height:40px;
-    border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:16px;background:linear-gradient(145deg,rgba(30,41,59,0.92),rgba(15,23,42,0.92));
+    color:#ffd700;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
     cursor:pointer;border:1.5px solid rgba(201,168,123,0.7);
     box-shadow:0 3px 18px rgba(255,215,0,0.3),inset 0 1px 0 rgba(255,255,255,0.1);
     transition:transform 0.2s, box-shadow 0.2s;
     backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-    will-change:transform;
-    flex-shrink:0;
+    will-change:transform;flex-shrink:0;
 }
 .menu-icon:active{transform:scale(0.9);box-shadow:0 0 25px rgba(255,215,0,0.6)}
 
@@ -198,35 +174,81 @@ body::before{
     color:#ffdfa5;width:34px!important;height:34px;
     padding:0!important;border-radius:50%!important;
     display:flex;align-items:center;justify-content:center;
+    z-index:10;
+}
+.side-menu .section-title{
+    color:#c9a87b;font-size:0.68rem;font-weight:900;
+    padding:4px 8px;text-transform:uppercase;letter-spacing:0.5px;
+    opacity:0.9;
 }
 #colorMenu .color-opt{padding:8px 5px;font-size:0.7rem}
 #colorMenu .color-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
-.overlay{
-    position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9998;display:none;
-    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
-    opacity:0;transition:opacity 0.28s ease;will-change:opacity;
-}
-.overlay.show{display:block;opacity:1}
+.stage-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:6px}
+.stage-btn{padding:8px 4px;font-size:0.68rem;position:relative}
+.stage-btn.locked{opacity:0.4;cursor:not-allowed}
+.stage-btn.locked::after{content:'🔒';position:absolute;top:2px;left:2px;font-size:0.6rem}
+.stage-btn.completed::after{content:'✅';position:absolute;top:2px;left:2px;font-size:0.6rem}
 
-/* ============ حاوية اللوحة ============ */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:6px 0}
+.stat-card{
+    background:linear-gradient(145deg,rgba(44,58,74,0.7),rgba(30,40,54,0.7));
+    border:1px solid rgba(201,168,123,0.3);border-radius:10px;
+    padding:8px;text-align:center;
+}
+.stat-card .val{font-size:1.1rem;font-weight:900;color:#ffd700;line-height:1.2}
+.stat-card .lbl{font-size:0.6rem;color:#a8b0bc;margin-top:2px;font-weight:700}
+body.light-mode .stat-card{background:linear-gradient(145deg,rgba(245,235,215,0.95),rgba(230,215,190,0.95));border-color:rgba(139,90,43,0.4)}
+body.light-mode .stat-card .val{color:#8b5a2b}
+body.light-mode .stat-card .lbl{color:#5a4a3a}
+
+.login-overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:20000;
+    display:none;justify-content:center;align-items:center;padding:20px;
+    backdrop-filter:blur(10px);
+}
+.login-overlay.show{display:flex}
+.login-box{
+    background:linear-gradient(145deg,#2d2a24,#1a1814);
+    padding:26px 22px;border-radius:22px;text-align:center;
+    border:2px solid #ffd700;max-width:340px;width:100%;
+    box-shadow:0 0 60px rgba(255,215,0,0.4);
+}
+.login-box h2{color:#ffd700;font-size:1.2rem;margin-bottom:16px}
+.login-box input{
+    width:100%;padding:11px;border-radius:11px;
+    border:1.5px solid rgba(201,168,123,0.5);
+    background:rgba(15,23,42,0.95);color:#ffd700;
+    text-align:center;font-size:0.9rem;font-family:'Cairo',sans-serif;
+    font-weight:700;margin-bottom:10px;
+}
+.login-box input:focus{outline:none;border-color:#ffd700;box-shadow:0 0 15px rgba(255,215,0,0.4)}
+.login-box button{
+    background:linear-gradient(145deg,#c9772e,#a05a1e);border:none;
+    padding:11px 26px;border-radius:26px;color:white;font-weight:700;
+    font-size:0.85rem;cursor:pointer;font-family:'Cairo',sans-serif;
+    width:100%;margin-top:4px;
+}
+.login-box .skip{background:transparent;border:1px solid rgba(201,168,123,0.4);color:#a8b0bc;margin-top:8px}
+.avatar{
+    width:38px;height:38px;border-radius:50%;
+    background:linear-gradient(145deg,#c9772e,#a05a1e);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:900;color:#fff;font-size:0.95rem;
+    border:2px solid #ffd700;flex-shrink:0;
+}
+
 .app{
-    width:100%;max-width:640px;
-    margin:0 auto;
+    width:100%;max-width:640px;margin:0 auto;
     min-height:100vh;min-height:100dvh;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:8px;
-    padding:calc(64px + env(safe-area-inset-top)) 10px calc(56px + env(safe-area-inset-bottom));
+    gap:8px;padding:calc(64px + env(safe-area-inset-top)) 10px calc(56px + env(safe-area-inset-bottom));
     position:relative;z-index:1;
 }
 .game-container{
     background:linear-gradient(145deg,rgba(42,36,24,0.9),rgba(26,21,16,0.9));
     padding:8px;border-radius:18px;
     border:2px solid transparent;background-clip:padding-box;
-    box-shadow:
-        0 20px 50px rgba(0,0,0,0.85),
-        0 0 0 2px rgba(255,215,0,0.35),
-        inset 0 1px 0 rgba(255,215,0,0.2),
-        inset 0 -2px 8px rgba(0,0,0,0.6);
+    box-shadow:0 20px 50px rgba(0,0,0,0.85),0 0 0 2px rgba(255,215,0,0.35),inset 0 1px 0 rgba(255,215,0,0.2),inset 0 -2px 8px rgba(0,0,0,0.6);
     width:100%;position:relative;
 }
 .board-wrapper{position:relative;width:100%;aspect-ratio:1/1;border-radius:12px;overflow:hidden;box-shadow:inset 0 0 30px rgba(0,0,0,0.6)}
@@ -246,12 +268,16 @@ body::before{
 .cell.last-move{background:rgba(255,215,0,0.15)!important;box-shadow:inset 0 0 0 2px rgba(255,215,0,0.5)}
 .cell.last-move.light{background:linear-gradient(135deg,#f0d9b5,rgba(255,215,0,0.3))!important}
 .cell.last-move.dark{background:linear-gradient(135deg,#1e1e1e,rgba(255,215,0,0.2))!important}
+.cell.hint-from{box-shadow:inset 0 0 0 3px #22c55e,0 0 20px rgba(34,197,94,0.8)!important}
+.cell.hint-to{box-shadow:inset 0 0 0 3px #22c55e,0 0 25px rgba(34,197,94,1)!important;animation:hintPulse 0.8s infinite}
+@keyframes hintPulse{0%,100%{opacity:0.7}50%{opacity:1}}
+.cell.captured-flash{animation:captureFlash 0.5s}
+@keyframes captureFlash{0%{filter:brightness(2.5) saturate(0);transform:scale(1.2)}100%{filter:brightness(1);transform:scale(1)}}
 .piece{width:88%;height:88%;display:flex;align-items:center;justify-content:center;pointer-events:none;will-change:opacity;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.5));z-index:2;position:relative}
 .piece svg{width:100%;height:100%;display:block}
 .thinking{display:inline-block;animation:blink 1s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
 
-/* ============ لوحة الأونلاين ============ */
 .online-panel{
     display:none;margin-top:6px;width:100%;
     background:linear-gradient(145deg,rgba(30,41,59,0.9),rgba(15,23,42,0.9));
@@ -277,13 +303,81 @@ body::before{
 .online-panel button:disabled{opacity:0.4;cursor:not-allowed}
 .online-panel .status-text{color:#ffd700;font-size:0.68rem;text-align:center;font-weight:700;word-break:break-all;margin-top:5px;min-height:14px;}
 
-/* ============ زر المأكولات ============ */
-.captured-wrapper{
-    position:fixed;
-    bottom:calc(14px + env(safe-area-inset-bottom));
-    left:14px;
-    z-index:9990;
+.chat-btn{
+    position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));
+    right:14px;z-index:9990;
+    background:linear-gradient(145deg,rgba(30,41,59,0.95),rgba(15,23,42,0.95));
+    border:1.5px solid rgba(201,168,123,0.7);color:#ffd700;
+    width:44px;height:44px;border-radius:50%;
+    font-size:18px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 18px rgba(0,0,0,0.6);
+    transition:transform 0.15s;
 }
+.chat-btn:active{transform:scale(0.92)}
+.chat-btn .dot{
+    position:absolute;top:2px;right:2px;width:10px;height:10px;
+    background:#ef4444;border-radius:50%;border:2px solid #0a0e1a;
+    display:none;
+}
+.chat-btn .dot.show{display:block;animation:blink 1s infinite}
+.chat-panel{
+    position:fixed;bottom:calc(70px + env(safe-area-inset-bottom));
+    right:14px;width:min(88vw,300px);height:340px;
+    background:linear-gradient(145deg,rgba(26,30,44,0.99),rgba(15,20,32,0.99));
+    border:1px solid rgba(201,168,123,0.55);border-radius:14px;
+    box-shadow:0 15px 50px rgba(0,0,0,0.8);
+    display:flex;flex-direction:column;
+    opacity:0;pointer-events:none;transform:translateY(15px) scale(0.96);
+    transition:all 0.22s cubic-bezier(0.22,1,0.36,1);
+    z-index:9995;
+}
+.chat-panel.open{opacity:1;pointer-events:auto;transform:translateY(0) scale(1)}
+.chat-panel .chat-head{
+    padding:8px 12px;border-bottom:1px solid rgba(201,168,123,0.2);
+    display:flex;justify-content:space-between;align-items:center;
+    color:#ffd700;font-weight:900;font-size:0.8rem;
+}
+.chat-panel .chat-head button{
+    background:transparent;border:none;color:#a8b0bc;font-size:1rem;cursor:pointer;
+}
+.chat-panel .chat-body{
+    flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:5px;
+    -webkit-overflow-scrolling:touch;
+}
+.chat-msg{
+    max-width:80%;padding:6px 10px;border-radius:12px;
+    font-size:0.72rem;line-height:1.4;word-wrap:break-word;
+}
+.chat-msg.me{
+    align-self:flex-end;background:linear-gradient(145deg,#c9772e,#a05a1e);color:#fff;
+    border-bottom-right-radius:3px;
+}
+.chat-msg.them{
+    align-self:flex-start;background:rgba(44,58,74,0.9);color:#f0e6d3;
+    border-bottom-left-radius:3px;
+}
+.chat-msg.sys{
+    align-self:center;background:transparent;color:#a8b0bc;font-size:0.65rem;
+    font-style:italic;text-align:center;
+}
+.chat-panel .chat-foot{
+    display:flex;gap:5px;padding:8px;border-top:1px solid rgba(201,168,123,0.2);
+}
+.chat-panel .chat-foot input{
+    flex:1;padding:7px 10px;border-radius:20px;
+    border:1px solid rgba(201,168,123,0.4);
+    background:rgba(15,23,42,0.9);color:#fff;
+    font-size:0.75rem;font-family:'Cairo',sans-serif;
+}
+.chat-panel .chat-foot input:focus{outline:none;border-color:#ffd700}
+.chat-panel .chat-foot button{
+    background:linear-gradient(145deg,#c9772e,#a05a1e);border:none;
+    padding:0 14px;border-radius:20px;color:#fff;font-weight:700;
+    cursor:pointer;font-size:0.75rem;
+}
+
+.captured-wrapper{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));left:14px;z-index:9990;}
 .captured-btn{
     background:linear-gradient(145deg,rgba(30,41,59,0.95),rgba(15,23,42,0.95));
     border:1.5px solid rgba(201,168,123,0.7);color:#ffd700;
@@ -303,15 +397,14 @@ body::before{
 .captured-btn.open .caret{transform:rotate(180deg)}
 .captured-dropdown{
     position:absolute;bottom:calc(100% + 8px);left:0;
-    transform:translateY(8px) scale(0.96);
-    transform-origin:bottom left;width:min(88vw,360px);
+    transform:translateY(8px) scale(0.96);transform-origin:bottom left;
+    width:min(88vw,360px);
     background:linear-gradient(145deg,rgba(26,30,44,0.98),rgba(15,20,32,0.98));
     border:1px solid rgba(201,168,123,0.55);border-radius:14px;
     box-shadow:0 15px 50px rgba(0,0,0,0.8),0 0 30px rgba(255,215,0,0.15);
     padding:8px 10px;opacity:0;pointer-events:none;
     transition:opacity 0.22s ease, transform 0.22s cubic-bezier(0.22,1,0.36,1);
     z-index:500;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-    will-change:transform, opacity;
 }
 .captured-dropdown.open{opacity:1;pointer-events:auto;transform:translateY(0) scale(1);}
 .captured-dropdown .section{padding:4px 3px;}
@@ -321,7 +414,6 @@ body::before{
 .captured-dropdown .row svg{width:22px;height:22px;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));}
 .captured-dropdown .empty{color:#5a6a7a;font-size:0.66rem;font-style:italic;}
 
-/* ============ نافذة الترقية ============ */
 .promotion-overlay{
     position:fixed;inset:0;background:rgba(0,0,0,0.88);
     display:flex;justify-content:center;align-items:center;
@@ -340,7 +432,6 @@ body::before{
 .promotion-btn span{font-size:0.72rem;font-weight:700;color:#ffd700}
 .promotion-btn:active{transform:scale(0.95);background:#c9772e}
 
-/* ============ شاشة الفائز ============ */
 .winner-overlay{
     position:fixed;inset:0;background:rgba(0,0,0,0.92);
     display:flex;justify-content:center;align-items:center;
@@ -362,6 +453,7 @@ body::before{
     padding:12px 26px;border-radius:28px;color:white;font-weight:700;
     font-size:0.9rem;cursor:pointer;font-family:'Cairo',sans-serif;
     box-shadow:0 4px 20px rgba(201,119,46,0.5);
+    margin:4px;
 }
 .winner-box button:active{transform:scale(0.95)}
 
@@ -373,9 +465,19 @@ body::before{
     border:1px solid #ffd700;font-weight:700;font-size:0.78rem;
     box-shadow:0 10px 40px rgba(0,0,0,0.8);
     transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
-    z-index:13000;max-width:90vw;text-align:center;will-change:transform;
+    z-index:13000;max-width:90vw;text-align:center;
 }
 .toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ✅ إصلاح النقر على overlay */
+.overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,0.7);
+    z-index:9998;display:none;
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    opacity:0;transition:opacity 0.28s ease;
+    pointer-events:none;
+}
+.overlay.show{display:block;opacity:1;pointer-events:auto}
 
 @media (max-width:400px){
     .app{padding:calc(58px + env(safe-area-inset-top)) 6px calc(50px + env(safe-area-inset-bottom))}
@@ -386,15 +488,13 @@ body::before{
     .player-clock .moves{font-size:0.45rem}
     .menu-icon{width:36px;height:36px;font-size:14px}
     .captured-dropdown .row svg{width:18px;height:18px}
+    .chat-panel{width:min(92vw,280px)}
 }
-@media (min-width:700px){
-    .app{max-width:560px;}
-}
+@media (min-width:700px){.app{max-width:560px;}}
 </style>
 </head>
 <body>
 
-<!-- الشريط العلوي المنظّم: عنوان (يسار) | عدادات (منتصف) | زر (يمين) -->
 <div class="top-bar">
     <div class="top-left">
         <h1>♛ CHESS MASTER</h1>
@@ -415,18 +515,57 @@ body::before{
     </div>
 </div>
 
-<!-- القائمة الجانبية -->
 <div class="side-menu" id="sideMenu">
     <button class="close-btn" id="closeMenuBtn">✖</button>
+
+    <div class="section-title">👤 الحساب</div>
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;">
+        <div class="avatar" id="userAvatar">?</div>
+        <div style="flex:1;min-width:0;">
+            <div id="userName" style="font-weight:900;font-size:0.8rem;color:#ffd700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ضيف</div>
+            <div id="userSub" style="font-size:0.6rem;color:#a8b0bc;">لم تسجل دخول</div>
+        </div>
+    </div>
+    <button id="loginBtn">🔑 تسجيل الدخول</button>
+    <button id="logoutBtn" style="display:none">🚪 خروج</button>
+    <hr>
+
+    <div class="section-title">🎮 وضع اللعب</div>
     <button id="vsComputerBtn">🤖 ضد الكمبيوتر</button>
     <button id="vsLocalBtn">👥 ضد صديق</button>
-    <button id="vsOnlineBtn">📡 ضد صديق (أونلاين)</button>
+    <button id="vsOnlineBtn">📡 أونلاين</button>
     <hr>
-    <button id="diffMediumBtn">⚡ متوسط</button>
-    <button id="diffHardBtn">🔥 صعب</button>
-    <button id="diffInsaneBtn">💀 مستحيل</button>
+
+    <div class="section-title">🏆 المراحل</div>
+    <div class="stage-grid" id="stageGrid"></div>
     <hr>
+
+    <div class="section-title">📊 إحصائياتي</div>
+    <div class="stats-grid">
+        <div class="stat-card"><div class="val" id="statWins">0</div><div class="lbl">فوز</div></div>
+        <div class="stat-card"><div class="val" id="statLosses">0</div><div class="lbl">خسارة</div></div>
+        <div class="stat-card"><div class="val" id="statDraws">0</div><div class="lbl">تعادل</div></div>
+        <div class="stat-card"><div class="val" id="statGames">0</div><div class="lbl">مباريات</div></div>
+        <div class="stat-card"><div class="val" id="statRate">0%</div><div class="lbl">نسبة الفوز</div></div>
+        <div class="stat-card"><div class="val" id="statStreak">0</div><div class="lbl">سلسلة</div></div>
+    </div>
+    <button id="viewStatsBtn">📈 عرض كل الإحصائيات</button>
+    <hr>
+
+    <div class="section-title">⚙️ الإعدادات</div>
+    <button id="toggleThemeBtn">☀️ الوضع النهاري</button>
+    <button id="toggleSoundBtn">🔊 الصوت: مفعل</button>
+    <button id="toggleAnimBtn">✨ الحركات: مفعلة</button>
     <button id="openColorsBtn">🎨 الألوان</button>
+    <button id="openTimeBtn">⏱️ وقت اللعبة</button>
+    <hr>
+
+    <div class="section-title">🛠️ أدوات</div>
+    <button id="undoBtn">↩️ تراجع عن حركة</button>
+    <button id="hintBtn">💡 تلميح</button>
+    <button id="saveGameBtn">💾 حفظ اللعبة</button>
+    <button id="loadGameBtn">📂 استعادة اللعبة</button>
+    <button id="resetGameBtn">🔄 لعبة جديدة</button>
 </div>
 
 <div class="side-menu" id="colorMenu" style="z-index:10001">
@@ -449,10 +588,30 @@ body::before{
     </div>
 </div>
 
+<div class="side-menu" id="timeMenu" style="z-index:10001">
+    <button class="close-btn" id="closeTimeBtn">✖</button>
+    <button class="close-btn" id="backFromTimeBtn" style="left:56px;font-size:11px;background:#5a4a3a!important;border-radius:28px!important;padding:5px 10px!important;width:auto!important;height:auto!important">↩️ رجوع</button>
+    <hr>
+    <button class="time-opt" data-time="60">⚡ دقيقة واحدة</button>
+    <button class="time-opt" data-time="180">🕒 3 دقائق</button>
+    <button class="time-opt" data-time="300">🕔 5 دقائق</button>
+    <button class="time-opt" data-time="600">🕙 10 دقائق</button>
+    <button class="time-opt" data-time="1800">🕐 30 دقيقة</button>
+    <button class="time-opt" data-time="0">♾️ بدون وقت</button>
+</div>
+
+<div class="side-menu" id="statsMenu" style="z-index:10001;width:340px">
+    <button class="close-btn" id="closeStatsBtn">✖</button>
+    <h3 style="color:#ffd700;text-align:center;margin:8px 0;font-size:0.95rem">📊 الإحصائيات الكاملة</h3>
+    <hr>
+    <div id="fullStatsContent" style="font-size:0.75rem;line-height:1.8;color:#e0e0e0"></div>
+</div>
+
 <div class="overlay" id="overlay"></div>
 <div class="overlay" id="overlayColor"></div>
+<div class="overlay" id="overlayTime"></div>
+<div class="overlay" id="overlayStats"></div>
 
-<!-- الحاوية الرئيسية: اللوحة في المنتصف -->
 <div class="app">
     <div class="game-container">
         <div class="board-wrapper">
@@ -470,7 +629,6 @@ body::before{
     </div>
 </div>
 
-<!-- زر المأكولات في الزاوية السفلية اليسرى -->
 <div class="captured-wrapper">
     <button class="captured-btn" id="capturedBtn">
         🍽️ المأكولات
@@ -486,6 +644,31 @@ body::before{
             <span class="label">⬛ مأكولات الأسود (القطع البيضاء)</span>
             <div class="row" id="capturedBlackList"><span class="empty">لا يوجد</span></div>
         </div>
+    </div>
+</div>
+
+<button class="chat-btn" id="chatBtn">💬<span class="dot" id="chatDot"></span></button>
+<div class="chat-panel" id="chatPanel">
+    <div class="chat-head">
+        <span>💬 المحادثة</span>
+        <button id="closeChatBtn">✖</button>
+    </div>
+    <div class="chat-body" id="chatBody">
+        <div class="chat-msg sys">ابدأ المحادثة...</div>
+    </div>
+    <div class="chat-foot">
+        <input type="text" id="chatInput" placeholder="اكتب رسالة..." maxlength="200" />
+        <button id="sendChatBtn">➤</button>
+    </div>
+</div>
+
+<div class="login-overlay" id="loginOverlay">
+    <div class="login-box">
+        <div style="font-size:2.5rem;margin-bottom:6px">♛</div>
+        <h2>مرحباً بك في Chess Master</h2>
+        <input type="text" id="loginName" placeholder="اسمك (اختياري)" maxlength="20" />
+        <button id="doLoginBtn">🎮 ابدأ اللعب</button>
+        <button class="skip" id="skipLoginBtn">متابعة كضيف</button>
     </div>
 </div>
 
@@ -509,11 +692,258 @@ const PIECE_SVG = {
     'black_pawn': `<svg viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg"><path d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill="#1e1e1e" stroke="#000" stroke-width="1.5" stroke-linecap="round"/></svg>`
 };
 
-// ========== حالة اللعبة ==========
+// ==========================================================
+// نظام التخزين
+// ==========================================================
+const STORAGE = {
+    USER: 'cm_user',
+    STATS: 'cm_stats',
+    SETTINGS: 'cm_settings',
+    PROGRESS: 'cm_progress',
+    SAVED_GAME: 'cm_saved_game',
+    MODE_STATES: 'cm_mode_states'
+};
+
+const DEFAULT_SETTINGS = {
+    theme: 'dark',
+    sound: true,
+    animations: true,
+    boardColors: { light: '#f0d9b5', dark: '#1e1e1e' },
+    gameTime: 600
+};
+
+function loadJSON(key, def){
+    try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; }
+    catch(e){ return def; }
+}
+function saveJSON(key, val){
+    try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){}
+}
+
+let settings = Object.assign({}, DEFAULT_SETTINGS, loadJSON(STORAGE.SETTINGS, {}));
+let user = loadJSON(STORAGE.USER, null);
+let stats = loadJSON(STORAGE.STATS, {
+    wins: 0, losses: 0, draws: 0, games: 0,
+    streak: 0, bestStreak: 0,
+    totalMoves: 0, totalTime: 0,
+    captures: 0, castles: 0, promotions: 0, checks: 0,
+    stageWins: {}, stageLosses: {},
+    history: []
+});
+let progress = loadJSON(STORAGE.PROGRESS, {
+    currentStage: 1,
+    completed: []
+});
+
+function saveStats(){ saveJSON(STORAGE.STATS, stats); refreshStatsUI(); }
+function saveSettings(){ saveJSON(STORAGE.SETTINGS, settings); }
+function saveUser(){ saveJSON(STORAGE.USER, user); }
+function saveProgress(){ saveJSON(STORAGE.PROGRESS, progress); }
+
+// ==========================================================
+// نظام حالة كل نمط
+// ==========================================================
+function getModeStates(){ return loadJSON(STORAGE.MODE_STATES, {}); }
+function saveModeStates(s){ saveJSON(STORAGE.MODE_STATES, s); }
+
+// ==========================================================
+// الصوت
+// ==========================================================
+const Sound = (function(){
+    let ctx = null;
+    function getCtx(){
+        if(!ctx){
+            try{ ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+            catch(e){ return null; }
+        }
+        if(ctx.state === 'suspended') ctx.resume();
+        return ctx;
+    }
+    function play(freq, dur, type, vol){
+        if(!settings.sound) return;
+        const c = getCtx(); if(!c) return;
+        try{
+            const osc = c.createOscillator();
+            const gain = c.createGain();
+            osc.type = type || 'sine';
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(vol || 0.15, c.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + dur);
+            osc.connect(gain); gain.connect(c.destination);
+            osc.start(); osc.stop(c.currentTime + dur);
+        }catch(e){}
+    }
+    return {
+        move(){ play(400, 0.08, 'triangle', 0.12); },
+        capture(){ play(180, 0.15, 'sawtooth', 0.18); },
+        check(){ play(700, 0.12, 'square', 0.15); setTimeout(()=>play(900,0.12,'square',0.15),120); },
+        win(){ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>play(f,0.2,'sine',0.18), i*120)); },
+        lose(){ [400,350,300,250].forEach((f,i)=>setTimeout(()=>play(f,0.2,'sine',0.15), i*130)); },
+        draw(){ [440,440].forEach((f,i)=>setTimeout(()=>play(f,0.2,'sine',0.15), i*150)); },
+        click(){ play(600, 0.05, 'sine', 0.08); },
+        warn(){ play(300, 0.1, 'square', 0.15); },
+        chat(){ play(880, 0.08, 'sine', 0.12); setTimeout(()=>play(1100,0.08,'sine',0.12),80); }
+    };
+})();
+
+// ==========================================================
+// الثيم
+// ==========================================================
+function applyTheme(){
+    if(settings.theme === 'light') document.body.classList.add('light-mode');
+    else document.body.classList.remove('light-mode');
+    const btn = document.getElementById('toggleThemeBtn');
+    if(btn) btn.textContent = settings.theme === 'light' ? '🌙 الوضع الليلي' : '☀️ الوضع النهاري';
+}
+
+// ==========================================================
+// المستخدم
+// ==========================================================
+function applyUser(){
+    const name = user && user.name ? user.name : 'ضيف';
+    const avatar = document.getElementById('userAvatar');
+    const nameEl = document.getElementById('userName');
+    const subEl = document.getElementById('userSub');
+    if(avatar) avatar.textContent = name.charAt(0).toUpperCase();
+    if(nameEl) nameEl.textContent = name;
+    if(subEl){
+        if(user && user.loggedIn){
+            const d = user.createdAt ? new Date(user.createdAt).toLocaleDateString('ar-EG') : '';
+            subEl.textContent = 'مسجل منذ ' + d;
+        } else {
+            subEl.textContent = 'لم تسجل دخول';
+        }
+    }
+    document.getElementById('loginBtn').style.display = (user && user.loggedIn) ? 'none' : 'block';
+    document.getElementById('logoutBtn').style.display = (user && user.loggedIn) ? 'block' : 'none';
+}
+
+function refreshStatsUI(){
+    const rate = stats.games > 0 ? Math.round((stats.wins / stats.games) * 100) : 0;
+    document.getElementById('statWins').textContent = stats.wins;
+    document.getElementById('statLosses').textContent = stats.losses;
+    document.getElementById('statDraws').textContent = stats.draws;
+    document.getElementById('statGames').textContent = stats.games;
+    document.getElementById('statRate').textContent = rate + '%';
+    document.getElementById('statStreak').textContent = stats.streak;
+}
+
+function renderFullStats(){
+    const rate = stats.games > 0 ? Math.round((stats.wins / stats.games) * 100) : 0;
+    const avgMoves = stats.games > 0 ? Math.round(stats.totalMoves / stats.games) : 0;
+    const totalMin = Math.floor(stats.totalTime / 60);
+    let html = `
+        <div style="background:rgba(201,119,46,0.15);padding:10px;border-radius:10px;margin-bottom:10px;text-align:center">
+            <div style="font-size:1.6rem;font-weight:900;color:#ffd700">${stats.games}</div>
+            <div style="font-size:0.65rem;color:#a8b0bc">إجمالي المباريات</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+            <div style="text-align:center;padding:8px;background:rgba(34,197,94,0.15);border-radius:8px">
+                <div style="color:#22c55e;font-weight:900">${stats.wins}</div>
+                <div style="font-size:0.6rem">فوز</div>
+            </div>
+            <div style="text-align:center;padding:8px;background:rgba(239,68,68,0.15);border-radius:8px">
+                <div style="color:#ef4444;font-weight:900">${stats.losses}</div>
+                <div style="font-size:0.6rem">خسارة</div>
+            </div>
+            <div style="text-align:center;padding:8px;background:rgba(168,176,188,0.15);border-radius:8px">
+                <div style="color:#a8b0bc;font-weight:900">${stats.draws}</div>
+                <div style="font-size:0.6rem">تعادل</div>
+            </div>
+            <div style="text-align:center;padding:8px;background:rgba(255,215,0,0.15);border-radius:8px">
+                <div style="color:#ffd700;font-weight:900">${rate}%</div>
+                <div style="font-size:0.6rem">نسبة الفوز</div>
+            </div>
+        </div>
+        <hr style="border:none;border-top:1px solid rgba(201,168,123,0.2);margin:10px 0">
+        <div style="font-size:0.7rem;color:#c9a87b;font-weight:900;margin-bottom:6px">🔥 السلسلة</div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span>السلسلة الحالية</span><span style="color:#ffd700;font-weight:900">${stats.streak}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span>أطول سلسلة</span><span style="color:#ffd700;font-weight:900">${stats.bestStreak}</span>
+        </div>
+        <hr style="border:none;border-top:1px solid rgba(201,168,123,0.2);margin:10px 0">
+        <div style="font-size:0.7rem;color:#c9a87b;font-weight:900;margin-bottom:6px">♟️ إحصائيات اللعب</div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>إجمالي الحركات</span><span style="color:#ffd700">${stats.totalMoves}</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>متوسط الحركات/مباراة</span><span style="color:#ffd700">${avgMoves}</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>وقت اللعب الكلي</span><span style="color:#ffd700">${totalMin} د</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>عدد الأكلات</span><span style="color:#ffd700">${stats.captures}</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>التبييتات</span><span style="color:#ffd700">${stats.castles}</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>ترقيات البيادق</span><span style="color:#ffd700">${stats.promotions}</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>حالات الكش</span><span style="color:#ffd700">${stats.checks}</span></div>
+        <hr style="border:none;border-top:1px solid rgba(201,168,123,0.2);margin:10px 0">
+        <div style="font-size:0.7rem;color:#c9a87b;font-weight:900;margin-bottom:6px">🏆 المراحل المكتملة</div>
+        <div style="color:#ffd700;font-weight:900">${progress.completed.length} / 10</div>
+    `;
+    document.getElementById('fullStatsContent').innerHTML = html;
+}
+
+// ==========================================================
+// المراحل
+// ==========================================================
+const STAGES = [
+    { id: 1, name: 'مبتدئ', depth: 1, delay: 800, reward: 50 },
+    { id: 2, name: 'سهل', depth: 1, delay: 600, reward: 75 },
+    { id: 3, name: 'عادي', depth: 2, delay: 500, reward: 100 },
+    { id: 4, name: 'متوسط', depth: 2, delay: 400, reward: 150 },
+    { id: 5, name: 'متقدم', depth: 3, delay: 350, reward: 200 },
+    { id: 6, name: 'صعب', depth: 3, delay: 300, reward: 300 },
+    { id: 7, name: 'خبير', depth: 4, delay: 250, reward: 400 },
+    { id: 8, name: 'محترف', depth: 4, delay: 200, reward: 500 },
+    { id: 9, name: 'أسطوري', depth: 5, delay: 150, reward: 750 },
+    { id: 10, name: 'مستحيل', depth: 6, delay: 100, reward: 1000 }
+];
+
+let currentStage = progress.currentStage;
+
+function renderStages(){
+    const grid = document.getElementById('stageGrid');
+    if(!grid) return;
+    grid.innerHTML = '';
+    STAGES.forEach(st => {
+        const btn = document.createElement('button');
+        const done = progress.completed.includes(st.id);
+        const unlocked = st.id <= progress.currentStage;
+        btn.className = 'stage-btn' + (done ? ' completed' : '') + (!unlocked ? ' locked' : '');
+        btn.textContent = st.id;
+        btn.title = st.name;
+        if(!unlocked){ btn.disabled = true; }
+        btn.addEventListener('click', () => {
+            if(!unlocked){ showToast('🔒 اكمل المراحل السابقة أولاً'); return; }
+            // احفظ الحالة الحالية قبل التبديل
+            if(gameMode === 'computer') persistModeState('computer');
+            currentStage = st.id;
+            gameMode = 'computer';
+            difficulty = 'stage_' + st.id;
+            hideOnlinePanel();
+            updateMenuStates();
+            // حاول استعادة حالة هذه المرحلة
+            const restored = tryRestoreModeState('computer');
+            if(!restored) resetGame();
+            closeAllMenus();
+            showToast(`🏆 المرحلة ${st.id}: ${st.name}`);
+        });
+        if(st.id === currentStage) btn.classList.add('active');
+        grid.appendChild(btn);
+    });
+}
+
+function getStageConfig(){
+    if(typeof difficulty === 'string' && difficulty.startsWith('stage_')){
+        const id = parseInt(difficulty.split('_')[1]);
+        return STAGES.find(s => s.id === id) || STAGES[0];
+    }
+    return null;
+}
+
+// ==========================================================
+// حالة اللعبة
+// ==========================================================
 let board = Array(8).fill().map(()=>Array(8).fill(null));
 let turn = 'white';
 let gameMode = 'computer';
-let difficulty = 'medium';
+let difficulty = 'stage_1';
 let selectedRow = null, selectedCol = null;
 let gameOver = false;
 let winner = null;
@@ -535,8 +965,18 @@ const pieceValue={pawn:1,knight:3,bishop:3,rook:5,queen:9,king:100};
 let cellElements=[];
 let isAnimating=false;
 
-// ========== الساعات والعدادات ==========
-const INITIAL_TIME = 10 * 60;
+let moveHistory = [];
+let gameStartTime = 0;
+let gameMoveCounter = 0;
+let gameCaptures = 0;
+let gameCastles = 0;
+let gamePromotions = 0;
+let gameChecks = 0;
+
+// ==========================================================
+// الساعات
+// ==========================================================
+let INITIAL_TIME = settings.gameTime || 600;
 let whiteTime = INITIAL_TIME;
 let blackTime = INITIAL_TIME;
 let whiteMovesCount = 0;
@@ -564,32 +1004,25 @@ function updateClockDisplay(){
     if(wc && bc){
         wc.classList.toggle('active', turn==='white' && !gameOver);
         bc.classList.toggle('active', turn==='black' && !gameOver);
+        wc.classList.toggle('warning', whiteTime <= 30 && whiteTime > 0 && turn==='white' && !gameOver);
+        bc.classList.toggle('warning', blackTime <= 30 && blackTime > 0 && turn==='black' && !gameOver);
     }
 }
 function startClock(){
     if(clockRunning) return;
+    if(INITIAL_TIME === 0) return;
     clockRunning = true;
     if(clockInterval) clearInterval(clockInterval);
     clockInterval = setInterval(()=>{
         if(gameOver) return;
         if(turn==='white'){
             whiteTime--;
-            if(whiteTime<=0){
-                whiteTime=0;
-                updateClockDisplay();
-                stopClock();
-                setGameOver('الأسود');
-                return;
-            }
+            if(whiteTime<=0){ whiteTime=0; updateClockDisplay(); stopClock(); setGameOver('الأسود'); return; }
+            if(whiteTime <= 30) Sound.warn();
         }else{
             blackTime--;
-            if(blackTime<=0){
-                blackTime=0;
-                updateClockDisplay();
-                stopClock();
-                setGameOver('الأبيض');
-                return;
-            }
+            if(blackTime<=0){ blackTime=0; updateClockDisplay(); stopClock(); setGameOver('الأبيض'); return; }
+            if(blackTime <= 30) Sound.warn();
         }
         updateClockDisplay();
     },1000);
@@ -762,8 +1195,82 @@ function setGameOver(winnerColor){
     gameOver=true;winner=winnerColor;
     stopClock();
     updateClockDisplay();
+    recordGameResult(winnerColor);
     setTimeout(showWinnerScreen,500);
 }
+
+function recordGameResult(winnerColor){
+    const elapsed = Math.floor((Date.now() - gameStartTime) / 1000);
+    stats.games++;
+    stats.totalMoves += gameMoveCounter;
+    stats.totalTime += elapsed;
+    stats.captures += gameCaptures;
+    stats.castles += gameCastles;
+    stats.promotions += gamePromotions;
+    stats.checks += gameChecks;
+
+    const stage = getStageConfig();
+    let playerWon = false, playerLost = false;
+
+    if(winnerColor === 'تعادل'){
+        stats.draws++;
+        stats.streak = 0;
+        Sound.draw();
+    }else if(gameMode === 'computer'){
+        if(winnerColor === 'الأبيض'){
+            stats.wins++;
+            stats.streak++;
+            if(stats.streak > stats.bestStreak) stats.bestStreak = stats.streak;
+            playerWon = true;
+            Sound.win();
+            if(stage){
+                stats.stageWins[stage.id] = (stats.stageWins[stage.id] || 0) + 1;
+                if(!progress.completed.includes(stage.id)){
+                    progress.completed.push(stage.id);
+                }
+                if(stage.id === progress.currentStage && progress.currentStage < 10){
+                    progress.currentStage = stage.id + 1;
+                    setTimeout(()=>showToast(`🎉 فتحت المرحلة ${progress.currentStage}!`), 1500);
+                }
+                saveProgress();
+                renderStages();
+            }
+        }else{
+            stats.losses++;
+            stats.streak = 0;
+            playerLost = true;
+            Sound.lose();
+            if(stage){
+                stats.stageLosses[stage.id] = (stats.stageLosses[stage.id] || 0) + 1;
+            }
+        }
+    }else if(gameMode === 'local'){
+        if(winnerColor === 'الأبيض'){ stats.wins++; playerWon = true; Sound.win(); }
+        else { stats.losses++; playerLost = true; Sound.lose(); }
+    }else if(gameMode === 'online'){
+        if(winnerColor === (myColor === 'white' ? 'الأبيض' : 'الأسود')){
+            stats.wins++; stats.streak++;
+            if(stats.streak > stats.bestStreak) stats.bestStreak = stats.streak;
+            playerWon = true; Sound.win();
+        }else{
+            stats.losses++; stats.streak = 0;
+            playerLost = true; Sound.lose();
+        }
+    }
+
+    stats.history.push({
+        date: Date.now(),
+        result: playerWon ? 'win' : (playerLost ? 'loss' : 'draw'),
+        mode: gameMode,
+        stage: stage ? stage.id : null,
+        moves: gameMoveCounter,
+        time: elapsed
+    });
+    if(stats.history.length > 20) stats.history.shift();
+
+    saveStats();
+}
+
 function showWinnerScreen(){
     let overlay=document.createElement('div');
     overlay.className='winner-overlay';
@@ -772,10 +1279,15 @@ function showWinnerScreen(){
     overlay.innerHTML=`<div class="winner-box">
         <div class="emoji">${emoji}</div>
         <h2>${text}</h2>
-        <button id="newGameFromWinner">لعبة جديدة</button>
+        <button id="newGameFromWinner">🔄 لعبة جديدة</button>
     </div>`;
     document.body.appendChild(overlay);
-    overlay.querySelector('#newGameFromWinner').onclick=()=>{overlay.remove();resetGame();};
+    overlay.querySelector('#newGameFromWinner').onclick=()=>{
+        overlay.remove();
+        // امسح الحالة لأن اللعبة انتهت
+        clearModeState(gameMode);
+        resetGame();
+    };
 }
 function showPromotionDialog(row,col,color){
     pendingPromotion={row,col,color};
@@ -794,49 +1306,346 @@ function showPromotionDialog(row,col,color){
             board[row][col]=`${color}_${type}`;
             dialog.remove();
             pendingPromotion=null;
+            gamePromotions++;
             let state=getGameState(board,turn);
             if(state==='checkmate')setGameOver(turn==='white'?'الأسود':'الأبيض');
-            else if(state==='stalemate'){gameOver=true;winner='تعادل';stopClock();setTimeout(showWinnerScreen,500);}
+            else if(state==='stalemate'){gameOver=true;winner='تعادل';stopClock();recordGameResult('تعادل');setTimeout(showWinnerScreen,500);}
             renderBoard();
             if(gameMode==='computer'&&turn==='black'&&!gameOver)scheduleComputerMove();
             if(gameMode==='online')sendGameState();
         });
     });
 }
+
+// ==========================================================
+// محرك الكمبيوتر
+// ==========================================================
+const PST = {
+    pawn: [
+        [0,0,0,0,0,0,0,0],
+        [50,50,50,50,50,50,50,50],
+        [10,10,20,30,30,20,10,10],
+        [5,5,10,25,25,10,5,5],
+        [0,0,0,20,20,0,0,0],
+        [5,-5,-10,0,0,-10,-5,5],
+        [5,10,10,-20,-20,10,10,5],
+        [0,0,0,0,0,0,0,0]
+    ],
+    knight: [
+        [-50,-40,-30,-30,-30,-30,-40,-50],
+        [-40,-20,0,0,0,0,-20,-40],
+        [-30,0,10,15,15,10,0,-30],
+        [-30,5,15,20,20,15,5,-30],
+        [-30,0,15,20,20,15,0,-30],
+        [-30,5,10,15,15,10,5,-30],
+        [-40,-20,0,5,5,0,-20,-40],
+        [-50,-40,-30,-30,-30,-30,-40,-50]
+    ],
+    bishop: [
+        [-20,-10,-10,-10,-10,-10,-10,-20],
+        [-10,0,0,0,0,0,0,-10],
+        [-10,0,5,10,10,5,0,-10],
+        [-10,5,5,10,10,5,5,-10],
+        [-10,0,10,10,10,10,0,-10],
+        [-10,10,10,10,10,10,10,-10],
+        [-10,5,0,0,0,0,5,-10],
+        [-20,-10,-10,-10,-10,-10,-10,-20]
+    ],
+    rook: [
+        [0,0,0,0,0,0,0,0],
+        [5,10,10,10,10,10,10,5],
+        [-5,0,0,0,0,0,0,-5],
+        [-5,0,0,0,0,0,0,-5],
+        [-5,0,0,0,0,0,0,-5],
+        [-5,0,0,0,0,0,0,-5],
+        [-5,0,0,0,0,0,0,-5],
+        [0,0,0,5,5,0,0,0]
+    ],
+    queen: [
+        [-20,-10,-10,-5,-5,-10,-10,-20],
+        [-10,0,0,0,0,0,0,-10],
+        [-10,0,5,5,5,5,0,-10],
+        [-5,0,5,5,5,5,0,-5],
+        [0,0,5,5,5,5,0,-5],
+        [-10,5,5,5,5,5,0,-10],
+        [-10,0,5,0,0,0,0,-10],
+        [-20,-10,-10,-5,-5,-10,-10,-20]
+    ],
+    king: [
+        [-30,-40,-40,-50,-50,-40,-40,-30],
+        [-30,-40,-40,-50,-50,-40,-40,-30],
+        [-30,-40,-40,-50,-50,-40,-40,-30],
+        [-30,-40,-40,-50,-50,-40,-40,-30],
+        [-20,-30,-30,-40,-40,-30,-30,-20],
+        [-10,-20,-20,-20,-20,-20,-20,-10],
+        [20,20,0,0,0,0,20,20],
+        [20,30,10,0,0,10,30,20]
+    ]
+};
+
+function evaluateBoard(b){
+    let score = 0;
+    for(let i=0;i<8;i++){
+        for(let j=0;j<8;j++){
+            const p = b[i][j];
+            if(!p) continue;
+            const [color, type] = p.split('_');
+            const val = pieceValue[type] || 0;
+            const pst = PST[type] ? PST[type][i][j] / 100 : 0;
+            if(color === 'black') score += val * 10 + pst;
+            else score -= val * 10 + pst;
+        }
+    }
+    return score;
+}
+
+function minimax(b, depth, alpha, beta, maximizing){
+    const state = getGameState(b, maximizing ? 'black' : 'white');
+    if(state === 'checkmate') return maximizing ? -100000 + (10-depth) : 100000 - (10-depth);
+    if(state === 'stalemate') return 0;
+    if(depth === 0) return evaluateBoard(b);
+
+    const moves = getAllValidMoves(maximizing ? 'black' : 'white', b);
+    if(moves.length === 0) return evaluateBoard(b);
+
+    if(maximizing){
+        let maxEval = -Infinity;
+        for(const m of moves){
+            const nb = copyBoard(b);
+            nb[m.to[0]][m.to[1]] = nb[m.from[0]][m.from[1]];
+            nb[m.from[0]][m.from[1]] = null;
+            if(m.piece.endsWith('_pawn') && m.to[0] === 7) nb[m.to[0]][m.to[1]] = 'black_queen';
+            const ev = minimax(nb, depth-1, alpha, beta, false);
+            if(ev > maxEval) maxEval = ev;
+            alpha = Math.max(alpha, ev);
+            if(beta <= alpha) break;
+        }
+        return maxEval;
+    } else {
+        let minEval = Infinity;
+        for(const m of moves){
+            const nb = copyBoard(b);
+            nb[m.to[0]][m.to[1]] = nb[m.from[0]][m.from[1]];
+            nb[m.from[0]][m.from[1]] = null;
+            if(m.piece.endsWith('_pawn') && m.to[0] === 0) nb[m.to[0]][m.to[1]] = 'white_queen';
+            const ev = minimax(nb, depth-1, alpha, beta, true);
+            if(ev < minEval) minEval = ev;
+            beta = Math.min(beta, ev);
+            if(beta <= alpha) break;
+        }
+        return minEval;
+    }
+}
+
 function getComputerMove(){
     let moves=getAllValidMoves('black',board);
     if(!moves.length)return null;
-    let scored=moves.map(m=>{
-        let score=0;
-        let target=board[m.to[0]][m.to[1]];
-        if(target&&target.startsWith('white'))score+=(pieceValue[target.split('_')[1]]||0)*10;
-        let temp=copyBoard(board);
-        temp[m.to[0]][m.to[1]]=temp[m.from[0]][m.from[1]];
-        temp[m.from[0]][m.from[1]]=null;
-        if(isKingInCheck(temp,'white'))score+=50;
-        if(isKingInCheck(temp,'black'))score-=30;
-        let centerDist=Math.abs(m.to[0]-3.5)+Math.abs(m.to[1]-3.5);
-        score+=(7-centerDist)*0.5;
-        return{move:m,score};
-    });
-    scored.sort((a,b)=>b.score-a.score);
-    if(difficulty==='medium'){
-        let top=Math.max(1,Math.floor(scored.length*0.4));
-        return scored[Math.floor(Math.random()*top)].move;
-    }else if(difficulty==='hard'){
-        let top=Math.max(1,Math.floor(scored.length*0.2));
-        return scored[Math.floor(Math.random()*top)].move;
-    }else return scored[0].move;
+
+    const stage = getStageConfig();
+    const depth = stage ? stage.depth : 3;
+
+    if(stage && stage.id <= 2) return moves[Math.floor(Math.random() * moves.length)];
+
+    let bestMove = null;
+    let bestScore = -Infinity;
+    const alpha = -Infinity, beta = Infinity;
+
+    for(const m of moves){
+        const nb = copyBoard(board);
+        nb[m.to[0]][m.to[1]] = nb[m.from[0]][m.from[1]];
+        nb[m.from[0]][m.from[1]] = null;
+        if(m.piece.endsWith('_pawn') && m.to[0] === 7) nb[m.to[0]][m.to[1]] = 'black_queen';
+        const score = minimax(nb, depth-1, alpha, beta, false);
+        const finalScore = score + Math.random() * 0.1;
+        if(finalScore > bestScore){ bestScore = finalScore; bestMove = m; }
+    }
+
+    if(stage && stage.id <= 4 && Math.random() < 0.15) return moves[Math.floor(Math.random() * moves.length)];
+    return bestMove;
 }
+
 function scheduleComputerMove(){
     if(computerTimeout)clearTimeout(computerTimeout);
+    const stage = getStageConfig();
+    const delay = stage ? stage.delay : 400;
     computerTimeout=setTimeout(()=>{
         if(gameMode==='computer'&&turn==='black'&&!gameOver&&!pendingPromotion){
             let move=getComputerMove();
             if(move)makeMove(move.from[0],move.from[1],move.to[0],move.to[1],true);
         }
-    },350);
+    },delay);
 }
+
+// ==========================================================
+// التلميح
+// ==========================================================
+function showHint(){
+    if(gameOver){ showToast('اللعبة انتهت'); return; }
+    if(!canPlayerMove(turn)){ showToast('ليس دورك'); return; }
+    const moves = getAllValidMoves('white', board);
+    if(!moves.length){ showToast('لا توجد حركات'); return; }
+    let best = moves[0], bestScore = -Infinity;
+    for(const m of moves){
+        let score = 0;
+        const t = board[m.to[0]][m.to[1]];
+        if(t) score += (pieceValue[t.split('_')[1]] || 0) * 10;
+        const nb = copyBoard(board);
+        nb[m.to[0]][m.to[1]] = nb[m.from[0]][m.from[1]];
+        nb[m.from[0]][m.from[1]] = null;
+        if(isKingInCheck(nb, 'black')) score += 30;
+        if(isKingInCheck(nb, 'white')) score -= 50;
+        score += (7 - (Math.abs(m.to[0]-3.5) + Math.abs(m.to[1]-3.5))) * 0.5;
+        if(score > bestScore){ bestScore = score; best = m; }
+    }
+    const boardEl = document.getElementById('chessboard');
+    document.querySelectorAll('.cell.hint-from, .cell.hint-to').forEach(c=>{
+        c.classList.remove('hint-from', 'hint-to');
+    });
+    const fromCell = boardEl.children[best.from[0]*8 + best.from[1]];
+    const toCell = boardEl.children[best.to[0]*8 + best.to[1]];
+    if(fromCell) fromCell.classList.add('hint-from');
+    if(toCell) toCell.classList.add('hint-to');
+    setTimeout(()=>{
+        if(fromCell) fromCell.classList.remove('hint-from');
+        if(toCell) toCell.classList.remove('hint-to');
+    }, 3000);
+    showToast(`💡 اقتراح: ${squareName(best.from)} → ${squareName(best.to)}`);
+}
+function squareName(pos){
+    const files = 'abcdefgh';
+    return files[pos[1]] + (8 - pos[0]);
+}
+
+// ==========================================================
+// Snapshot / Undo
+// ==========================================================
+function snapshotState(){
+    return {
+        board: copyBoard(board),
+        turn,
+        whiteKingMoved, blackKingMoved,
+        whiteRookMoved: {...whiteRookMoved},
+        blackRookMoved: {...blackRookMoved},
+        capturedWhite: [...capturedWhite],
+        capturedBlack: [...capturedBlack],
+        lastMove: lastMove ? {from:[...lastMove.from], to:[...lastMove.to]} : null,
+        whiteTime, blackTime, whiteMovesCount, blackMovesCount,
+        gameMoveCounter, gameCaptures, gameCastles, gamePromotions, gameChecks
+    };
+}
+function restoreState(s){
+    board = copyBoard(s.board);
+    turn = s.turn;
+    whiteKingMoved = s.whiteKingMoved;
+    blackKingMoved = s.blackKingMoved;
+    whiteRookMoved = {...s.whiteRookMoved};
+    blackRookMoved = {...s.blackRookMoved};
+    capturedWhite = [...s.capturedWhite];
+    capturedBlack = [...s.capturedBlack];
+    lastMove = s.lastMove ? {from:[...s.lastMove.from], to:[...s.lastMove.to]} : null;
+    whiteTime = s.whiteTime;
+    blackTime = s.blackTime;
+    whiteMovesCount = s.whiteMovesCount;
+    blackMovesCount = s.blackMovesCount;
+    gameMoveCounter = s.gameMoveCounter;
+    gameCaptures = s.gameCaptures;
+    gameCastles = s.gameCastles;
+    gamePromotions = s.gamePromotions;
+    gameChecks = s.gameChecks;
+    updateClockDisplay();
+    renderBoard();
+}
+function undoMove(){
+    if(gameOver){ showToast('اللعبة انتهت'); return; }
+    if(moveHistory.length === 0){ showToast('لا يوجد حركات للتراجع'); return; }
+    let steps = gameMode === 'computer' && moveHistory.length >= 2 ? 2 : 1;
+    for(let i = 0; i < steps && moveHistory.length > 0; i++){
+        const s = moveHistory.pop();
+        restoreState(s);
+    }
+    selectedRow = null; selectedCol = null;
+    renderBoard();
+    showToast('↩️ تم التراجع');
+    Sound.click();
+}
+
+// ==========================================================
+// حفظ/استعادة حالة كل نمط
+// ==========================================================
+function persistModeState(mode){
+    if(mode === 'online') return;
+    const states = getModeStates();
+    states[mode] = {
+        board: copyBoard(board),
+        turn,
+        whiteKingMoved, blackKingMoved,
+        whiteRookMoved: {...whiteRookMoved},
+        blackRookMoved: {...blackRookMoved},
+        capturedWhite: [...capturedWhite],
+        capturedBlack: [...capturedBlack],
+        lastMove: lastMove ? {from:[...lastMove.from], to:[...lastMove.to]} : null,
+        whiteTime, blackTime, whiteMovesCount, blackMovesCount,
+        gameOver, winner,
+        difficulty,
+        currentStage,
+        gameMoveCounter, gameCaptures, gameCastles, gamePromotions, gameChecks,
+        savedAt: Date.now()
+    };
+    saveModeStates(states);
+}
+function tryRestoreModeState(mode){
+    if(mode === 'online') return false;
+    const states = getModeStates();
+    const s = states[mode];
+    if(!s) return false;
+
+    board = copyBoard(s.board);
+    turn = s.turn || 'white';
+    whiteKingMoved = !!s.whiteKingMoved;
+    blackKingMoved = !!s.blackKingMoved;
+    whiteRookMoved = s.whiteRookMoved || {left:false,right:false};
+    blackRookMoved = s.blackRookMoved || {left:false,right:false};
+    capturedWhite = s.capturedWhite || [];
+    capturedBlack = s.capturedBlack || [];
+    lastMove = s.lastMove || null;
+    whiteTime = typeof s.whiteTime === 'number' ? s.whiteTime : INITIAL_TIME;
+    blackTime = typeof s.blackTime === 'number' ? s.blackTime : INITIAL_TIME;
+    whiteMovesCount = s.whiteMovesCount || 0;
+    blackMovesCount = s.blackMovesCount || 0;
+    gameOver = !!s.gameOver;
+    winner = s.winner || null;
+    if(s.difficulty) difficulty = s.difficulty;
+    if(typeof s.currentStage === 'number') currentStage = s.currentStage;
+    gameMoveCounter = s.gameMoveCounter || 0;
+    gameCaptures = s.gameCaptures || 0;
+    gameCastles = s.gameCastles || 0;
+    gamePromotions = s.gamePromotions || 0;
+    gameChecks = s.gameChecks || 0;
+
+    selectedRow = null; selectedCol = null;
+    pendingPromotion = null;
+    isAnimating = false;
+    moveHistory = [];
+    gameStartTime = Date.now();
+
+    updateClockDisplay();
+    renderBoard();
+    updateMenuStates();
+    renderStages();
+
+    if(gameMode === 'computer' && turn === 'black' && !gameOver) scheduleComputerMove();
+    return true;
+}
+function clearModeState(mode){
+    if(mode === 'online') return;
+    const states = getModeStates();
+    delete states[mode];
+    saveModeStates(states);
+}
+
+// ==========================================================
+// تنفيذ الحركة
+// ==========================================================
 function makeMove(fromR,fromC,toR,toC,fromAI=false){
     if(gameOver||isAnimating)return false;
     let piece=board[fromR][fromC];
@@ -845,14 +1654,20 @@ function makeMove(fromR,fromC,toR,toC,fromAI=false){
     if(target&&target.split('_')[0]===turn)return false;
     if(!isValidMoveFull(piece,fromR,fromC,toR,toC,board,turn))return false;
 
+    moveHistory.push(snapshotState());
+    if(moveHistory.length > 100) moveHistory.shift();
+
     if(target){
         let color=target.split('_')[0],type=target.split('_')[1];
         if(color==='white')capturedBlack.push(type); else capturedWhite.push(type);
+        gameCaptures++;
     }
     let color=turn;
     let isKing=piece.split('_')[1]==='king';
     let isRook=piece.split('_')[1]==='rook';
     let isCastling=isKing&&Math.abs(toC-fromC)===2;
+
+    if(target) Sound.capture(); else Sound.move();
 
     isAnimating=true;
     animateMove(fromR,fromC,toR,toC,piece,()=>{
@@ -867,6 +1682,7 @@ function makeMove(fromR,fromC,toR,toC,fromAI=false){
             board[kingRow][newRookCol]=`${color}_rook`;
             if(color==='white'){whiteKingMoved=true;if(toC>fromC)whiteRookMoved.right=true;else whiteRookMoved.left=true;}
             else{blackKingMoved=true;if(toC>fromC)blackRookMoved.right=true;else blackRookMoved.left=true;}
+            gameCastles++;
         }else{
             board[toR][toC]=piece;
             board[fromR][fromC]=null;
@@ -882,6 +1698,7 @@ function makeMove(fromR,fromC,toR,toC,fromAI=false){
         let originalTurn=turn;
 
         incrementMoves(originalTurn);
+        gameMoveCounter++;
 
         turn=turn==='white'?'black':'white';
         selectedRow=null;
@@ -891,6 +1708,8 @@ function makeMove(fromR,fromC,toR,toC,fromAI=false){
         if(!clockRunning && !gameOver) startClock();
         updateClockDisplay();
 
+        if(getGameState(board, turn) === 'check'){ Sound.check(); gameChecks++; }
+
         if(reachedEnd){
             renderBoard();
             showPromotionDialog(toR,toC,originalTurn);
@@ -898,7 +1717,7 @@ function makeMove(fromR,fromC,toR,toC,fromAI=false){
         }
         let state=getGameState(board,turn);
         if(state==='checkmate')setGameOver(turn==='white'?'الأسود':'الأبيض');
-        else if(state==='stalemate'){gameOver=true;winner='تعادل';stopClock();setTimeout(showWinnerScreen,500);}
+        else if(state==='stalemate'){gameOver=true;winner='تعادل';stopClock();recordGameResult('تعادل');setTimeout(showWinnerScreen,500);}
         renderBoard();
         if(gameMode==='computer'&&turn==='black'&&!gameOver&&!pendingPromotion)scheduleComputerMove();
         if(gameMode==='online'&&!fromAI)sendGameState();
@@ -907,11 +1726,11 @@ function makeMove(fromR,fromC,toR,toC,fromAI=false){
 }
 function animateMove(fromR,fromC,toR,toC,piece,callback){
     let boardEl=document.getElementById('chessboard');
-    if(!boardEl) { if(callback) callback(); return; }
+    if(!boardEl){ if(callback) callback(); return; }
     let fromCell=boardEl.children[fromR*8+fromC];
     let toCell=boardEl.children[toR*8+toC];
 
-    if(!fromCell || !toCell) { if(callback) callback(); return; }
+    if(!fromCell || !toCell || !settings.animations){ if(callback) callback(); return; }
 
     let fromRect=fromCell.getBoundingClientRect();
     let toRect=toCell.getBoundingClientRect();
@@ -921,25 +1740,19 @@ function animateMove(fromR,fromC,toR,toC,piece,callback){
     let origPieceEl=fromCell.querySelector('.piece');
     let capturedEl=toCell.querySelector('.piece');
     if(origPieceEl) origPieceEl.style.opacity='0';
-    if(capturedEl) capturedEl.style.opacity='0';
+    if(capturedEl){
+        capturedEl.style.opacity='0';
+        toCell.classList.add('captured-flash');
+        setTimeout(()=>toCell.classList.remove('captured-flash'), 500);
+    }
 
     let flyingPiece=document.createElement('div');
     flyingPiece.style.cssText=`
-        position:fixed;
-        left:${fromRect.left}px;
-        top:${fromRect.top}px;
-        width:${fromRect.width}px;
-        height:${fromRect.height}px;
-        z-index:999;
-        pointer-events:none;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        transform:translate3d(0,0,0);
-        transition:transform 0.2s cubic-bezier(0.3,0.7,0.4,1);
-        will-change:transform;
-        backface-visibility:hidden;
-        -webkit-backface-visibility:hidden;
+        position:fixed;left:${fromRect.left}px;top:${fromRect.top}px;
+        width:${fromRect.width}px;height:${fromRect.height}px;
+        z-index:999;pointer-events:none;display:flex;align-items:center;justify-content:center;
+        transform:translate3d(0,0,0);transition:transform 0.2s cubic-bezier(0.3,0.7,0.4,1);
+        will-change:transform;backface-visibility:hidden;-webkit-backface-visibility:hidden;
     `;
     flyingPiece.innerHTML=`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:6%;filter:drop-shadow(0 8px 12px rgba(0,0,0,0.5));">${PIECE_SVG[piece]}</div>`;
     document.body.appendChild(flyingPiece);
@@ -953,6 +1766,10 @@ function animateMove(fromR,fromC,toR,toC,piece,callback){
         if(callback)callback();
     },200);
 }
+
+// ==========================================================
+// الرسم
+// ==========================================================
 function renderBoard(){
     let container=document.getElementById('chessboard');
     if(container.children.length!==64){
@@ -1020,22 +1837,12 @@ function updateCapturedDisplay(){
     let bl=document.getElementById('capturedBlackList');
     let badge=document.getElementById('capturedBadge');
     if(wl){
-        if(capturedWhite.length===0){
-            wl.innerHTML='<span class="empty">لا يوجد</span>';
-        }else{
-            wl.innerHTML=capturedWhite.map(t=>
-                `<span style="display:inline-block;width:22px;height:22px;">${PIECE_SVG['black_'+t]}</span>`
-            ).join('');
-        }
+        if(capturedWhite.length===0){ wl.innerHTML='<span class="empty">لا يوجد</span>'; }
+        else{ wl.innerHTML=capturedWhite.map(t=>`<span style="display:inline-block;width:22px;height:22px;">${PIECE_SVG['black_'+t]}</span>`).join(''); }
     }
     if(bl){
-        if(capturedBlack.length===0){
-            bl.innerHTML='<span class="empty">لا يوجد</span>';
-        }else{
-            bl.innerHTML=capturedBlack.map(t=>
-                `<span style="display:inline-block;width:22px;height:22px;">${PIECE_SVG['white_'+t]}</span>`
-            ).join('');
-        }
+        if(capturedBlack.length===0){ bl.innerHTML='<span class="empty">لا يوجد</span>'; }
+        else{ bl.innerHTML=capturedBlack.map(t=>`<span style="display:inline-block;width:22px;height:22px;">${PIECE_SVG['white_'+t]}</span>`).join(''); }
     }
     if(badge) badge.textContent=(capturedWhite.length+capturedBlack.length);
 }
@@ -1060,11 +1867,9 @@ function onCellClick(row,col){
     if(selectedRow===null){
         if(piece){
             let pieceColor=piece.split('_')[0];
-            if(!canPlayerMove(pieceColor)){
-                showToast("لا يمكنك تحريك قطع الخصم");
-                return;
-            }
+            if(!canPlayerMove(pieceColor)){ showToast("لا يمكنك تحريك قطع الخصم"); return; }
             selectedRow=row;selectedCol=col;
+            Sound.click();
             renderBoard();
         }
     }else{
@@ -1072,6 +1877,7 @@ function onCellClick(row,col){
             let pieceColor=piece.split('_')[0];
             if(canPlayerMove(pieceColor)){
                 selectedRow=row;selectedCol=col;
+                Sound.click();
                 renderBoard();
                 return;
             }
@@ -1079,10 +1885,15 @@ function onCellClick(row,col){
         makeMove(selectedRow,selectedCol,row,col);
     }
 }
-function setColors(light,dark){currentLight=light;currentDark=dark;renderBoard();}
+function setColors(light,dark){
+    currentLight=light;currentDark=dark;
+    settings.boardColors = {light, dark};
+    saveSettings();
+    renderBoard();
+}
 
 // ==========================================================
-// PeerJS - بدون تغيير
+// PeerJS - الأونلاين (بدون أي تعديل)
 // ==========================================================
 const PEER_CONFIG={
     config:{iceServers:[
@@ -1161,6 +1972,10 @@ function setupConnection(c){
                 myColor=msg.color;isMyTurn=(turn===myColor);
             }else if(msg.type==='reset'){
                 resetGame(true);
+            }else if(msg.type==='chat'){
+                addChatMessage(msg.text, 'them');
+                Sound.chat();
+                if(!chatOpen) chatDot.classList.add('show');
             }
         }catch(e){console.warn('Parse error:',e);}
     });
@@ -1279,31 +2094,323 @@ function sendGameState(){
     }
 }
 
-// ========== القوائم ==========
+// ==========================================================
+// الشات
+// ==========================================================
+let chatOpen = false;
+const chatBtn = document.getElementById('chatBtn');
+const chatPanel = document.getElementById('chatPanel');
+const chatDot = document.getElementById('chatDot');
+const chatBody = document.getElementById('chatBody');
+
+function addChatMessage(text, type){
+    const div = document.createElement('div');
+    div.className = 'chat-msg ' + type;
+    div.textContent = text;
+    chatBody.appendChild(div);
+    chatBody.scrollTop = chatBody.scrollHeight;
+}
+function sendChat(){
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if(!text) return;
+    addChatMessage(text, 'me');
+    input.value = '';
+    if(conn && conn.open){
+        try{ conn.send(JSON.stringify({type:'chat', text})); }catch(e){}
+    } else {
+        setTimeout(()=>{
+            const replies = ['👍', 'حظاً موفقاً!', 'حركة جيدة', '😅', '🎯'];
+            addChatMessage(replies[Math.floor(Math.random()*replies.length)], 'them');
+        }, 800);
+    }
+}
+
+// ==========================================================
+// ✅ إدارة القوائم (مُصلحة بالكامل)
+// ==========================================================
+const MENUS = ['sideMenu', 'colorMenu', 'timeMenu', 'statsMenu'];
+const MENU_OVERLAYS = {
+    sideMenu: 'overlay',
+    colorMenu: 'overlayColor',
+    timeMenu: 'overlayTime',
+    statsMenu: 'overlayStats'
+};
+
 function openMenu(id){
-    document.getElementById(id).classList.add('open');
-    document.getElementById(id==='colorMenu'?'overlayColor':'overlay').classList.add('show');
+    // أغلق أي قائمة أخرى
+    MENUS.forEach(m => {
+        if(m !== id){
+            const el = document.getElementById(m);
+            if(el) el.classList.remove('open');
+            const ov = document.getElementById(MENU_OVERLAYS[m]);
+            if(ov) ov.classList.remove('show');
+        }
+    });
+    const el = document.getElementById(id);
+    if(el) el.classList.add('open');
+    const ov = document.getElementById(MENU_OVERLAYS[id]);
+    if(ov) ov.classList.add('show');
 }
 function closeMenu(id){
-    document.getElementById(id).classList.remove('open');
-    document.getElementById(id==='colorMenu'?'overlayColor':'overlay').classList.remove('show');
+    const el = document.getElementById(id);
+    if(el) el.classList.remove('open');
+    const ov = document.getElementById(MENU_OVERLAYS[id]);
+    if(ov) ov.classList.remove('show');
 }
-document.getElementById('menuIcon').addEventListener('click',()=>openMenu('sideMenu'));
-document.getElementById('closeMenuBtn').addEventListener('click',()=>closeMenu('sideMenu'));
-document.getElementById('overlay').addEventListener('click',()=>closeMenu('sideMenu'));
-document.getElementById('openColorsBtn').addEventListener('click',()=>{
-    closeMenu('sideMenu');setTimeout(()=>openMenu('colorMenu'),250);
+function closeAllMenus(){
+    MENUS.forEach(m => {
+        const el = document.getElementById(m);
+        if(el) el.classList.remove('open');
+        const ov = document.getElementById(MENU_OVERLAYS[m]);
+        if(ov) ov.classList.remove('show');
+    });
+}
+
+// ربط الأزرار
+document.getElementById('menuIcon').addEventListener('click', e=>{
+    e.stopPropagation();
+    openMenu('sideMenu');
 });
-document.getElementById('closeColorBtn').addEventListener('click',()=>closeMenu('colorMenu'));
-document.getElementById('backFromColorBtn').addEventListener('click',()=>{
-    closeMenu('colorMenu');setTimeout(()=>openMenu('sideMenu'),250);
+document.getElementById('closeMenuBtn').addEventListener('click', e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    closeMenu('sideMenu');
 });
-document.getElementById('overlayColor').addEventListener('click',()=>closeMenu('colorMenu'));
+
+document.getElementById('openColorsBtn').addEventListener('click', ()=>{
+    closeMenu('sideMenu');
+    setTimeout(()=>openMenu('colorMenu'), 250);
+});
+document.getElementById('closeColorBtn').addEventListener('click', e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    closeMenu('colorMenu');
+});
+document.getElementById('backFromColorBtn').addEventListener('click', ()=>{
+    closeMenu('colorMenu');
+    setTimeout(()=>openMenu('sideMenu'), 250);
+});
+
+document.getElementById('openTimeBtn').addEventListener('click', ()=>{
+    closeMenu('sideMenu');
+    setTimeout(()=>openMenu('timeMenu'), 250);
+});
+document.getElementById('closeTimeBtn').addEventListener('click', e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    closeMenu('timeMenu');
+});
+document.getElementById('backFromTimeBtn').addEventListener('click', ()=>{
+    closeMenu('timeMenu');
+    setTimeout(()=>openMenu('sideMenu'), 250);
+});
+
+document.getElementById('viewStatsBtn').addEventListener('click', ()=>{
+    renderFullStats();
+    closeMenu('sideMenu');
+    setTimeout(()=>openMenu('statsMenu'), 250);
+});
+document.getElementById('closeStatsBtn').addEventListener('click', e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    closeMenu('statsMenu');
+});
+
+// ربط الـ overlays (الإغلاق بالضغط بالمكان الفارغ)
+Object.entries(MENU_OVERLAYS).forEach(([menuId, overlayId])=>{
+    const ov = document.getElementById(overlayId);
+    if(ov){
+        ov.addEventListener('click', e=>{
+            e.stopPropagation();
+            closeMenu(menuId);
+        });
+    }
+});
+
+// إغلاق بزر Escape
+document.addEventListener('keydown', e=>{
+    if(e.key === 'Escape') closeAllMenus();
+});
+
+// ==========================================================
+// تسجيل الدخول / الخروج
+// ==========================================================
+document.getElementById('loginBtn').addEventListener('click', ()=>{
+    document.getElementById('loginOverlay').classList.add('show');
+    document.getElementById('loginName').value = '';
+    closeMenu('sideMenu');
+});
+document.getElementById('doLoginBtn').addEventListener('click', ()=>{
+    const name = document.getElementById('loginName').value.trim() || ('لاعب' + Math.floor(Math.random()*9999));
+    user = {name, loggedIn: true, createdAt: Date.now()};
+    saveUser();
+    applyUser();
+    document.getElementById('loginOverlay').classList.remove('show');
+    showToast(`👋 أهلاً ${name}`);
+    Sound.win();
+});
+document.getElementById('skipLoginBtn').addEventListener('click', ()=>{
+    document.getElementById('loginOverlay').classList.remove('show');
+    if(!user){ user = {name: 'ضيف', loggedIn: false, createdAt: Date.now()}; saveUser(); applyUser(); }
+});
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+    user = {name: 'ضيف', loggedIn: false, createdAt: Date.now()};
+    saveUser();
+    applyUser();
+    showToast('🚪 تم تسجيل الخروج');
+    closeMenu('sideMenu');
+});
+document.getElementById('loginName').addEventListener('keypress', e=>{
+    if(e.key === 'Enter') document.getElementById('doLoginBtn').click();
+});
+
+// ==========================================================
+// أزرار الأنماط (مع حفظ/استعادة كل نمط)
+// ==========================================================
+document.getElementById('vsComputerBtn').addEventListener('click', ()=>{
+    if(gameMode !== 'computer'){
+        persistModeState(gameMode); // احفظ النمط الحالي
+        gameMode = 'computer';
+        if(!difficulty.startsWith('stage_')) difficulty = 'stage_' + currentStage;
+        hideOnlinePanel();
+        updateMenuStates();
+        const restored = tryRestoreModeState('computer');
+        if(!restored){
+            resetGame();
+            const st = getStageConfig();
+            showToast(st ? `🏆 المرحلة ${st.id}: ${st.name}` : '🤖 ضد الكمبيوتر');
+        }else{
+            showToast('▶️ متابعة اللعبة ضد الكمبيوتر');
+        }
+    }else{
+        hideOnlinePanel();
+        updateMenuStates();
+    }
+    closeMenu('sideMenu');
+    Sound.click();
+});
+
+document.getElementById('vsLocalBtn').addEventListener('click', ()=>{
+    if(gameMode !== 'local'){
+        persistModeState(gameMode);
+        gameMode = 'local';
+        hideOnlinePanel();
+        updateMenuStates();
+        const restored = tryRestoreModeState('local');
+        if(!restored){
+            resetGame();
+            showToast('👥 ضد صديق');
+        }else{
+            showToast('▶️ متابعة اللعبة المحلية');
+        }
+    }else{
+        hideOnlinePanel();
+        updateMenuStates();
+    }
+    closeMenu('sideMenu');
+    Sound.click();
+});
+
+document.getElementById('vsOnlineBtn').addEventListener('click', ()=>{
+    if(gameMode !== 'online'){
+        persistModeState(gameMode);
+    }
+    gameMode = 'online';
+    showOnlinePanel();
+    updateMenuStates();
+    resetGame();
+    closeMenu('sideMenu');
+    document.getElementById('roomStatus').textContent = '💡 أدخل كود أو أنشئ غرفة';
+    showToast('📡 اتصال أونلاين');
+    Sound.click();
+});
+
+// أزرار الأونلاين
+document.getElementById('createRoomBtn').addEventListener('click',createRoom);
+document.getElementById('joinRoomBtn').addEventListener('click',joinRoom);
+document.getElementById('roomInput').addEventListener('input', (e)=>{
+    e.target.value = e.target.value.replace(/\D/g,'').slice(0,3);
+});
+document.getElementById('roomInput').addEventListener('keypress', (e)=>{
+    if(e.key === 'Enter') document.getElementById('joinRoomBtn').click();
+});
+
+// أدوات
+document.getElementById('undoBtn').addEventListener('click', ()=>{ undoMove(); closeMenu('sideMenu'); });
+document.getElementById('hintBtn').addEventListener('click', ()=>{ showHint(); closeMenu('sideMenu'); });
+document.getElementById('saveGameBtn').addEventListener('click', ()=>{
+    const data = snapshotState();
+    data.gameMode = gameMode;
+    data.difficulty = difficulty;
+    data.savedAt = Date.now();
+    saveJSON(STORAGE.SAVED_GAME, data);
+    showToast('💾 تم حفظ اللعبة');
+    Sound.click();
+    closeMenu('sideMenu');
+});
+document.getElementById('loadGameBtn').addEventListener('click', ()=>{
+    const data = loadJSON(STORAGE.SAVED_GAME, null);
+    if(!data){ showToast('لا يوجد لعبة محفوظة'); closeMenu('sideMenu'); return; }
+    gameMode = data.gameMode || 'computer';
+    difficulty = data.difficulty || 'stage_1';
+    restoreState(data);
+    moveHistory = [];
+    gameOver = false;
+    winner = null;
+    document.querySelectorAll('.winner-overlay').forEach(el=>el.remove());
+    updateMenuStates();
+    renderStages();
+    showToast('📂 تم استعادة اللعبة');
+    if(gameMode === 'computer' && turn === 'black') scheduleComputerMove();
+    if(gameMode === 'online') sendGameState();
+    closeMenu('sideMenu');
+});
+document.getElementById('resetGameBtn').addEventListener('click', ()=>{
+    clearModeState(gameMode);
+    resetGame();
+    closeMenu('sideMenu');
+    showToast('🔄 لعبة جديدة');
+});
+
+// الإعدادات
+document.getElementById('toggleThemeBtn').addEventListener('click', ()=>{
+    settings.theme = settings.theme === 'dark' ? 'light' : 'dark';
+    saveSettings();
+    applyTheme();
+    Sound.click();
+});
+document.getElementById('toggleSoundBtn').addEventListener('click', ()=>{
+    settings.sound = !settings.sound;
+    saveSettings();
+    document.getElementById('toggleSoundBtn').textContent = settings.sound ? '🔊 الصوت: مفعل' : '🔇 الصوت: مكتوم';
+    if(settings.sound) Sound.click();
+});
+document.getElementById('toggleAnimBtn').addEventListener('click', ()=>{
+    settings.animations = !settings.animations;
+    saveSettings();
+    document.getElementById('toggleAnimBtn').textContent = settings.animations ? '✨ الحركات: مفعلة' : '🚫 الحركات: معطلة';
+    Sound.click();
+});
+
+// خيارات الألوان
 document.querySelectorAll('.color-opt').forEach(btn=>{
     btn.addEventListener('click',()=>{setColors('#f0d9b5',btn.dataset.dark);closeMenu('colorMenu');});
 });
+// خيارات الوقت
+document.querySelectorAll('.time-opt').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+        const t = parseInt(btn.dataset.time);
+        INITIAL_TIME = t;
+        settings.gameTime = t;
+        saveSettings();
+        closeMenu('timeMenu');
+        resetClocks();
+        showToast(t === 0 ? '♾️ بدون وقت' : `⏱️ ${formatTime(t)}`);
+    });
+});
 
-// ========== زر المأكولات ==========
+// زر المأكولات
 const capturedBtn=document.getElementById('capturedBtn');
 const capturedDropdown=document.getElementById('capturedDropdown');
 let capturedOpen=false;
@@ -1322,36 +2429,36 @@ document.addEventListener('click',(e)=>{
     }
 });
 
-// ========== الأزرار ==========
-document.getElementById('vsComputerBtn').addEventListener('click',()=>{
-    gameMode='computer';hideOnlinePanel();updateMenuStates();resetGame();closeMenu('sideMenu');showToast('🤖 ضد الكمبيوتر');
+// أزرار الشات
+chatBtn.addEventListener('click', ()=>{
+    chatOpen = !chatOpen;
+    chatPanel.classList.toggle('open', chatOpen);
+    if(chatOpen) chatDot.classList.remove('show');
 });
-document.getElementById('vsLocalBtn').addEventListener('click',()=>{
-    gameMode='local';hideOnlinePanel();updateMenuStates();resetGame();closeMenu('sideMenu');showToast('👥 ضد صديق');
+document.getElementById('closeChatBtn').addEventListener('click', ()=>{
+    chatOpen = false;
+    chatPanel.classList.remove('open');
 });
-document.getElementById('vsOnlineBtn').addEventListener('click',()=>{
-    gameMode='online';showOnlinePanel();updateMenuStates();resetGame();closeMenu('sideMenu');
-    document.getElementById('roomStatus').textContent = '💡 أدخل كود أو أنشئ غرفة';
-    showToast('📡 اتصال أونلاين');
-});
-document.getElementById('diffMediumBtn').addEventListener('click',()=>{difficulty='medium';updateMenuStates();resetGame();closeMenu('sideMenu');showToast('⚡ متوسط');});
-document.getElementById('diffHardBtn').addEventListener('click',()=>{difficulty='hard';updateMenuStates();resetGame();closeMenu('sideMenu');showToast('🔥 صعب');});
-document.getElementById('diffInsaneBtn').addEventListener('click',()=>{difficulty='insane';updateMenuStates();resetGame();closeMenu('sideMenu');showToast('💀 مستحيل');});
-document.getElementById('createRoomBtn').addEventListener('click',createRoom);
-document.getElementById('joinRoomBtn').addEventListener('click',joinRoom);
-
-document.getElementById('roomInput').addEventListener('input', (e)=>{
-    e.target.value = e.target.value.replace(/\D/g,'').slice(0,3);
-});
-document.getElementById('roomInput').addEventListener('keypress', (e)=>{
-    if(e.key === 'Enter') document.getElementById('joinRoomBtn').click();
+document.getElementById('sendChatBtn').addEventListener('click', sendChat);
+document.getElementById('chatInput').addEventListener('keypress', e=>{
+    if(e.key === 'Enter') sendChat();
 });
 
+// ==========================================================
+// Reset & Menu States
+// ==========================================================
 function resetGame(silent=false){
     if(computerTimeout)clearTimeout(computerTimeout);
     board=initBoard();
     turn='white';selectedRow=null;selectedCol=null;
     gameOver=false;winner=null;pendingPromotion=null;isAnimating=false;
+    moveHistory=[];
+    gameStartTime = Date.now();
+    gameMoveCounter = 0;
+    gameCaptures = 0;
+    gameCastles = 0;
+    gamePromotions = 0;
+    gameChecks = 0;
     document.querySelectorAll('.winner-overlay').forEach(el=>el.remove());
     document.querySelectorAll('.promotion-overlay').forEach(el=>el.remove());
     resetClocks();
@@ -1364,14 +2471,48 @@ function updateMenuStates(){
     if(gameMode==='computer')document.getElementById('vsComputerBtn').classList.add('active');
     if(gameMode==='local')document.getElementById('vsLocalBtn').classList.add('active');
     if(gameMode==='online')document.getElementById('vsOnlineBtn').classList.add('active');
-    if(difficulty==='medium')document.getElementById('diffMediumBtn').classList.add('active');
-    if(difficulty==='hard')document.getElementById('diffHardBtn').classList.add('active');
-    if(difficulty==='insane')document.getElementById('diffInsaneBtn').classList.add('active');
 }
 
-resetGame();
-updateMenuStates();
-hideOnlinePanel();
+// ==========================================================
+// التشغيل الأولي
+// ==========================================================
+function bootstrap(){
+    applyTheme();
+    document.getElementById('toggleSoundBtn').textContent = settings.sound ? '🔊 الصوت: مفعل' : '🔇 الصوت: مكتوم';
+    document.getElementById('toggleAnimBtn').textContent = settings.animations ? '✨ الحركات: مفعلة' : '🚫 الحركات: معطلة';
+
+    if(settings.boardColors){
+        currentLight = settings.boardColors.light;
+        currentDark = settings.boardColors.dark;
+    }
+
+    if(!user) document.getElementById('loginOverlay').classList.add('show');
+    applyUser();
+    refreshStatsUI();
+    renderStages();
+
+    INITIAL_TIME = settings.gameTime || 600;
+
+    // جرب استعادة حالة الكمبيوتر إذا وجدت
+    gameMode = 'computer';
+    if(!difficulty.startsWith('stage_')) difficulty = 'stage_' + currentStage;
+    const restored = tryRestoreModeState('computer');
+    if(!restored) resetGame();
+    updateMenuStates();
+    hideOnlinePanel();
+
+    gameStartTime = Date.now();
+
+    // حفظ تلقائي قبل مغادرة الصفحة
+    window.addEventListener('beforeunload', ()=>{
+        persistModeState(gameMode);
+    });
+    document.addEventListener('visibilitychange', ()=>{
+        if(document.hidden) persistModeState(gameMode);
+    });
+}
+
+bootstrap();
 </script>
 </body>
 </html>
