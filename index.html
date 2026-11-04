@@ -89,7 +89,9 @@ body.day-mode .logo-mini .by{color:#4a6080}
 .board-wrapper::after{content:'';position:absolute;inset:-2px;border-radius:20px;background:conic-gradient(from 180deg,transparent 0deg,rgba(126,179,255,0.45) 30deg,transparent 90deg,transparent 360deg);animation:frameRotate 7s linear infinite;z-index:-1;filter:blur(6px);opacity:0.45;}
 @keyframes frameRotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transparent 0deg,rgba(90,150,255,0.7) 40deg,rgba(140,120,255,0.8) 70deg,transparent 130deg,transparent 360deg);opacity:0.65;}
-.board{position:absolute;inset:2px;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);user-select:none;border-radius:16px;overflow:hidden;background:#1a2540;}
+
+/* ✅ تعديل: إضافة direction: ltr لمنع انعكاس المربعات بسبب rtl */
+.board{position:absolute;inset:2px;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);user-select:none;border-radius:16px;overflow:hidden;background:#1a2540;direction:ltr;}
 
 .coord{position:absolute;font-size:0.55rem;font-weight:900;color:#a8c8ff;text-shadow:0 1px 4px rgba(0,0,0,0.9);pointer-events:none;z-index:5;font-family:'Courier New',monospace;display:flex;align-items:center;justify-content:center;}
 .coord.file{width:12.5%;height:20px;text-align:center;}
@@ -760,6 +762,7 @@ function canPlayerMove(color){
 function initBoard(){
     let b=Array(8).fill().map(()=>Array(8).fill(null));
     for(let i=0;i<8;i++){b[1][i]='black_pawn';b[6][i]='white_pawn';}
+    // ✅ الترتيب الصحيح: الوزير على لونه، الملك بجانبه
     const order=['rook','knight','bishop','queen','king','bishop','knight','rook'];
     for(let i=0;i<8;i++){b[0][i]=`black_${order[i]}`;b[7][i]=`white_${order[i]}`;}
     whiteKingMoved=false;blackKingMoved=false;
