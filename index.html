@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <title>♛ Chess Master</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
 html{width:100%;min-height:100%;background:#04060f;overflow-x:hidden;}
@@ -74,7 +75,7 @@ body.day-mode .logo-mini .by{color:#4a6080}
 .side-menu button.draw{border-color:rgba(126,179,255,0.6);color:#a8c8ff}
 .side-menu button.undo{border-color:rgba(180,140,255,0.6);color:#c8b3ff}
 .side-menu button.restart{border-color:rgba(80,220,180,0.6);color:#7ee8c8}
-.side-menu button.report-btn-side{border-color:rgba(255,140,60,0.7);color:#ffb37a;background:linear-gradient(145deg,rgba(255,120,60,0.2),rgba(180,80,30,0.15))}
+.side-menu button.replay-btn{border-color:rgba(255,180,50,0.7);color:#ffd75a;background:linear-gradient(145deg,rgba(255,180,50,0.15),rgba(180,120,20,0.1))}
 
 .profile-card{background:linear-gradient(145deg,rgba(90,150,255,0.18),rgba(140,90,255,0.14));border:1.5px solid rgba(126,179,255,0.55);border-radius:16px;padding:12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer;}
 .profile-card .avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(145deg,#7eb3ff,#b39aff);display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:900;color:#0a1024;flex-shrink:0;}
@@ -90,7 +91,6 @@ body.day-mode .logo-mini .by{color:#4a6080}
 @keyframes frameRotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transparent 0deg,rgba(90,150,255,0.7) 40deg,rgba(140,120,255,0.8) 70deg,transparent 130deg,transparent 360deg);opacity:0.65;}
 
-/* ✅ تعديل: إضافة direction: ltr لمنع انعكاس المربعات بسبب rtl */
 .board{position:absolute;inset:2px;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);user-select:none;border-radius:16px;overflow:hidden;background:#1a2540;direction:ltr;}
 
 .coord{position:absolute;font-size:0.55rem;font-weight:900;color:#a8c8ff;text-shadow:0 1px 4px rgba(0,0,0,0.9);pointer-events:none;z-index:5;font-family:'Courier New',monospace;display:flex;align-items:center;justify-content:center;}
@@ -105,8 +105,6 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
 
 .cell{position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background-color 0.15s;overflow:visible;width:100%;height:100%;}
 .cell.selected{background:linear-gradient(135deg,rgba(90,150,255,0.55),rgba(140,90,255,0.55))!important;box-shadow:inset 0 0 0 3px #7eb3ff,inset 0 0 24px rgba(126,179,255,0.6);}
-.cell.selected::before{content:'';position:absolute;inset:0;background:radial-gradient(circle,rgba(126,179,255,0.35),transparent 70%);animation:selPulse 1s ease-in-out infinite}
-@keyframes selPulse{0%,100%{opacity:0.55}50%{opacity:1}}
 .cell.valid-move::after{content:"";position:absolute;width:30%;height:30%;border-radius:50%;background:radial-gradient(circle,rgba(126,179,255,1),rgba(126,179,255,0.3));box-shadow:0 0 18px rgba(126,179,255,1);pointer-events:none;animation:dotPulse 1.2s ease-in-out infinite}
 @keyframes dotPulse{0%,100%{transform:scale(1);opacity:0.9}50%{transform:scale(1.3);opacity:0.5}}
 .cell.valid-move.capture::after{width:88%;height:88%;background:transparent;border:3px solid rgba(255,80,120,0.95);box-shadow:0 0 22px rgba(255,80,120,0.9);animation:capturePulse 1s ease-in-out infinite}
@@ -125,8 +123,11 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
 .online-panel button{background:linear-gradient(145deg,rgba(60,100,180,0.85),rgba(35,65,130,0.85));border:1px solid rgba(126,179,255,0.45);padding:8px 12px;border-radius:11px;color:#dceaff;font-weight:700;cursor:pointer;font-size:0.78rem;font-family:'Cairo',sans-serif;}
 .online-panel .status-text{color:#7eb3ff;font-size:0.68rem;text-align:center;font-weight:700;margin-top:5px;min-height:14px;}
 
+.chat-wrapper{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));right:14px;z-index:9990;display:none;}
+.chat-toggle-btn{background:linear-gradient(145deg,rgba(30,50,90,0.92),rgba(15,25,55,0.92));border:1.5px solid rgba(126,179,255,0.6);color:#7eb3ff;width:46px;height:46px;border-radius:50%;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;}
+.chat-toggle-btn .unread{position:absolute;top:-4px;right:-4px;background:linear-gradient(145deg,#ff3c5a,#c00030);color:#fff;font-size:0.6rem;font-weight:900;min-width:18px;height:18px;padding:0 5px;border-radius:9px;display:none;align-items:center;justify-content:center;}
+.chat-toggle-btn .unread.show{display:flex}
 .chat-fullscreen{position:fixed;inset:0;z-index:15000;background:linear-gradient(180deg,rgba(6,12,28,0.92),rgba(4,8,20,0.95)),url('https://i.ibb.co/cS43HTCF/5.jpg') center/cover no-repeat fixed;display:none;flex-direction:column;backdrop-filter:blur(24px);}
-body.day-mode .chat-fullscreen{background:linear-gradient(180deg,rgba(240,246,255,0.9),rgba(228,238,255,0.92)),url('https://i.ibb.co/dw03cG0D/Screenshot-1.jpg') center/cover no-repeat fixed;}
 .chat-fullscreen.open{display:flex}
 .chat-fs-header{display:flex;align-items:center;justify-content:space-between;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;background:linear-gradient(145deg,rgba(60,100,180,0.35),rgba(35,65,130,0.25));border-bottom:1px solid rgba(126,179,255,0.4);}
 .chat-fs-header .chat-title{color:#a8c8ff;font-size:0.95rem;font-weight:900;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
@@ -136,26 +137,15 @@ body.day-mode .chat-fullscreen{background:linear-gradient(180deg,rgba(240,246,25
 .chat-msg{max-width:78%;padding:8px 12px;border-radius:16px;font-size:0.85rem;line-height:1.45;word-wrap:break-word;overflow-wrap:break-word;font-family:'Cairo','Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif;word-break:break-word;}
 .chat-msg.me{align-self:flex-end;background:linear-gradient(145deg,rgba(90,150,255,0.9),rgba(55,105,220,0.9));color:#fff;border-bottom-right-radius:4px;}
 .chat-msg.them{align-self:flex-start;background:rgba(126,179,255,0.14);color:#e6eeff;border-bottom-left-radius:4px;border:1px solid rgba(126,179,255,0.25);}
-body.day-mode .chat-msg.them{background:rgba(126,179,255,0.22);color:#0a1832;}
 .chat-msg .sender{font-size:0.62rem;font-weight:900;opacity:0.85;margin-bottom:3px;display:block}
-.chat-msg.emoji-only{background:transparent!important;font-size:2.6rem;padding:4px 8px;line-height:1.15;border:none!important;box-shadow:none!important;max-width:100%;word-break:normal;}
-.chat-msg.emoji-only .sender{display:none}
-
 .emoji-picker{display:none;background:rgba(15,25,50,0.98);border-top:1px solid rgba(126,179,255,0.3);padding:8px;max-height:200px;overflow-y:auto;grid-template-columns:repeat(8,1fr);gap:4px;}
-body.day-mode .emoji-picker{background:rgba(240,246,255,0.98)}
 .emoji-picker.open{display:grid}
 .emoji-picker button{background:transparent;border:none;font-size:1.5rem;cursor:pointer;padding:4px;border-radius:10px;font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif;}
-
 .chat-input-row{display:flex;gap:6px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));border-top:1px solid rgba(126,179,255,0.3);background:rgba(0,0,0,0.35);align-items:center;}
 .chat-input-row .emoji-toggle{background:rgba(126,179,255,0.15);border:1px solid rgba(126,179,255,0.45);color:#7eb3ff;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.1rem;flex-shrink:0;font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif;}
 .chat-input-row .emoji-toggle.active{background:#7eb3ff;color:#0a1024}
 .chat-input-row input{flex:1;padding:11px 14px;border-radius:24px;border:1.5px solid rgba(126,179,255,0.4);background:rgba(10,18,40,0.9);color:#fff;font-family:'Cairo',sans-serif;font-size:0.85rem;min-width:0;}
 .chat-input-row button.send-btn{background:linear-gradient(145deg,rgba(90,150,255,0.95),rgba(55,105,220,0.95));border:none;color:#fff;width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:1.1rem;flex-shrink:0;}
-
-.chat-wrapper{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));right:14px;z-index:9990;display:none;}
-.chat-toggle-btn{background:linear-gradient(145deg,rgba(30,50,90,0.92),rgba(15,25,55,0.92));border:1.5px solid rgba(126,179,255,0.6);color:#7eb3ff;width:46px;height:46px;border-radius:50%;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;}
-.chat-toggle-btn .unread{position:absolute;top:-4px;right:-4px;background:linear-gradient(145deg,#ff3c5a,#c00030);color:#fff;font-size:0.6rem;font-weight:900;min-width:18px;height:18px;padding:0 5px;border-radius:9px;display:none;align-items:center;justify-content:center;}
-.chat-toggle-btn .unread.show{display:flex}
 
 .captured-wrapper{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));left:14px;z-index:9990;}
 .captured-btn{background:linear-gradient(145deg,rgba(30,50,90,0.92),rgba(15,25,55,0.92));border:1.5px solid rgba(126,179,255,0.6);color:#7eb3ff;padding:7px 12px;border-radius:24px;font-family:'Cairo',sans-serif;font-weight:700;font-size:0.72rem;cursor:pointer;display:flex;align-items:center;gap:5px;}
@@ -236,14 +226,43 @@ body.day-mode .emoji-picker{background:rgba(240,246,255,0.98)}
 .custom-time-row button{background:linear-gradient(145deg,#4ee0b0,#22b888);border:none;padding:9px 16px;border-radius:12px;color:#042020;font-weight:700;font-size:0.8rem;cursor:pointer;font-family:'Cairo',sans-serif;}
 .time-close-btn{background:linear-gradient(145deg,rgba(90,150,255,0.95),rgba(55,105,220,0.95));border:none;padding:10px 24px;border-radius:26px;color:white;font-weight:700;font-size:0.8rem;cursor:pointer;font-family:'Cairo',sans-serif;width:100%;}
 
-.day-mode .menu-icon{background:linear-gradient(145deg,rgba(255,255,255,0.95),rgba(230,238,255,0.95));border-color:rgba(126,179,255,0.85);color:#1a4dbb;}
-.day-mode .side-menu{background:linear-gradient(180deg,rgba(245,248,255,0.97),rgba(232,240,255,0.98));}
-.day-mode .side-menu button{background:linear-gradient(145deg,rgba(220,232,255,0.95),rgba(200,215,245,0.95));color:#0a1832;border-color:rgba(126,179,255,0.5);}
-.day-mode .side-menu .menu-title{color:#1a4dbb}
-.day-mode .profile-card{background:linear-gradient(145deg,rgba(220,235,255,0.9),rgba(200,220,255,0.85));}
-.day-mode .profile-card .pname{color:#0a1832}
-.day-mode .profile-card .pelo{color:#1a4dbb}
-.day-mode .captured-btn,.day-mode .chat-toggle-btn{background:linear-gradient(145deg,rgba(255,255,255,0.95),rgba(235,242,255,0.95));color:#1a4dbb;}
+/* ========== Replay Modal (نافذة منبثقة فوق شاشة اللعب) ========== */
+.replay-modal{position:fixed;inset:0;background:rgba(0,5,20,0.92);z-index:16000;display:none;justify-content:center;align-items:center;padding:12px;backdrop-filter:blur(16px);}
+.replay-modal.open{display:flex;}
+.replay-box{background:linear-gradient(145deg,rgba(20,35,70,0.98),rgba(10,18,40,0.98));border:2px solid rgba(126,179,255,0.7);border-radius:20px;width:100%;max-width:800px;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,0.85);}
+.replay-header{padding:12px 16px;border-bottom:1px solid rgba(126,179,255,0.3);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:rgba(10,18,40,0.6);}
+.replay-header h2{color:#a8c8ff;font-size:1rem;font-weight:900;}
+.replay-close{background:rgba(255,90,120,0.15);border:1px solid rgba(255,90,120,0.5);color:#ff8aa3;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:0.95rem;font-family:inherit;}
+.replay-close:hover{background:rgba(255,90,120,0.3);}
+.replay-body{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;}
+.replay-list{display:flex;flex-direction:column;gap:6px;}
+.replay-item{padding:10px 14px;background:rgba(126,179,255,0.08);border:1px solid rgba(126,179,255,0.3);border-radius:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;transition:all 0.2s;}
+.replay-item:hover{background:rgba(126,179,255,0.18);border-color:#7eb3ff;transform:translateX(-3px);}
+.replay-item .ri-info{flex:1;min-width:0;}
+.replay-item .ri-title{color:#e6eeff;font-weight:700;font-size:0.82rem;margin-bottom:2px;}
+.replay-item .ri-meta{color:#8ba0c8;font-size:0.68rem;}
+.replay-result{padding:3px 10px;border-radius:10px;font-size:0.72rem;font-weight:900;white-space:nowrap;}
+.replay-result.win{background:rgba(80,220,180,0.2);color:#7ee8c8;}
+.replay-result.loss{background:rgba(255,90,120,0.2);color:#ff8aa3;}
+.replay-result.draw{background:rgba(200,200,200,0.2);color:#ccc;}
+.replay-info{color:#a8c8ff;text-align:center;padding:8px;font-weight:700;font-size:0.82rem;margin-bottom:4px;}
+.replay-board{display:grid;grid-template-columns:repeat(8,1fr);width:min(50vw,320px);aspect-ratio:1;border:2px solid rgba(126,179,255,0.5);border-radius:6px;overflow:hidden;direction:ltr;flex-shrink:0;}
+.replay-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;position:relative;}
+.replay-cell.light{background:#f0d9b5;}
+.replay-cell.dark{background:#1e1e1e;}
+.replay-cell svg{width:85%;height:85%;}
+.replay-cell.highlight{box-shadow:inset 0 0 0 3px #feca57;background:rgba(254,202,87,0.3)!important;}
+.replay-controls{display:flex;gap:4px;justify-content:center;align-items:center;flex-wrap:wrap;}
+.replay-controls button{background:rgba(126,179,255,0.15);border:1px solid rgba(126,179,255,0.5);color:#a8c8ff;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:0.9rem;font-family:'Cairo',sans-serif;font-weight:700;transition:all 0.15s;}
+.replay-controls button:hover:not(:disabled){background:#7eb3ff;color:#0a1024;}
+.replay-controls button:disabled{opacity:0.3;cursor:not-allowed;}
+.replay-speed{display:flex;align-items:center;gap:6px;color:#a8c8ff;font-size:0.72rem;font-weight:700;}
+.replay-speed select{background:rgba(10,18,40,0.9);border:1px solid rgba(126,179,255,0.5);color:#7eb3ff;padding:5px 8px;border-radius:6px;font-family:'Cairo',sans-serif;font-weight:700;cursor:pointer;font-size:0.72rem;}
+.replay-moves-list{width:100%;max-height:120px;overflow-y:auto;margin-top:6px;padding:6px;background:rgba(10,18,40,0.6);border-radius:8px;border:1px solid rgba(126,179,255,0.2);font-family:'Courier New',monospace;font-size:0.7rem;color:#a8c8ff;display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:2px;}
+.replay-move-tag{padding:2px 5px;border-radius:4px;background:rgba(126,179,255,0.06);cursor:pointer;text-align:center;}
+.replay-move-tag:hover{background:rgba(126,179,255,0.2);}
+.replay-move-tag.current{background:rgba(126,179,255,0.45);color:#fff;font-weight:900;}
+.replay-empty{text-align:center;padding:30px 20px;color:#8ba0c8;font-size:0.82rem;}
 
 @media (max-width:380px){
     .logo-mini h1{font-size:0.5rem}
@@ -252,6 +271,7 @@ body.day-mode .emoji-picker{background:rgba(240,246,255,0.98)}
     .coord{font-size:0.45rem}
     .board-outer{padding:16px}
     .emoji-picker{grid-template-columns:repeat(7,1fr)}
+    .replay-board{width:min(80vw,280px)}
 }
 @media (min-width:700px){.app{max-width:560px}}
 
@@ -313,13 +333,12 @@ body.day-mode .emoji-picker{background:rgba(240,246,255,0.98)}
     <div class="menu-title">📈 المراحل (ضد الكمبيوتر)</div>
     <div id="stagesContainer"></div>
     <hr>
+    <button id="openReplayBtn" class="replay-btn">🎬 إعادة آخر المباريات</button>
     <button id="openColorsBtn">🎨 الألوان</button>
     <button id="toggleSoundBtn">🔊 صوت التحريك: مفعّل</button>
     <button id="toggleThemeBtn">☀️ الوضع النهاري</button>
     <button id="openStatsBtn">📊 الإحصائيات</button>
     <button id="changeNameBtn">✏️ تغيير الاسم</button>
-    <hr>
-    <button id="reportBtnSide" class="report-btn-side">🚨 الإبلاغ عن مشكلة</button>
 </div>
 
 <div class="side-menu" id="colorMenu" style="z-index:10001">
@@ -456,44 +475,56 @@ body.day-mode .emoji-picker{background:rgba(240,246,255,0.98)}
     </div>
 </div>
 
-<!-- Contact Dialog (بديل الإبلاغ) -->
-<div id="reportOverlay" style="position:fixed;inset:0;background:rgba(0,5,20,0.94);z-index:15500;display:none;justify-content:center;align-items:center;padding:20px;backdrop-filter:blur(16px);">
-    <div style="background:linear-gradient(145deg,rgba(20,35,70,0.98),rgba(10,18,40,0.98));padding:26px 22px;border-radius:22px;width:100%;max-width:420px;border:2px solid rgba(255,140,60,0.75);">
-        <h2 style="color:#ff9a5a;font-size:1.1rem;text-align:center;margin-bottom:6px">🚨 الإبلاغ عن مشكلة</h2>
-        <p style="color:#a8b0bc;font-size:0.72rem;text-align:center;margin-bottom:18px">تواصل معنا مباشرة عبر إحدى الطرق التالية</p>
-
-        <a href="https://www.instagram.com/ahmdhlaq031?stkn=MXRidmU2eW1zanZ5Zw==" target="_blank" rel="noopener"
-           style="display:flex;align-items:center;gap:12px;text-decoration:none;padding:13px 16px;border-radius:14px;margin-bottom:10px;background:linear-gradient(145deg,rgba(225,48,108,0.25),rgba(180,30,80,0.18));border:1.5px solid rgba(225,48,108,0.7);">
-            <span style="font-size:1.5rem">📸</span>
-            <div style="text-align:right;flex:1">
-                <div style="color:#ff7ab0;font-weight:900;font-size:0.9rem;font-family:'Cairo',sans-serif">إنستغرام</div>
-                <div style="color:#c8a0b8;font-size:0.65rem;font-family:'Courier New',monospace">ahmdhlaq031</div>
+<!-- Replay Modal -->
+<div class="replay-modal" id="replayModal">
+    <div class="replay-box">
+        <div class="replay-header">
+            <h2>🎬 إعادة المباريات</h2>
+            <button class="replay-close" id="replayClose">✕</button>
+        </div>
+        <div class="replay-body">
+            <div id="replayListContainer" style="flex:1; overflow-y:auto;">
+                <div class="replay-list" id="replayList"></div>
             </div>
-            <span style="color:#ff7ab0;font-size:1.2rem">↗</span>
-        </a>
-
-        <a href="https://wa.me/963937318709" target="_blank" rel="noopener"
-           style="display:flex;align-items:center;gap:12px;text-decoration:none;padding:13px 16px;border-radius:14px;margin-bottom:16px;background:linear-gradient(145deg,rgba(37,211,102,0.22),rgba(20,150,70,0.16));border:1.5px solid rgba(37,211,102,0.7);">
-            <span style="font-size:1.5rem">💬</span>
-            <div style="text-align:right;flex:1">
-                <div style="color:#4ee08a;font-weight:900;font-size:0.9rem;font-family:'Cairo',sans-serif">واتساب</div>
-                <div style="color:#9ec8a8;font-size:0.68rem;font-family:'Courier New',monospace">0937318709</div>
+            <div id="replayViewerContainer" style="display:none; flex:1; flex-direction:column;">
+                <div class="replay-info" id="replayInfo">اختر مباراة</div>
+                <div style="display:flex; gap:12px; padding:8px; flex-wrap:wrap;">
+                    <div class="replay-board" id="replayBoard" style="flex-shrink:0;"></div>
+                    <div style="flex:1; min-width:180px; display:flex; flex-direction:column; gap:6px;">
+                        <div class="replay-controls">
+                            <button id="replayStart" title="البداية">⏮️</button>
+                            <button id="replayPrev" title="السابق">◀️</button>
+                            <button id="replayPlay" title="تشغيل/إيقاف">▶️</button>
+                            <button id="replayNext" title="التالي">▶️▶️</button>
+                            <button id="replayEnd" title="النهاية">⏭️</button>
+                        </div>
+                        <div class="replay-speed" style="padding:6px; background:rgba(10,18,40,0.6); border-radius:10px;">
+                            <label>السرعة:</label>
+                            <select id="replaySpeed">
+                                <option value="2000">0.5x</option>
+                                <option value="1000" selected>1x</option>
+                                <option value="500">2x</option>
+                                <option value="250">4x</option>
+                            </select>
+                        </div>
+                        <button id="replayBackToList" style="background:rgba(126,179,255,0.15); border:1px solid rgba(126,179,255,0.5); color:#a8c8ff; padding:8px 12px; border-radius:10px; cursor:pointer; font-family:'Cairo',sans-serif; font-weight:700; font-size:0.8rem;">
+                            ← رجوع للقائمة
+                        </button>
+                    </div>
+                </div>
+                <div class="replay-moves-list" id="replayMovesList"></div>
             </div>
-            <span style="color:#4ee08a;font-size:1.2rem">↗</span>
-        </a>
-
-        <button id="reportCancelBtn" style="width:100%;padding:11px;border-radius:14px;border:1px solid rgba(150,160,180,0.5);background:rgba(60,70,90,0.5);color:#dceaff;font-family:'Cairo',sans-serif;font-weight:700;font-size:0.85rem;cursor:pointer;">إغلاق</button>
+        </div>
     </div>
 </div>
 
-<script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 <script>
 /* =========================================================
    PIECE SVGs
    ========================================================= */
 const PIECE_SVG = {
     'white_king': `<svg viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg"><g fill="#fff" stroke="#000" stroke-width="1.5" stroke-linejoin="round"><path d="M22.5 11.63V6M20 8h5" stroke-linecap="round"/><path d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5"/><path d="M12.5 37c5.5 3.5 14.5 3.5 20 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-2.5-7.5-12-10.5-16-4-3 6 6 10.5 6 10.5v7"/><path d="M12.5 30c5.5-3 14.5-3 20 0M12.5 33.5c5.5-3 14.5-3 20 0M12.5 37c5.5-3 14.5-3 20 0"/></g></svg>`,
-    'white_queen': `<svg viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg"><g fill="#fff" stroke="#000" stroke-width="1.5" stroke-linejoin="round"><path d="M9 26c8.5-1.5 21-1.5 27 0l2.5-12.5L31 25l-.3-14.1-5.2 13.6-3-14.5-3 14.5-5.2-13.6L14 25 6.5 13.5 9 26z"/><path d="M9 26c0 2 1.5 2 2.5 4 1 1.5 1 1 .5 3.5-1.5 1-1.5 2.5-1.5 2.5-1.5 1.5.5 2.5.5 2.5 6.5 1 16.5 1 23 0 0 0 1.5-1 0-2.5 0 0 .5-1.5-1-2.5-.5-2.5-.5-2 .5-3.5 1-2 2.5-2 2.5-4-8.5-1.5-18.5-1.5-27 0z" fill="#fff"/><path d="M11.5 30c3.5-1 18.5-1 22 0M12 33.5c6-1 15-1 21 0" fill="none"/><circle cx="6" cy="12" r="2"/><circle cx="14" cy="9" r="2"/><circle cx="22.5" cy="8" r="2"/><circle cx="31" cy="9" r="2"/><circle cx="39" cy="12" r="2"/></g></svg>`,
+    'white_queen': `<svg viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg"><g fill="#fff" stroke="#000" stroke-width="1.5" stroke-linejoin="round"><path d="M9 26c8.5-1.5 21-1.5 27 0l2.5-12.5L31 25l-.3-14.1-5.2 13.6-3-14.5-3 14.5-5.2-13.6L14 25 6.5 13.5 9 26z"/><path d="M9 26c0 2 1.5 2 2.5 4 1 1.5 1 1 .5 3.5-1.5 1-1.5 2.5-1.5 2.5-1.5 1.5.5 2.5.5 2.5 6.5 1 16.5 1 23 0 0 0 1.5-1 0-2.5 0 0 .5-1.5-1-2.5-.5-2.5-.5-2 .5-3.5 1-2 2.5-2 2.5-4-8.5-1.5-18.5-1.5-27 0z"/><circle cx="6" cy="12" r="2"/><circle cx="14" cy="9" r="2"/><circle cx="22.5" cy="8" r="2"/><circle cx="31" cy="9" r="2"/><circle cx="39" cy="12" r="2"/></g></svg>`,
     'white_rook': `<svg viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg"><g fill="#fff" stroke="#000" stroke-width="1.5" stroke-linejoin="round"><path d="M9 39h27v-3H9v3zM12 36v-4h21v4H12zM11 14V9h4v2h5V9h5v2h5V9h4v5"/><path d="M34 14l-3 3H14l-3-3"/><path d="M31 17v12.5H14V17"/><path d="M31 29.5l1.5 2.5h-20l1.5-2.5"/></g></svg>`,
     'white_bishop': `<svg viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg"><g fill="#fff" stroke="#000" stroke-width="1.5" stroke-linejoin="round"><path d="M9 36c3.39-.97 10.11.43 13.5-2 3.39 2.43 10.11 1.03 13.5 2 0 0 1.65.54 3 2-.68.97-1.65.99-3 .5-3.39-.97-10.11.46-13.5-1-3.39 1.46-10.11.03-13.5 1-1.354.49-2.323.47-3-.5 1.354-1.94 3-2 3-2z"/><path d="M15 32c2.5 2.5 12.5 2.5 15 0 .5-1.5 0-2 0-2 0-2.5-2.5-4-2.5-4 5.5-1.5 6-11.5-5-15.5-11 4-10.5 14-5 15.5 0 0-2.5 1.5-2.5 4 0 0-.5.5 0 2z"/><circle cx="22.5" cy="8" r="2.5"/></g></svg>`,
     'white_knight': `<svg viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg"><g fill="#fff" stroke="#000" stroke-width="1.5" stroke-linejoin="round"><path d="M22 10c10.5 1 16.5 8 16 29H15c0-9 10-6.5 8-21"/><path d="M24 18c.38 2.91-5.55 7.37-8 9-3 2-2.82 4.34-5 4-1.042-.94 1.41-3.04 0-3-1 0 .19 1.23-1 2-1 0-4.003 1-4-4 0-2 6-12 6-12s1.89-1.9 2-3.5c-.73-.994-.5-2-.5-3 1-1 3 2.5 3 2.5h2s.78-1.992 2.5-3c1 0 1 3 1 3"/></g></svg>`,
@@ -517,7 +548,8 @@ const STORAGE_KEYS = {
     GAMES_WON_AS_BLACK:'chess_won_black', FASTEST_WIN:'chess_fastest_win',
     CURRENT_STREAK:'chess_current_streak', BEST_STREAK:'chess_best_streak',
     UNLOCKED_STAGE:'chess_unlocked_stage', SOUND_ENABLED:'chess_sound_enabled',
-    SAVED_AI_GAME:'chess_saved_ai_game', INITIAL_TIME:'chess_initial_time'
+    SAVED_AI_GAME:'chess_saved_ai_game', INITIAL_TIME:'chess_initial_time',
+    GAME_HISTORY:'chess_game_history', DEVICE_FP:'chess_device_fp'
 };
 
 function loadData(key, fallback){ try{ let v = localStorage.getItem(key); return v !== null ? JSON.parse(v) : fallback; }catch(e){ return fallback; } }
@@ -541,6 +573,177 @@ let isBoardFlipped = false, moveHistory = [];
 let drawOfferPending = false, autosaveTimer = null, drawOfferTimeout = null, lastEloDelta = 0;
 let INITIAL_TIME = 10 * 60, whiteTime = INITIAL_TIME, blackTime = INITIAL_TIME, selectedTimeOption = '10';
 
+/* ========== Device fingerprint ========== */
+let DEVICE_FP = null;
+function getDeviceFingerprint() {
+    if (DEVICE_FP) return DEVICE_FP;
+    let saved = loadData(STORAGE_KEYS.DEVICE_FP, null);
+    if (saved) { DEVICE_FP = saved; return saved; }
+    const parts = [
+        navigator.userAgent || '',
+        navigator.language || '',
+        screen.width + 'x' + screen.height,
+        navigator.hardwareConcurrency || 0,
+        (new Date()).getTimezoneOffset()
+    ];
+    let hash = 0;
+    const str = parts.join('|');
+    for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+        hash |= 0;
+    }
+    DEVICE_FP = 'fp_' + Math.abs(hash).toString(36) + '_' + Math.random().toString(36).slice(2,6);
+    saveData(STORAGE_KEYS.DEVICE_FP, DEVICE_FP);
+    return DEVICE_FP;
+}
+
+/* ========== Game Record (for replay) ========== */
+let currentGameRecord = { mode: null, stage: 1, myColor: 'white', startTime: null, endTime: null, result: null, moves: [], finalBoard: null, opponentName: null };
+
+function startGameRecord(mode, stage, color, oppName) {
+    currentGameRecord = { mode: mode, stage: stage || 1, myColor: color || 'white', startTime: Date.now(), endTime: null, result: null, moves: [], finalBoard: null, opponentName: oppName || null };
+}
+
+function recordMove(from, to, piece, capture, promoteTo) {
+    if (!currentGameRecord || currentGameRecord.result !== null) return;
+    currentGameRecord.moves.push({ from: [from[0], from[1]], to: [to[0], to[1]], piece: piece, capture: !!capture, promoteTo: promoteTo || null, timestamp: Date.now() });
+}
+
+function finalizeGameRecord(result) {
+    if (!currentGameRecord) return;
+    currentGameRecord.result = result;
+    currentGameRecord.endTime = Date.now();
+    currentGameRecord.finalBoard = board.map(row => row.map(p => p));
+    try {
+        const history = loadData(STORAGE_KEYS.GAME_HISTORY, []);
+        history.unshift(JSON.parse(JSON.stringify(currentGameRecord)));
+        if (history.length > 10) history.length = 10;
+        saveData(STORAGE_KEYS.GAME_HISTORY, history);
+    } catch(e) { console.warn('save history:', e); }
+}
+
+/* =========================================================
+   AI: Minimax + Alpha-Beta
+   ========================================================= */
+const PIECE_VALUES = { pawn: 100, knight: 320, bishop: 330, rook: 500, queen: 900, king: 20000 };
+const PAWN_TABLE = [[0,0,0,0,0,0,0,0],[50,50,50,50,50,50,50,50],[10,10,20,30,30,20,10,10],[5,5,10,25,25,10,5,5],[0,0,0,20,20,0,0,0],[5,-5,-10,0,0,-10,-5,5],[5,10,10,-20,-20,10,10,5],[0,0,0,0,0,0,0,0]];
+const KNIGHT_TABLE = [[-50,-40,-30,-30,-30,-30,-40,-50],[-40,-20,0,0,0,0,-20,-40],[-30,0,10,15,15,10,0,-30],[-30,5,15,20,20,15,5,-30],[-30,0,15,20,20,15,0,-30],[-30,5,10,15,15,10,5,-30],[-40,-20,0,5,5,0,-20,-40],[-50,-40,-30,-30,-30,-30,-40,-50]];
+const BISHOP_TABLE = [[-20,-10,-10,-10,-10,-10,-10,-20],[-10,0,0,0,0,0,0,-10],[-10,0,5,10,10,5,0,-10],[-10,5,5,10,10,5,5,-10],[-10,0,10,10,10,10,0,-10],[-10,10,10,10,10,10,10,-10],[-10,5,0,0,0,0,5,-10],[-20,-10,-10,-10,-10,-10,-10,-20]];
+const ROOK_TABLE = [[0,0,0,0,0,0,0,0],[5,10,10,10,10,10,10,5],[-5,0,0,0,0,0,0,-5],[-5,0,0,0,0,0,0,-5],[-5,0,0,0,0,0,0,-5],[-5,0,0,0,0,0,0,-5],[-5,0,0,0,0,0,0,-5],[0,0,0,5,5,0,0,0]];
+const KING_TABLE = [[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-20,-30,-30,-40,-40,-30,-30,-20],[-10,-20,-20,-20,-20,-20,-20,-10],[20,20,0,0,0,0,20,20],[20,30,10,0,0,10,30,20]];
+const STAGE_DEPTH = { 1:1, 2:2, 3:2, 4:3, 5:3, 6:4, 7:4, 8:5, 9:5, 10:6 };
+
+function evaluateBoard(b) {
+    let score = 0;
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            const piece = b[r][c];
+            if (!piece) continue;
+            const parts = piece.split('_');
+            const color = parts[0], type = parts[1];
+            let val = PIECE_VALUES[type] || 0;
+            let pos = 0;
+            const tableRow = (color === 'black') ? r : (7 - r);
+            if (type === 'pawn') pos = PAWN_TABLE[tableRow][c];
+            else if (type === 'knight') pos = KNIGHT_TABLE[tableRow][c];
+            else if (type === 'bishop') pos = BISHOP_TABLE[tableRow][c];
+            else if (type === 'rook') pos = ROOK_TABLE[tableRow][c];
+            else if (type === 'king') pos = KING_TABLE[tableRow][c];
+            const total = val + pos;
+            if (color === 'black') score += total;
+            else score -= total;
+        }
+    }
+    return score;
+}
+
+function makeMoveOnBoard(b, from, to, promoteTo) {
+    if (!promoteTo) promoteTo = 'queen';
+    const piece = b[from[0]][from[1]];
+    if (!piece) return;
+    const parts = piece.split('_');
+    const color = parts[0], type = parts[1];
+    b[to[0]][to[1]] = piece;
+    b[from[0]][from[1]] = null;
+    if (type === 'pawn' && ((color === 'white' && to[0] === 0) || (color === 'black' && to[0] === 7))) {
+        b[to[0]][to[1]] = color + '_' + promoteTo;
+    }
+    if (type === 'king' && Math.abs(to[1] - from[1]) === 2) {
+        const rookFrom = to[1] > from[1] ? 7 : 0;
+        const rookTo = to[1] > from[1] ? 5 : 3;
+        b[from[0]][rookTo] = b[from[0]][rookFrom];
+        b[from[0]][rookFrom] = null;
+    }
+}
+
+function minimax(b, depth, alpha, beta, isMax, colorToMove) {
+    if (depth === 0) return evaluateBoard(b);
+    const moves = generateMovesFast(b, colorToMove);
+    if (moves.length === 0) {
+        if (isKingInCheck(b, colorToMove)) return colorToMove === 'black' ? (-100000 + (10 - depth)) : (100000 - (10 - depth));
+        return 0;
+    }
+    moves.sort((a, b2) => {
+        const tA = b[a.to[0]][a.to[1]], tB = b[b2.to[0]][b2.to[1]];
+        const vA = tA ? (PIECE_VALUES[tA.split('_')[1]] || 0) : 0;
+        const vB = tB ? (PIECE_VALUES[tB.split('_')[1]] || 0) : 0;
+        return vB - vA;
+    });
+    if (isMax) {
+        let maxEval = -Infinity;
+        for (let i = 0; i < moves.length; i++) {
+            const move = moves[i];
+            const nb = b.map(row => row.slice());
+            makeMoveOnBoard(nb, move.from, move.to);
+            if (isKingInCheck(nb, colorToMove)) continue;
+            const ev = minimax(nb, depth - 1, alpha, beta, false, 'white');
+            if (ev > maxEval) maxEval = ev;
+            if (ev > alpha) alpha = ev;
+            if (beta <= alpha) break;
+        }
+        return maxEval === -Infinity ? evaluateBoard(b) : maxEval;
+    } else {
+        let minEval = Infinity;
+        for (let i = 0; i < moves.length; i++) {
+            const move = moves[i];
+            const nb = b.map(row => row.slice());
+            makeMoveOnBoard(nb, move.from, move.to);
+            if (isKingInCheck(nb, colorToMove)) continue;
+            const ev = minimax(nb, depth - 1, alpha, beta, true, 'black');
+            if (ev < minEval) minEval = ev;
+            if (ev < beta) beta = ev;
+            if (beta <= alpha) break;
+        }
+        return minEval === Infinity ? evaluateBoard(b) : minEval;
+    }
+}
+
+function getComputerMove() {
+    const depth = STAGE_DEPTH[currentStage] || 3;
+    const moves = getAllValidMoves('black', board);
+    if (!moves.length) return null;
+    let bestMove = null, bestScore = -Infinity, alpha = -Infinity;
+    const beta = Infinity, startTime = Date.now(), TIME_LIMIT = 4000;
+    moves.sort((a, b) => {
+        const tA = board[a.to[0]][a.to[1]], tB = board[b.to[0]][b.to[1]];
+        const vA = tA ? (PIECE_VALUES[tA.split('_')[1]] || 0) : 0;
+        const vB = tB ? (PIECE_VALUES[tB.split('_')[1]] || 0) : 0;
+        return vB - vA;
+    });
+    for (let i = 0; i < moves.length; i++) {
+        if (Date.now() - startTime > TIME_LIMIT && bestMove) break;
+        const move = moves[i];
+        const nb = board.map(row => row.slice());
+        makeMoveOnBoard(nb, move.from, move.to);
+        if (isKingInCheck(nb, 'black')) continue;
+        const score = minimax(nb, depth - 1, alpha, beta, true, 'white');
+        if (score > bestScore) { bestScore = score; bestMove = move; }
+        if (score > alpha) alpha = score;
+    }
+    return bestMove;
+}
+
+/* ========== Audio ========== */
 let audioCtx = null;
 function initAudio(){ if(audioCtx) return; try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){} }
 function playMoveSound(isCapture){
@@ -548,31 +751,26 @@ function playMoveSound(isCapture){
     initAudio(); if(!audioCtx) return;
     try{
         if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
         if(isCapture){
-            let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
             osc.type = 'square';
             osc.frequency.setValueAtTime(220, audioCtx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.15);
             gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
         } else {
-            let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
             osc.type = 'sine';
             osc.frequency.setValueAtTime(650, audioCtx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(320, audioCtx.currentTime + 0.09);
             gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.13);
         }
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
     }catch(e){}
 }
 
-/* =========================================================
-   ✅ BASE64 EMOJI-SAFE TEXT ENCODING
-   ========================================================= */
+/* ========== Base64 ========== */
 function encodeTextSafe(text){
     try{
         const utf8Bytes = new TextEncoder().encode(String(text));
@@ -582,10 +780,7 @@ function encodeTextSafe(text){
             binary += String.fromCharCode.apply(null, utf8Bytes.subarray(i, i + chunkSize));
         }
         return btoa(binary);
-    }catch(e){
-        console.warn('encodeTextSafe failed', e);
-        return '';
-    }
+    }catch(e){ return ''; }
 }
 function decodeTextSafe(base64){
     try{
@@ -593,12 +788,8 @@ function decodeTextSafe(base64){
         const bytes = new Uint8Array(binary.length);
         for(let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
         return new TextDecoder('utf-8').decode(bytes);
-    }catch(e){
-        console.warn('decodeTextSafe failed', e);
-        return '';
-    }
+    }catch(e){ return ''; }
 }
-
 function safeSliceGraphemes(text, maxGraphemes){
     if(!text) return '';
     try{
@@ -611,9 +802,7 @@ function safeSliceGraphemes(text, maxGraphemes){
     return [...String(text)].slice(0, maxGraphemes).join('');
 }
 
-/* =========================================================
-   CLOCKS
-   ========================================================= */
+/* ========== Clocks ========== */
 let whiteMovesCount = 0, blackMovesCount = 0, clockInterval = null, clockRunning = false;
 function formatTime(sec){ if(sec<0) sec=0; let m = Math.floor(sec/60), s = sec%60; return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
 function updateClockDisplay(){
@@ -630,13 +819,8 @@ function startClock(){
     if(clockInterval) clearInterval(clockInterval);
     clockInterval = setInterval(()=>{
         if(gameOver) return;
-        if(turn==='white'){
-            whiteTime--;
-            if(whiteTime<=0){whiteTime=0;updateClockDisplay();stopClock();setGameOver('الأسود');return;}
-        }else{
-            blackTime--;
-            if(blackTime<=0){blackTime=0;updateClockDisplay();stopClock();setGameOver('الأبيض');return;}
-        }
+        if(turn==='white'){ whiteTime--; if(whiteTime<=0){whiteTime=0;updateClockDisplay();stopClock();setGameOver('الأسود');return;} }
+        else { blackTime--; if(blackTime<=0){blackTime=0;updateClockDisplay();stopClock();setGameOver('الأبيض');return;} }
         updateClockDisplay();
     },1000);
 }
@@ -708,12 +892,10 @@ function showStatsWindow(){
         <div class="stat-row"><span class="stat-label">ELO</span><span class="stat-value">${elo}</span></div>
         <div class="stat-row"><span class="stat-label">معدل الفوز</span><span class="stat-value">${winRate}%</span></div>
         <div class="stats-section">🌐 أونلاين</div>
-        <div class="stat-row"><span class="stat-label">مباريات</span><span class="stat-value">${s.onlineWins + s.onlineLosses + s.onlineDraws}</span></div>
         <div class="stat-row"><span class="stat-label">فوز</span><span class="stat-value" style="color:#7ee8c8">${s.onlineWins}</span></div>
         <div class="stat-row"><span class="stat-label">خسارة</span><span class="stat-value" style="color:#ff8aa3">${s.onlineLosses}</span></div>
         <div class="stat-row"><span class="stat-label">تعادل</span><span class="stat-value">${s.onlineDraws}</span></div>
         <div class="stats-section">🤖 كمبيوتر</div>
-        <div class="stat-row"><span class="stat-label">مباريات</span><span class="stat-value">${s.computerGames}</span></div>
         <div class="stat-row"><span class="stat-label">فوز</span><span class="stat-value" style="color:#7ee8c8">${s.computerWins}</span></div>
         <div class="stat-row"><span class="stat-label">خسارة</span><span class="stat-value" style="color:#ff8aa3">${s.computerLosses}</span></div>
         <div class="stat-row"><span class="stat-label">تعادل</span><span class="stat-value">${s.computerDraws}</span></div>
@@ -731,12 +913,7 @@ function showStatsWindow(){
     overlay.querySelector('#closeStatsBtn').onclick = () => overlay.remove();
 }
 
-const STAGES = {
-    1:{name:'مبتدئ',randomness:0.6},2:{name:'هاوٍ',randomness:0.5},3:{name:'متوسط',randomness:0.4},
-    4:{name:'جيد',randomness:0.3},5:{name:'متقدم',randomness:0.2},6:{name:'خبير',randomness:0.15},
-    7:{name:'محترف',randomness:0.1},8:{name:'خارق',randomness:0.05},9:{name:'أسطوري',randomness:0.02},
-    10:{name:'إلهي',randomness:0}
-};
+const STAGES = { 1:{name:'مبتدئ'},2:{name:'هاوٍ'},3:{name:'متوسط'},4:{name:'جيد'},5:{name:'متقدم'},6:{name:'خبير'},7:{name:'محترف'},8:{name:'خارق'},9:{name:'أسطوري'},10:{name:'إلهي'} };
 function renderStagesButtons(){
     let container = document.getElementById('stagesContainer'); container.innerHTML = '';
     for(let i=1; i<=10; i++){
@@ -762,7 +939,6 @@ function canPlayerMove(color){
 function initBoard(){
     let b=Array(8).fill().map(()=>Array(8).fill(null));
     for(let i=0;i<8;i++){b[1][i]='black_pawn';b[6][i]='white_pawn';}
-    // ✅ الترتيب الصحيح: الوزير على لونه، الملك بجانبه
     const order=['rook','knight','bishop','queen','king','bishop','knight','rook'];
     for(let i=0;i<8;i++){b[0][i]=`black_${order[i]}`;b[7][i]=`white_${order[i]}`;}
     whiteKingMoved=false;blackKingMoved=false;
@@ -780,24 +956,15 @@ function isSquareUnderAttack(r,c,b,defendingColor){
     return false;
 }
 function isKingInCheck(b,color){ let k=findKing(b,color); if(!k)return false; return isSquareUnderAttack(k[0],k[1],b,color); }
-function isValidCastling(color,kFrom,kTo,rFrom,rTo,b){
-    if(color==='white'&&whiteKingMoved)return false;
-    if(color==='black'&&blackKingMoved)return false;
-    if(color==='white'){ if(kTo[1]===6&&whiteRookMoved.right)return false; if(kTo[1]===2&&whiteRookMoved.left)return false; }
-    else { if(kTo[1]===6&&blackRookMoved.right)return false; if(kTo[1]===2&&blackRookMoved.left)return false; }
-    let kingRow=color==='white'?7:0;
-    if(kFrom[0]!==kingRow || rFrom[0]!==kingRow) return false;
-    let step=kTo[1]>kFrom[1]?1:-1;
-    for(let c=kFrom[1]+step;c!==kTo[1];c+=step)if(b[kFrom[0]][c])return false;
-    if(isSquareUnderAttack(kFrom[0],kFrom[1],b,color))return false;
-    if(isSquareUnderAttack(kFrom[0],kFrom[1]+step,b,color))return false;
-    if(isSquareUnderAttack(kTo[0],kTo[1],b,color))return false;
-    return true;
-}
+
 function isValidMoveBasic(piece,fromR,fromC,toR,toC,b){
     if(toR<0||toR>7||toC<0||toC>7)return false;
     let target=b[toR][toC];
-    if(target&&target.split('_')[0]===piece.split('_')[0])return false;
+    if(target){
+        const targetColor = target.split('_')[0];
+        const pieceColor = piece.split('_')[0];
+        if(targetColor === pieceColor) return false;
+    }
     let dr=toR-fromR,dc=toC-fromC;
     let type=piece.split('_')[1],color=piece.split('_')[0];
     if(type==='pawn'){
@@ -817,8 +984,7 @@ function isValidMoveBasic(piece,fromR,fromC,toR,toC,b){
             let rookCol=dc===2?7:0;
             let rookPiece=b[fromR][rookCol];
             if(rookPiece&&rookPiece===`${color}_rook`){
-                let newKingCol=fromC+(dc>0?2:-2), newRookCol=dc>0?fromC+1:fromC-1;
-                return isValidCastling(color,[fromR,fromC],[fromR,newKingCol],[fromR,rookCol],[fromR,newRookCol],b);
+                return isValidCastling(color,[fromR,fromC],[fromR,fromC+(dc>0?2:-2)],[fromR,rookCol],[fromR,fromC+(dc>0?1:-1)],b);
             }
         }
         return false;
@@ -829,6 +995,21 @@ function isClearLine(r1,c1,r2,c2,b){
     let dr=r2===r1?0:(r2>r1?1:-1), dc=c2===c1?0:(c2>c1?1:-1);
     let r=r1+dr,c=c1+dc;
     while(!(r===r2&&c===c2)){ if(b[r][c])return false; r+=dr;c+=dc; }
+    return true;
+}
+function isValidCastling(color,kFrom,kTo,rFrom,rTo,b){
+    if(color==='white'&&whiteKingMoved)return false;
+    if(color==='black'&&blackKingMoved)return false;
+    if(color==='white'){ if(kTo[1]===6&&whiteRookMoved.right)return false; if(kTo[1]===2&&whiteRookMoved.left)return false; }
+    else { if(kTo[1]===6&&blackRookMoved.right)return false; if(kTo[1]===2&&blackRookMoved.left)return false; }
+    let kingRow=color==='white'?7:0;
+    if(kFrom[0]!==kingRow || rFrom[0]!==kingRow) return false;
+    if (b[rFrom[0]][rFrom[1]] !== `${color}_rook`) return false;
+    let step=kTo[1]>kFrom[1]?1:-1;
+    for(let c=kFrom[1]+step;c!==kTo[1];c+=step)if(b[kFrom[0]][c])return false;
+    if(isSquareUnderAttack(kFrom[0],kFrom[1],b,color))return false;
+    if(isSquareUnderAttack(kFrom[0],kFrom[1]+step,b,color))return false;
+    if(isSquareUnderAttack(kTo[0],kTo[1],b,color))return false;
     return true;
 }
 function isMoveSafe(piece,fromR,fromC,toR,toC,b,color){
@@ -855,6 +1036,17 @@ function getAllValidMoves(color,b){
     }
     return moves;
 }
+function generateMovesFast(b, color) {
+    const moves = [];
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+        const piece = b[r][c];
+        if (!piece || !piece.startsWith(color)) continue;
+        for (let tr = 0; tr < 8; tr++) for (let tc = 0; tc < 8; tc++) {
+            if (isValidMoveBasic(piece, r, c, tr, tc, b)) moves.push({ from: [r, c], to: [tr, tc], piece: piece });
+        }
+    }
+    return moves;
+}
 function getGameState(b,currentTurn){
     let inCheck=isKingInCheck(b,currentTurn);
     let hasMoves=getAllValidMoves(currentTurn,b).length>0;
@@ -863,27 +1055,35 @@ function getGameState(b,currentTurn){
     if(inCheck)return'check';
     return'normal';
 }
+
 function applyOnlineElo(result){
-    let delta = result === 'win' ? 16 : result === 'loss' ? -14 : 0;
+    const oppFp = window._opponentDeviceFp;
+    if (oppFp && oppFp === getDeviceFingerprint()) { showToast('⚠️ لن يتم احتساب ELO (نفس الجهاز)'); lastEloDelta = 0; return; }
+    if (currentGameStats.moves < 5 && result === 'win') { showToast('⚠️ مباراة قصيرة جداً — لن يتم احتساب ELO'); lastEloDelta = 0; return; }
+    const myElo = elo, oppElo = window._opponentElo || 800, k = 32;
+    let score = result === 'win' ? 1 : result === 'loss' ? 0 : 0.5;
+    const expected = 1 / (1 + Math.pow(10, (oppElo - myElo) / 400));
+    const delta = Math.round(k * (score - expected));
     elo = Math.max(100, elo + delta);
-    saveData(STORAGE_KEYS.ELO, elo); updateEloDisplay(); lastEloDelta = delta;
+    saveData(STORAGE_KEYS.ELO, elo);
+    updateEloDisplay();
+    lastEloDelta = delta;
 }
+
 function setGameOver(winnerColor){
     if(gameOver) return;
     gameOver=true;winner=winnerColor;
     stopClock(); updateClockDisplay();
     let result = 'draw';
     if(winnerColor !== 'تعادل'){
-        if(gameMode === 'online') result = (winnerColor === (myColor==='white'?'الأبيض':'الأسود')) ? 'win' : 'loss';
+        if(gameMode === 'online') { const myColorName = myColor === 'white' ? 'الأبيض' : 'الأسود'; result = (winnerColor === myColorName) ? 'win' : 'loss'; }
         else result = (winnerColor === 'الأبيض') ? 'win' : 'loss';
     }
+    finalizeGameRecord(result);
     updateStats(result, gameMode);
     if(gameMode === 'online') applyOnlineElo(result); else lastEloDelta = 0;
     if(gameMode === 'computer' && result === 'win'){
-        if(currentStage === unlockedStage && unlockedStage < 10){
-            unlockedStage++; saveData(STORAGE_KEYS.UNLOCKED_STAGE, unlockedStage); renderStagesButtons();
-            setTimeout(()=>showToast(`🎉 فتحت المرحلة ${unlockedStage}!`, 3000), 1500);
-        }
+        if(currentStage === unlockedStage && unlockedStage < 10){ unlockedStage++; saveData(STORAGE_KEYS.UNLOCKED_STAGE, unlockedStage); renderStagesButtons(); setTimeout(()=>showToast(`🎉 فتحت المرحلة ${unlockedStage}!`, 3000), 1500); }
     }
     if(gameMode === 'computer') localStorage.removeItem(STORAGE_KEYS.SAVED_AI_GAME);
     setTimeout(showWinnerScreen,500);
@@ -891,13 +1091,9 @@ function setGameOver(winnerColor){
 function showWinnerScreen(){
     let overlay=document.createElement('div'); overlay.className='winner-overlay';
     let emoji=winner==='تعادل'?'🤝':'🏆';
-    let text=winner==='تعادل'?'تعادل!':`فاز ${escapeHtml(winner)}!`;
+    let text=winner==='تعادل'?'تعادل!':`فاز ${escapeHtml(winner || '؟')}!`;
     let eloHtml = '';
-    if(gameMode === 'online'){
-        let d = lastEloDelta;
-        if(d > 0) eloHtml = `<div class="elo-change up">+${d} ELO</div>`;
-        else if(d < 0) eloHtml = `<div class="elo-change down">${d} ELO</div>`;
-    }
+    if(gameMode === 'online'){ let d = lastEloDelta; if(d > 0) eloHtml = `<div class="elo-change up">+${d} ELO</div>`; else if(d < 0) eloHtml = `<div class="elo-change down">${d} ELO</div>`; }
     overlay.innerHTML=`<div class="winner-box"><div class="emoji">${emoji}</div><h2>${text}</h2>${eloHtml}<button id="newGameFromWinner">لعبة جديدة</button></div>`;
     document.body.appendChild(overlay);
     overlay.querySelector('#newGameFromWinner').onclick=()=>{overlay.remove();resetGame();};
@@ -916,48 +1112,30 @@ function showPromotionDialog(row,col,color){
         btn.addEventListener('click',()=>{
             let type=btn.getAttribute('data-piece');
             board[row][col]=`${color}_${type}`;
+            const lastRec = currentGameRecord.moves[currentGameRecord.moves.length - 1];
+            if (lastRec && lastRec.to[0] === row && lastRec.to[1] === col) lastRec.promoteTo = type;
             dialog.remove(); pendingPromotion=null;
             let state=getGameState(board,turn);
             if(state==='checkmate')setGameOver(turn==='white'?'الأسود':'الأبيض');
-            else if(state==='stalemate'){gameOver=true;winner='تعادل';stopClock();updateStats('draw',gameMode);setTimeout(showWinnerScreen,500);}
+            else if(state==='stalemate'){gameOver=true;winner='تعادل';stopClock();updateStats('draw',gameMode);finalizeGameRecord('draw');setTimeout(showWinnerScreen,500);}
             renderBoard();
             if(gameMode==='computer'&&turn==='black'&&!gameOver)scheduleComputerMove();
             if(gameMode==='online')sendGameState();
         });
     });
 }
-function getComputerMove(){
-    let stage = STAGES[currentStage] || STAGES[1];
-    let moves=getAllValidMoves('black',board);
-    if(!moves.length)return null;
-    let scored=moves.map(m=>{
-        let score=0, target=board[m.to[0]][m.to[1]];
-        if(target&&target.startsWith('white'))score+=(pieceValue[target.split('_')[1]]||0)*10;
-        let temp=copyBoard(board); temp[m.to[0]][m.to[1]]=temp[m.from[0]][m.from[1]]; temp[m.from[0]][m.from[1]]=null;
-        if(isKingInCheck(temp,'white'))score+=50;
-        if(isKingInCheck(temp,'black'))score-=30;
-        score+=(7-(Math.abs(m.to[0]-3.5)+Math.abs(m.to[1]-3.5)))*0.5;
-        return{move:m,score};
-    });
-    scored.sort((a,b)=>b.score-a.score);
-    let randomness = stage.randomness;
-    if(randomness > 0){
-        let top = Math.max(1, Math.floor(scored.length * randomness));
-        return scored[Math.floor(Math.random()*top)].move;
-    }
-    return scored[0].move;
-}
+
 function scheduleComputerMove(){
     if(computerTimeout)clearTimeout(computerTimeout);
     computerTimeout=setTimeout(()=>{
         if(gameMode==='computer'&&turn==='black'&&!gameOver&&!pendingPromotion){
-            let move=getComputerMove();
+            const move=getComputerMove();
             if(move)makeMove(move.from[0],move.from[1],move.to[0],move.to[1],true);
         }
     },350);
 }
 
-function makeMove(fromR,fromC,toR,toC,fromAI=false){
+function makeMove(fromR,fromC,toR,toC,fromAI){
     if(gameOver||isAnimating)return false;
     let piece=board[fromR][fromC];
     if(!piece||piece.split('_')[0]!==turn)return false;
@@ -965,26 +1143,19 @@ function makeMove(fromR,fromC,toR,toC,fromAI=false){
     if(target&&target.split('_')[0]===turn)return false;
     if(!isValidMoveFull(piece,fromR,fromC,toR,toC,board,turn))return false;
     if(gameMode === 'computer' && !fromAI){
-        moveHistory.push({
-            board: copyBoard(board), turn,
-            whiteKingMoved, blackKingMoved,
-            whiteRookMoved: {...whiteRookMoved}, blackRookMoved: {...blackRookMoved},
-            capturedWhite: [...capturedWhite], capturedBlack: [...capturedBlack],
-            lastMove: lastMove ? {from:[...lastMove.from], to:[...lastMove.to]} : null,
-            whiteTime, blackTime, whiteMovesCount, blackMovesCount
-        });
+        moveHistory.push({ board: copyBoard(board), turn, whiteKingMoved, blackKingMoved, whiteRookMoved: {...whiteRookMoved}, blackRookMoved: {...blackRookMoved}, capturedWhite: [...capturedWhite], capturedBlack: [...capturedBlack], lastMove: lastMove ? {from:[...lastMove.from], to:[...lastMove.to]} : null, whiteTime, blackTime, whiteMovesCount, blackMovesCount });
     }
     let isCapture = !!target;
-    if(target){
-        let color=target.split('_')[0],type=target.split('_')[1];
-        if(color==='white')capturedBlack.push(type); else capturedWhite.push(type);
-        currentGameStats.captures++;
-    }
+    if(target){ let color=target.split('_')[0],type=target.split('_')[1]; if(color==='white')capturedBlack.push(type); else capturedWhite.push(type); currentGameStats.captures++; }
     playMoveSound(isCapture);
     let color=turn, isKing=piece.split('_')[1]==='king', isRook=piece.split('_')[1]==='rook';
     let isCastling=isKing&&Math.abs(toC-fromC)===2;
+    const isPawnPromotion = piece.split('_')[1] === 'pawn' && (toR === 0 || toR === 7);
+    recordMove([fromR, fromC], [toR, toC], piece, isCapture, isPawnPromotion ? 'queen' : null);
     isAnimating=true;
+    let animSafety = setTimeout(()=>{ isAnimating = false; }, 600);
     animateMove(fromR,fromC,toR,toC,piece,()=>{
+        clearTimeout(animSafety);
         if(isCastling){
             let rookCol=toC>fromC?7:0, newRookCol=toC>fromC?5:3;
             board[fromR][fromC]=null; board[fromR][rookCol]=null;
@@ -994,10 +1165,7 @@ function makeMove(fromR,fromC,toR,toC,fromAI=false){
         }else{
             board[toR][toC]=piece; board[fromR][fromC]=null;
             if(isKing){if(color==='white')whiteKingMoved=true;else blackKingMoved=true;}
-            if(isRook){
-                if(color==='white'){if(fromC===0)whiteRookMoved.left=true;if(fromC===7)whiteRookMoved.right=true;}
-                else{if(fromC===0)blackRookMoved.left=true;if(fromC===7)blackRookMoved.right=true;}
-            }
+            if(isRook){ if(color==='white'){if(fromC===0)whiteRookMoved.left=true;if(fromC===7)whiteRookMoved.right=true;} else{if(fromC===0)blackRookMoved.left=true;if(fromC===7)blackRookMoved.right=true;} }
         }
         lastMove={from:[fromR,fromC],to:[toR,toC]};
         let isPawn=piece.split('_')[1]==='pawn';
@@ -1011,7 +1179,7 @@ function makeMove(fromR,fromC,toR,toC,fromAI=false){
         if(reachedEnd){ renderBoard(); showPromotionDialog(toR,toC,originalTurn); if(gameMode === 'computer') scheduleAutosave(); return; }
         let state=getGameState(board,turn);
         if(state==='checkmate')setGameOver(turn==='white'?'الأسود':'الأبيض');
-        else if(state==='stalemate'){gameOver=true;winner='تعادل';stopClock();updateStats('draw',gameMode);setTimeout(showWinnerScreen,500);}
+        else if(state==='stalemate'){gameOver=true;winner='تعادل';stopClock();updateStats('draw',gameMode);finalizeGameRecord('draw');setTimeout(showWinnerScreen,500);}
         renderBoard();
         if(gameMode==='computer'&&turn==='black'&&!gameOver&&!pendingPromotion)scheduleComputerMove();
         if(gameMode==='online'&&!fromAI)sendGameState();
@@ -1022,12 +1190,9 @@ function makeMove(fromR,fromC,toR,toC,fromAI=false){
 function animateMove(fromR,fromC,toR,toC,piece,callback){
     let boardEl=document.getElementById('chessboard');
     if(!boardEl) { if(callback) callback(); return; }
-    let dispFromI = isBoardFlipped ? 7 - fromR : fromR;
-    let dispFromJ = isBoardFlipped ? 7 - fromC : fromC;
-    let dispToI = isBoardFlipped ? 7 - toR : toR;
-    let dispToJ = isBoardFlipped ? 7 - toC : toC;
-    let fromCell=boardEl.children[dispFromI*8+dispFromJ];
-    let toCell=boardEl.children[dispToI*8+dispToJ];
+    let dispFromI = isBoardFlipped ? 7 - fromR : fromR, dispFromJ = isBoardFlipped ? 7 - fromC : fromC;
+    let dispToI = isBoardFlipped ? 7 - toR : toR, dispToJ = isBoardFlipped ? 7 - toC : toC;
+    let fromCell=boardEl.children[dispFromI*8+dispFromJ], toCell=boardEl.children[dispToI*8+dispToJ];
     if(!fromCell || !toCell) { if(callback) callback(); return; }
     let fromRect=fromCell.getBoundingClientRect(), toRect=toCell.getBoundingClientRect();
     let dx=toRect.left-fromRect.left, dy=toRect.top-fromRect.top;
@@ -1051,9 +1216,7 @@ function renderBoard(){
             let isLight=(i+j)%2===0;
             cell.className=`cell ${isLight?'light':'dark'}`;
             cell.style.backgroundColor = isLight ? currentLight : currentDark;
-            cell.addEventListener('click', function(){
-                onCellClick(parseInt(this.dataset.logicalRow), parseInt(this.dataset.logicalCol));
-            });
+            cell.addEventListener('click', function(){ onCellClick(parseInt(this.dataset.logicalRow), parseInt(this.dataset.logicalCol)); });
             container.appendChild(cell); cellElements.push(cell);
         }
     }
@@ -1110,17 +1273,10 @@ function onCellClick(row,col){
     if(gameOver){showToast("اللعبة انتهت!");return;}
     if(pendingPromotion){showToast("أكمل الترقية أولاً");return;}
     if(isAnimating) return;
-    if(!isPlayerAllowedToMove()){
-        if(gameMode==='computer') showToast("انتظر دورك");
-        else if(gameMode==='online') showToast("ليس دورك");
-        return;
-    }
+    if(!isPlayerAllowedToMove()){ if(gameMode==='computer') showToast("انتظر دورك"); else if(gameMode==='online') showToast("ليس دورك"); return; }
     let piece=board[row][col];
     if(selectedRow===null){
-        if(piece){
-            if(!canPlayerMove(piece.split('_')[0])){showToast("لا يمكنك تحريك قطع الخصم");return;}
-            selectedRow=row;selectedCol=col; renderBoard();
-        }
+        if(piece){ if(!canPlayerMove(piece.split('_')[0])){showToast("لا يمكنك تحريك قطع الخصم");return;} selectedRow=row;selectedCol=col; renderBoard(); }
     }else{
         if(piece && canPlayerMove(piece.split('_')[0])){selectedRow=row;selectedCol=col;renderBoard();return;}
         makeMove(selectedRow,selectedCol,row,col);
@@ -1128,10 +1284,8 @@ function onCellClick(row,col){
 }
 function setColors(light,dark){ currentLight=light; currentDark=dark; saveData(STORAGE_KEYS.BOARD_COLORS, {light, dark}); renderBoard(); }
 
-/* =========================================================
-   PEER CONNECTION
-   ========================================================= */
-const PEER_CONFIG={ config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]}};
+/* ========== PeerJS ========== */
+const PEER_CONFIG={ config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'}]}};
 
 function destroyPeer(){ if(peer && !peer.destroyed){ try{ peer.destroy(); }catch(e){} } peer = null; conn = null; }
 function hideOnlinePanel(){ let p = document.getElementById('onlinePanel'); p.classList.add('hidden'); p.style.display = 'none'; }
@@ -1154,35 +1308,21 @@ function setupConnection(c){
         showToast('✅ تم الاتصال بالخصم');
         hideOnlinePanel();
         document.getElementById('chatWrapper').style.display = 'block';
-        sendMsg({type:'hello', name: myName, elo: elo});
-        if(gameMode==='online'){isMyTurn=(turn===myColor);sendGameState();}
+        sendMsg({type:'hello', name: myName, elo: elo, deviceFp: getDeviceFingerprint()});
+        if(gameMode==='online' && myColor === 'white'){ isMyTurn=(turn===myColor); sendGameState(); }
     });
     conn.on('data',d=>{
         let msg;
         try{
             if(typeof d === 'string'){
                 let trimmed = d.trim();
-                if(trimmed.startsWith('{') || trimmed.startsWith('[')){
-                    msg = JSON.parse(trimmed);
-                } else {
-                    let decoded = decodeTextSafe(trimmed);
-                    msg = JSON.parse(decoded);
-                }
-            } else if(d instanceof ArrayBuffer){
-                let decoded = new TextDecoder('utf-8').decode(new Uint8Array(d));
-                msg = JSON.parse(decoded);
-            } else if(d instanceof Uint8Array){
-                let decoded = new TextDecoder('utf-8').decode(d);
-                msg = JSON.parse(decoded);
-            } else {
-                msg = d;
-            }
-        }catch(parseErr){
-            console.warn('JSON parse failed:', parseErr);
-            return;
-        }
+                if(trimmed.startsWith('{') || trimmed.startsWith('[')){ msg = JSON.parse(trimmed); }
+                else { let decoded = decodeTextSafe(trimmed); msg = JSON.parse(decoded); }
+            } else if(d instanceof ArrayBuffer){ let decoded = new TextDecoder('utf-8').decode(new Uint8Array(d)); msg = JSON.parse(decoded); }
+            else if(d instanceof Uint8Array){ let decoded = new TextDecoder('utf-8').decode(d); msg = JSON.parse(decoded); }
+            else { msg = d; }
+        }catch(parseErr){ return; }
         if(!msg || typeof msg !== 'object') return;
-        
         try{
             if(msg.type==='state'){
                 board=msg.board;turn=msg.turn;gameOver=msg.gameOver||false;winner=msg.winner||null;
@@ -1197,20 +1337,28 @@ function setupConnection(c){
                 isMyTurn=(turn===myColor);
                 updateClockDisplay(); renderBoard();
                 if(gameOver&&winner&&!document.querySelector('.winner-overlay'))setTimeout(showWinnerScreen,500);
-            }else if(msg.type==='color'){
-                myColor=msg.color; isMyTurn=(turn===myColor);
-                isBoardFlipped = (myColor === 'black'); renderBoard();
-            }else if(msg.type==='hello'){
+            }else if(msg.type==='color'){ myColor=msg.color; isMyTurn=(turn===myColor); isBoardFlipped = (myColor === 'black'); renderBoard(); }
+            else if(msg.type==='hello'){
+                if (msg.deviceFp && msg.deviceFp === getDeviceFingerprint()) {
+                    showToast('🚫 لا يمكنك اللعب ضد نفسك!');
+                    sendMsg({ type: 'self-play-detected' });
+                    setTimeout(() => { if(conn) try{conn.close();}catch(e){}; conn=null; showOnlinePanel(); }, 500);
+                    return;
+                }
+                window._opponentDeviceFp = msg.deviceFp || null;
+                window._opponentElo = parseInt(msg.elo) || 800;
                 opponentName = String(msg.name || 'لاعب').slice(0,20);
                 opponentElo = parseInt(msg.elo) || 800;
                 updateChatOppInfo();
                 showToast(`📡 اتصل ${opponentName}`, 3500);
-                sendMsg({type:'hello-ack', name: myName, elo: elo});
+                sendMsg({type:'hello-ack', name: myName, elo: elo, deviceFp: getDeviceFingerprint()});
             }else if(msg.type==='hello-ack'){
-                if(!opponentName || opponentName === 'لاعب'){
-                    opponentName = String(msg.name || 'لاعب').slice(0,20);
-                    opponentElo = parseInt(msg.elo) || 800; updateChatOppInfo();
-                }
+                window._opponentDeviceFp = msg.deviceFp || null;
+                window._opponentElo = parseInt(msg.elo) || 800;
+                if(!opponentName || opponentName === 'لاعب'){ opponentName = String(msg.name || 'لاعب').slice(0,20); opponentElo = parseInt(msg.elo) || 800; updateChatOppInfo(); }
+            }else if(msg.type==='self-play-detected'){
+                showToast('🚫 تم رفض اللعب ضد نفسك');
+                setTimeout(() => { if(conn) try{conn.close();}catch(e){}; conn=null; showOnlinePanel(); }, 300);
             }else if(msg.type==='chat'){
                 let txt = msg.textEncoded ? decodeTextSafe(msg.textEncoded) : String(msg.text || '');
                 let senderName = String(msg.name || opponentName || 'الخصم');
@@ -1220,13 +1368,14 @@ function setupConnection(c){
                 if(gameOver) return;
                 gameOver = true; winner = (myColor === 'white') ? 'الأبيض' : 'الأسود';
                 stopClock(); updateStats('win', 'online'); applyOnlineElo('win');
+                finalizeGameRecord('win');
                 showToast('🏳️ استسلم الخصم!'); setTimeout(showWinnerScreen, 500); renderBoard();
-            }else if(msg.type==='draw-offer'){
-                if(gameOver) return; showDrawOffer(msg.name || opponentName);
-            }else if(msg.type==='draw-accept'){
+            }else if(msg.type==='draw-offer'){ if(gameOver) return; showDrawOffer(msg.name || opponentName); }
+            else if(msg.type==='draw-accept'){
                 if(gameOver) return;
                 gameOver = true; winner = 'تعادل'; stopClock();
                 updateStats('draw', 'online'); applyOnlineElo('draw');
+                finalizeGameRecord('draw');
                 document.getElementById('drawOfferModal').classList.remove('show');
                 showToast('🤝 تم قبول التعادل!'); setTimeout(showWinnerScreen, 500); renderBoard();
             }else if(msg.type==='draw-reject'){ drawOfferPending = false; showToast('❌ تم رفض التعادل'); }
@@ -1235,14 +1384,14 @@ function setupConnection(c){
                 else sendMsg({type:'restart-reject'});
             }else if(msg.type==='restart-accept'){ showToast('🔄 تمت إعادة اللعبة'); resetGame(true); }
             else if(msg.type==='restart-reject'){ showToast('❌ تم رفض إعادة اللعبة'); }
-        }catch(e){console.warn('Handler error:', e);}
+        }catch(e){}
     });
     conn.on('close',()=>{
         document.getElementById('roomStatus').textContent='❌ منقطع';
         conn=null; document.getElementById('chatWrapper').style.display='none';
         destroyPeer(); showOnlinePanel(); showToast('❌ انقطع الاتصال');
     });
-    conn.on('error',()=>{ document.getElementById('roomStatus').textContent='⚠️ خطأ'; });
+    conn.on('error',(e)=>{ console.error('conn error:', e); document.getElementById('roomStatus').textContent='⚠️ خطأ'; });
 }
 
 function updateChatOppInfo(){
@@ -1252,68 +1401,122 @@ function updateChatOppInfo(){
 function sendMsg(obj){
     if(!conn || !conn.open) return;
     try{
-        let json = JSON.stringify(obj);
-        let encoded = encodeTextSafe(json);
-        if(encoded) conn.send(encoded);
-        else conn.send(json);
-    }catch(e){ console.warn('Send failed', e); }
+        if (obj.type === 'hello' && !obj.deviceFp) obj.deviceFp = DEVICE_FP;
+        const json = JSON.stringify(obj);
+        conn.send(json);
+    }catch(e){ console.warn('sendMsg:', e); }
 }
 function sendGameState(){
-    sendMsg({
-        type:'state',board,turn,gameOver,winner,capturedWhite,capturedBlack,
-        whiteKingMoved,blackKingMoved,whiteRookMoved,blackRookMoved,lastMove,
-        whiteTime,blackTime,whiteMovesCount,blackMovesCount
-    });
+    sendMsg({ type:'state',board,turn,gameOver,winner,capturedWhite,capturedBlack,whiteKingMoved,blackKingMoved,whiteRookMoved,blackRookMoved,lastMove,whiteTime,blackTime,whiteMovesCount,blackMovesCount });
 }
 
 function createRoom(){
+    if(!navigator.onLine){ showToast('⚠️ لا يوجد اتصال بالإنترنت'); return; }
     let code = document.getElementById('roomInput').value.trim();
     if(!code || code.length !== 3){showToast('📝 أدخل كود 3 أرقام');return;}
     if(!/^\d{3}$/.test(code)){showToast('📝 الكود 3 أرقام');return;}
+    if (typeof Peer === 'undefined') { showToast('⚠️ PeerJS لم يتم تحميله - أعد تحميل الصفحة'); return; }
     document.getElementById('roomStatus').textContent = '⏳ جاري الإنشاء...';
     lockOnlineControls(); destroyPeer(); myColor = 'white';
-    let p = new Peer('chess-room-' + code, PEER_CONFIG);
-    let openTimeout = setTimeout(()=>{ if(!p.open){ showToast('⚠️ تأخر الاتصال'); try{ p.destroy(); }catch(e){} showOnlinePanel(); } }, 12000);
-    p.on('open', ()=>{
-        clearTimeout(openTimeout); peer = p;
+    let peerId = 'chess-room-v2-' + code;
+    console.log('[createRoom] Trying to create peer with ID:', peerId);
+    let p;
+    try {
+        p = new Peer(peerId, PEER_CONFIG);
+    } catch(e) {
+        console.error('[createRoom] Peer constructor failed:', e);
+        showToast('❌ فشل إنشاء الاتصال');
+        showOnlinePanel();
+        return;
+    }
+    let openTimeout = setTimeout(()=>{ if(p && !p.open){ showToast('⚠️ تأخر الاتصال - جرّب كوداً آخر'); try{ p.destroy(); }catch(e){} showOnlinePanel(); } }, 15000);
+    p.on('open', (id)=>{
+        clearTimeout(openTimeout);
+        console.log('[createRoom] Peer opened with ID:', id);
+        peer = p;
         document.getElementById('roomStatus').textContent = '⏳ انتظر الخصم...';
         showToast('🌟 الكود: ' + code);
-        p.on('connection', c=>{ conn = c; setupConnection(c); setTimeout(()=>{sendMsg({type:'color',color:'black'});}, 500); });
+        p.on('connection', c=>{
+            console.log('[createRoom] Got connection');
+            conn = c;
+            setupConnection(c);
+            setTimeout(()=>{ sendMsg({type:'color',color:'black'}); }, 500);
+        });
     });
     p.on('error', e=>{
         clearTimeout(openTimeout);
-        if(e.type === 'unavailable-id'){ showToast('⚠️ الكود محجوز'); document.getElementById('roomStatus').textContent = '❌ الكود مستخدم'; }
-        else { showToast('❌ فشل'); document.getElementById('roomStatus').textContent = '❌ فشل'; }
-        try{ p.destroy(); }catch(err){} showOnlinePanel();
+        console.error('[createRoom] Peer error:', e);
+        let msg = '❌ فشل الاتصال';
+        if(e.type === 'unavailable-id') msg = '⚠️ الكود محجوز - جرّب رقماً آخر';
+        else if(e.type === 'network') msg = '⚠️ مشكلة شبكة - تحقق من الإنترنت';
+        else if(e.type === 'server-error') msg = '⚠️ خادم PeerJS مشغول - حاول لاحقاً';
+        else if(e.type === 'browser-incompatible') msg = '⚠️ المتصفح لا يدعم WebRTC';
+        showToast(msg);
+        document.getElementById('roomStatus').textContent = msg;
+        try{ p.destroy(); }catch(err){}
+        showOnlinePanel();
+    });
+    p.on('disconnected', () => {
+        console.log('[createRoom] Peer disconnected, trying to reconnect...');
+        try { p.reconnect(); } catch(e) {}
     });
 }
+
 function joinRoom(){
+    if(!navigator.onLine){ showToast('⚠️ لا يوجد اتصال بالإنترنت'); return; }
     let code = document.getElementById('roomInput').value.trim();
     if(!code || code.length !== 3){showToast('📝 أدخل كود 3 أرقام');return;}
     if(!/^\d{3}$/.test(code)){showToast('📝 الكود 3 أرقام');return;}
+    if (typeof Peer === 'undefined') { showToast('⚠️ PeerJS لم يتم تحميله - أعد تحميل الصفحة'); return; }
     document.getElementById('roomStatus').textContent = '⏳ جاري الاتصال...';
     lockOnlineControls(); myColor = 'black'; destroyPeer();
-    let p = new Peer(PEER_CONFIG);
+    let peerId = 'chess-room-v2-' + code;
+    console.log('[joinRoom] Trying to join:', peerId);
+    let p;
+    try {
+        p = new Peer(PEER_CONFIG);
+    } catch(e) {
+        console.error('[joinRoom] Peer constructor failed:', e);
+        showToast('❌ فشل الاتصال');
+        showOnlinePanel();
+        return;
+    }
     let connected = false;
-    let timeout = setTimeout(()=>{ if(connected) return; connected=true; showToast('❌ فشل الاتصال'); document.getElementById('roomStatus').textContent='❌'; try{ p.destroy(); }catch(e){} showOnlinePanel(); }, 12000);
+    let timeout = setTimeout(()=>{
+        if(connected) return;
+        connected=true;
+        showToast('❌ فشل الاتصال - تحقق من الكود');
+        document.getElementById('roomStatus').textContent='❌ فشل';
+        try{ p.destroy(); }catch(e){}
+        showOnlinePanel();
+    }, 15000);
     p.on('open', ()=>{
+        console.log('[joinRoom] Peer opened, connecting to:', peerId);
         peer = p;
-        let c = p.connect('chess-room-' + code, {reliable:true});
-        conn = c; setupConnection(c);
+        let c = p.connect(peerId, {reliable:true});
+        if (!c) {
+            showToast('❌ فشل الاتصال');
+            showOnlinePanel();
+            return;
+        }
+        conn = c;
+        setupConnection(c);
         c.on('open', ()=>{
-            if(connected) return; connected = true; clearTimeout(timeout);
+            if(connected) return;
+            connected = true;
+            clearTimeout(timeout);
+            console.log('[joinRoom] Connected successfully');
             document.getElementById('roomStatus').textContent = '✅ متصل!';
-            isMyTurn = (turn === myColor); isBoardFlipped = (myColor === 'black');
-            renderBoard(); sendGameState();
+            isMyTurn = (turn === myColor);
+            isBoardFlipped = (myColor === 'black');
+            renderBoard();
         });
-        c.on('error', ()=>{ if(connected) return; connected=true; clearTimeout(timeout); showToast('❌ فشل'); document.getElementById('roomStatus').textContent='❌'; showOnlinePanel(); });
+        c.on('error', (e)=>{ console.error('[joinRoom] conn error:', e); if(connected) return; connected=true; clearTimeout(timeout); showToast('❌ فشل الاتصال'); document.getElementById('roomStatus').textContent='❌'; showOnlinePanel(); });
     });
-    p.on('error', ()=>{ if(connected) return; connected=true; clearTimeout(timeout); showToast('❌ خطأ'); document.getElementById('roomStatus').textContent='❌'; showOnlinePanel(); });
+    p.on('error', (e)=>{ console.error('[joinRoom] Peer error:', e); if(connected) return; connected=true; clearTimeout(timeout); let msg='❌ خطأ'; if(e.type==='peer-unavailable') msg='❌ الكود غير موجود - تأكد من الكود'; showToast(msg); document.getElementById('roomStatus').textContent='❌'; showOnlinePanel(); });
 }
 
-/* =========================================================
-   TIME SETTINGS
-   ========================================================= */
+/* ========== Time Settings ========== */
 function openTimeSettings(){
     document.getElementById('timeSettingsOverlay').classList.add('show');
     document.querySelectorAll('.time-opt').forEach(btn=>btn.classList.toggle('active', btn.dataset.time === selectedTimeOption));
@@ -1330,11 +1533,7 @@ document.querySelectorAll('.time-opt').forEach(btn=>{
         document.querySelectorAll('.time-opt').forEach(b=>b.classList.remove('active'));
         btn.classList.add('active');
         if(val === 'custom'){ selectedTimeOption = 'custom'; document.getElementById('customTimeRow').style.display = 'flex'; }
-        else {
-            selectedTimeOption = val; document.getElementById('customTimeRow').style.display = 'none';
-            INITIAL_TIME = parseInt(val) * 60; saveData(STORAGE_KEYS.INITIAL_TIME, INITIAL_TIME);
-            showToast(`⏱️ ${val} دقيقة`); closeTimeSettings(); resetGame();
-        }
+        else { selectedTimeOption = val; document.getElementById('customTimeRow').style.display = 'none'; INITIAL_TIME = parseInt(val) * 60; saveData(STORAGE_KEYS.INITIAL_TIME, INITIAL_TIME); showToast(`⏱️ ${val} دقيقة`); closeTimeSettings(); resetGame(); }
     });
 });
 document.getElementById('applyCustomTime').addEventListener('click', ()=>{
@@ -1344,9 +1543,7 @@ document.getElementById('applyCustomTime').addEventListener('click', ()=>{
     selectedTimeOption = 'custom'; showToast(`⏱️ ${mins} دقيقة`); closeTimeSettings(); resetGame();
 });
 
-/* =========================================================
-   MENU ACTIONS
-   ========================================================= */
+/* ========== Menu actions ========== */
 document.getElementById('menuResignBtn').addEventListener('click', ()=>{
     closeMenu('sideMenu');
     if(gameMode !== 'online' || gameOver){ showToast('أونلاين فقط'); return; }
@@ -1355,6 +1552,7 @@ document.getElementById('menuResignBtn').addEventListener('click', ()=>{
         sendMsg({type:'resign', name: myName});
         gameOver = true; winner = (myColor === 'white') ? 'الأسود' : 'الأبيض';
         stopClock(); updateStats('loss', 'online'); applyOnlineElo('loss');
+        finalizeGameRecord('loss');
         setTimeout(showWinnerScreen, 500); sendGameState();
     }, 250);
 });
@@ -1399,6 +1597,7 @@ document.getElementById('acceptDrawBtn').addEventListener('click', ()=>{
     sendMsg({type:'draw-accept'});
     gameOver = true; winner = 'تعادل'; stopClock();
     updateStats('draw', 'online'); applyOnlineElo('draw');
+    finalizeGameRecord('draw');
     setTimeout(showWinnerScreen, 500); sendGameState();
 });
 document.getElementById('rejectDrawBtn').addEventListener('click', ()=>{
@@ -1422,52 +1621,22 @@ function scheduleAutosave(){
 }
 function saveAIGame(){
     try{
-        let save = { board, turn, whiteKingMoved, blackKingMoved, whiteRookMoved, blackRookMoved,
-            capturedWhite, capturedBlack, lastMove, whiteTime, blackTime, whiteMovesCount, blackMovesCount,
-            currentStage, moveHistory: moveHistory.slice(-20), savedAt: Date.now() };
+        let save = { board, turn, whiteKingMoved, blackKingMoved, whiteRookMoved, blackRookMoved, capturedWhite, capturedBlack, lastMove, whiteTime, blackTime, whiteMovesCount, blackMovesCount, currentStage, moveHistory: moveHistory.slice(-20), savedAt: Date.now() };
         localStorage.setItem(STORAGE_KEYS.SAVED_AI_GAME, JSON.stringify(save));
         let ind = document.getElementById('autosaveIndicator');
         if(ind){ ind.classList.add('show'); setTimeout(()=>ind.classList.remove('show'), 1400); }
     }catch(e){}
 }
-function tryLoadSavedAIGame(){
-    try{
-        let raw = localStorage.getItem(STORAGE_KEYS.SAVED_AI_GAME);
-        if(!raw) return false;
-        let save = JSON.parse(raw);
-        if(!save || !save.board) return false;
-        if(!confirm('💾 لعبة محفوظة. استرجاع؟')){ localStorage.removeItem(STORAGE_KEYS.SAVED_AI_GAME); return false; }
-        board = save.board; turn = save.turn;
-        whiteKingMoved = save.whiteKingMoved; blackKingMoved = save.blackKingMoved;
-        whiteRookMoved = save.whiteRookMoved; blackRookMoved = save.blackRookMoved;
-        capturedWhite = save.capturedWhite || []; capturedBlack = save.capturedBlack || [];
-        lastMove = save.lastMove; whiteTime = save.whiteTime; blackTime = save.blackTime;
-        whiteMovesCount = save.whiteMovesCount; blackMovesCount = save.blackMovesCount;
-        currentStage = save.currentStage || 1; moveHistory = save.moveHistory || [];
-        gameOver = false; winner = null; isBoardFlipped = false;
-        updateClockDisplay(); renderBoard(); showToast('💾 تم الاسترجاع');
-        if(turn === 'black') scheduleComputerMove();
-        return true;
-    }catch(e){ return false; }
-}
 
-/* =========================================================
-   CHAT
-   ========================================================= */
+/* ========== Chat ========== */
 function isPureEmoji(text){
     if(!text) return false;
     let cleaned = String(text).replace(/[\s\u200B\u200C\u200D\uFE0E\uFE0F]/g, '');
     if(!cleaned) return false;
     let count = 1;
-    try{
-        if(typeof Intl !== 'undefined' && Intl.Segmenter){
-            let seg = new Intl.Segmenter('en', {granularity:'grapheme'});
-            count = [...seg.segment(cleaned)].length;
-        } else count = [...cleaned].length;
-    }catch(e){ count = [...cleaned].length; }
+    try{ if(typeof Intl !== 'undefined' && Intl.Segmenter){ let seg = new Intl.Segmenter('en', {granularity:'grapheme'}); count = [...seg.segment(cleaned)].length; } else count = [...cleaned].length; }catch(e){ count = [...cleaned].length; }
     if(count > 10) return false;
-    try{ return /^[\p{Extended_Pictographic}\u200D\uFE0E\uFE0F\u20E3\u002A\u0023\u0030-\u0039]+$/u.test(cleaned); }
-    catch(e){ return !/[\p{L}]/u.test(cleaned); }
+    try{ return /^[\p{Extended_Pictographic}\u200D\uFE0E\uFE0F\u20E3\u002A\u0023\u0030-\u0039]+$/u.test(cleaned); }catch(e){ return !/[\p{L}]/u.test(cleaned); }
 }
 
 let unreadCount = 0;
@@ -1498,32 +1667,16 @@ function addChatMessage(type, text, senderName){
     if(emojiOnly) msg.classList.add('emoji-only');
     if(type === 'me'){
         if(emojiOnly) msg.textContent = safeText;
-        else {
-            const senderEl = document.createElement('span');
-            senderEl.className = 'sender'; senderEl.textContent = myName || 'أنا';
-            msg.appendChild(senderEl); msg.appendChild(document.createTextNode(safeText));
-        }
+        else { const senderEl = document.createElement('span'); senderEl.className = 'sender'; senderEl.textContent = myName || 'أنا'; msg.appendChild(senderEl); msg.appendChild(document.createTextNode(safeText)); }
     } else if(type === 'them'){
         if(emojiOnly) msg.textContent = safeText;
-        else {
-            const senderEl = document.createElement('span');
-            senderEl.className = 'sender'; senderEl.textContent = safeSender || opponentName || 'الخصم';
-            msg.appendChild(senderEl); msg.appendChild(document.createTextNode(safeText));
-        }
+        else { const senderEl = document.createElement('span'); senderEl.className = 'sender'; senderEl.textContent = safeSender || opponentName || 'الخصم'; msg.appendChild(senderEl); msg.appendChild(document.createTextNode(safeText)); }
     } else msg.textContent = safeText;
     container.appendChild(msg);
     container.scrollTop = container.scrollHeight;
 }
-function incrementUnread(){
-    unreadCount++;
-    let badge = document.getElementById('chatUnread');
-    if(badge){ badge.textContent = unreadCount; badge.classList.add('show'); }
-}
-function clearUnread(){
-    unreadCount = 0;
-    let badge = document.getElementById('chatUnread');
-    if(badge) badge.classList.remove('show');
-}
+function incrementUnread(){ unreadCount++; let badge = document.getElementById('chatUnread'); if(badge){ badge.textContent = unreadCount; badge.classList.add('show'); } }
+function clearUnread(){ unreadCount = 0; let badge = document.getElementById('chatUnread'); if(badge) badge.classList.remove('show'); }
 
 function sendChatMessage(){
     let input = document.getElementById('chatInput');
@@ -1532,28 +1685,16 @@ function sendChatMessage(){
     let text = safeSliceGraphemes(raw, 200).trim();
     if(!text) return;
     addChatMessage('me', text);
-    sendMsg({
-        type: 'chat',
-        textEncoded: encodeTextSafe(text),
-        name: myName || 'لاعب'
-    });
+    sendMsg({ type: 'chat', textEncoded: encodeTextSafe(text), name: myName || 'لاعب' });
     input.value = '';
     input.focus();
 }
-document.getElementById('chatToggleBtn').addEventListener('click', ()=>{
-    document.getElementById('chatFullscreen').classList.add('open'); clearUnread();
-});
-document.getElementById('chatFsClose').addEventListener('click', ()=>{
-    document.getElementById('chatFullscreen').classList.remove('open');
-    document.getElementById('emojiPicker').classList.remove('open');
-    document.getElementById('emojiToggleBtn').classList.remove('active');
-});
+document.getElementById('chatToggleBtn').addEventListener('click', ()=>{ document.getElementById('chatFullscreen').classList.add('open'); clearUnread(); });
+document.getElementById('chatFsClose').addEventListener('click', ()=>{ document.getElementById('chatFullscreen').classList.remove('open'); document.getElementById('emojiPicker').classList.remove('open'); document.getElementById('emojiToggleBtn').classList.remove('active'); });
 document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
 document.getElementById('chatInput').addEventListener('keypress', (e)=>{ if(e.key === 'Enter'){ e.preventDefault(); sendChatMessage(); } });
 
-/* =========================================================
-   MENU HELPERS
-   ========================================================= */
+/* ========== Menu helpers ========== */
 function openMenu(id){ document.getElementById(id).classList.add('open'); document.getElementById(id==='colorMenu'?'overlayColor':'overlay').classList.add('show'); }
 function closeMenu(id){ document.getElementById(id).classList.remove('open'); document.getElementById(id==='colorMenu'?'overlayColor':'overlay').classList.remove('show'); }
 document.getElementById('menuIcon').addEventListener('click',()=>openMenu('sideMenu'));
@@ -1563,19 +1704,11 @@ document.getElementById('openColorsBtn').addEventListener('click',()=>{ closeMen
 document.getElementById('closeColorBtn').addEventListener('click',()=>closeMenu('colorMenu'));
 document.getElementById('backFromColorBtn').addEventListener('click',()=>{ closeMenu('colorMenu'); setTimeout(()=>openMenu('sideMenu'),250); });
 document.getElementById('overlayColor').addEventListener('click',()=>closeMenu('colorMenu'));
-document.querySelectorAll('.color-opt').forEach(btn=>{
-    btn.addEventListener('click',()=>{ setColors('#f0d9b5',btn.dataset.dark); closeMenu('colorMenu'); });
-});
+document.querySelectorAll('.color-opt').forEach(btn=>{ btn.addEventListener('click',()=>{ setColors('#f0d9b5',btn.dataset.dark); closeMenu('colorMenu'); }); });
 document.getElementById('profileCard').addEventListener('click', ()=>{ closeMenu('sideMenu'); setTimeout(showStatsWindow, 250); });
 
-function updateSoundBtn(){
-    let btn = document.getElementById('toggleSoundBtn');
-    if(btn) btn.textContent = soundEnabled ? '🔊 صوت التحريك: مفعّل' : '🔇 صوت التحريك: مكتوم';
-}
-document.getElementById('toggleSoundBtn').addEventListener('click', ()=>{
-    soundEnabled = !soundEnabled; saveData(STORAGE_KEYS.SOUND_ENABLED, soundEnabled);
-    updateSoundBtn(); showToast(soundEnabled ? '🔊 مفعّل' : '🔇 مكتوم');
-});
+function updateSoundBtn(){ let btn = document.getElementById('toggleSoundBtn'); if(btn) btn.textContent = soundEnabled ? '🔊 صوت التحريك: مفعّل' : '🔇 صوت التحريك: مكتوم'; }
+document.getElementById('toggleSoundBtn').addEventListener('click', ()=>{ soundEnabled = !soundEnabled; saveData(STORAGE_KEYS.SOUND_ENABLED, soundEnabled); updateSoundBtn(); showToast(soundEnabled ? '🔊 مفعّل' : '🔇 مكتوم'); });
 
 const capturedBtn=document.getElementById('capturedBtn');
 const capturedDropdown=document.getElementById('capturedDropdown');
@@ -1583,23 +1716,9 @@ let capturedOpen=false;
 capturedBtn.addEventListener('click',(e)=>{ e.stopPropagation(); capturedOpen=!capturedOpen; capturedBtn.classList.toggle('open',capturedOpen); capturedDropdown.classList.toggle('open',capturedOpen); });
 document.addEventListener('click',(e)=>{ if(capturedOpen && !capturedDropdown.contains(e.target) && e.target!==capturedBtn){ capturedOpen=false; capturedBtn.classList.remove('open'); capturedDropdown.classList.remove('open'); } });
 
-document.getElementById('vsComputerBtn').addEventListener('click',()=>{
-    gameMode='computer'; hideOnlinePanel(); updateMenuStates(); resetGame(); closeMenu('sideMenu');
-    document.getElementById('chatWrapper').style.display='none';
-    showToast(`🤖 المرحلة ${currentStage}`);
-});
-document.getElementById('vsOnlineBtn').addEventListener('click',()=>{
-    gameMode='online'; showOnlinePanel(); updateMenuStates(); resetGame(); closeMenu('sideMenu');
-    document.getElementById('chatWrapper').style.display='none';
-    document.getElementById('roomStatus').textContent = '💡 أدخل كود أو أنشئ غرفة';
-    showToast('📡 أونلاين');
-});
-document.getElementById('toggleThemeBtn').addEventListener('click',()=>{
-    isDayMode = !isDayMode; document.body.classList.toggle('day-mode', isDayMode);
-    saveData(STORAGE_KEYS.THEME, isDayMode ? 'day' : 'night');
-    document.getElementById('toggleThemeBtn').textContent = isDayMode ? '🌙 الوضع الليلي' : '☀️ الوضع النهاري';
-    closeMenu('sideMenu'); showToast(isDayMode ? '☀️ نهاري' : '🌙 ليلي');
-});
+document.getElementById('vsComputerBtn').addEventListener('click',()=>{ gameMode='computer'; hideOnlinePanel(); updateMenuStates(); resetGame(); closeMenu('sideMenu'); document.getElementById('chatWrapper').style.display='none'; showToast(`🤖 المرحلة ${currentStage}`); });
+document.getElementById('vsOnlineBtn').addEventListener('click',()=>{ gameMode='online'; showOnlinePanel(); updateMenuStates(); resetGame(); closeMenu('sideMenu'); document.getElementById('chatWrapper').style.display='none'; document.getElementById('roomStatus').textContent = '💡 أدخل كود أو أنشئ غرفة'; showToast('📡 أونلاين'); });
+document.getElementById('toggleThemeBtn').addEventListener('click',()=>{ isDayMode = !isDayMode; document.body.classList.toggle('day-mode', isDayMode); saveData(STORAGE_KEYS.THEME, isDayMode ? 'day' : 'night'); document.getElementById('toggleThemeBtn').textContent = isDayMode ? '🌙 الوضع الليلي' : '☀️ الوضع النهاري'; closeMenu('sideMenu'); showToast(isDayMode ? '☀️ نهاري' : '🌙 ليلي'); });
 document.getElementById('openStatsBtn').addEventListener('click',()=>{ closeMenu('sideMenu'); showStatsWindow(); });
 document.getElementById('changeNameBtn').addEventListener('click',()=>{ closeMenu('sideMenu'); setTimeout(askName, 250); });
 document.getElementById('createRoomBtn').addEventListener('click',createRoom);
@@ -1607,27 +1726,187 @@ document.getElementById('joinRoomBtn').addEventListener('click',joinRoom);
 document.getElementById('roomInput').addEventListener('input', (e)=>{ e.target.value = e.target.value.replace(/\D/g,'').slice(0,3); });
 document.getElementById('roomInput').addEventListener('keypress', (e)=>{ if(e.key === 'Enter') document.getElementById('joinRoomBtn').click(); });
 
-/* =========================================================
-   REPORT / CONTACT SYSTEM (Simple)
-   ========================================================= */
-document.getElementById('reportBtnSide').addEventListener('click', ()=>{
-    closeMenu('sideMenu');
-    setTimeout(()=>{
-        document.getElementById('reportOverlay').style.display = 'flex';
-    }, 250);
-});
-document.getElementById('reportCancelBtn').addEventListener('click', ()=>{ 
-    document.getElementById('reportOverlay').style.display = 'none'; 
-});
-document.getElementById('reportOverlay').addEventListener('click', (e)=>{ 
-    if(e.target.id === 'reportOverlay') document.getElementById('reportOverlay').style.display = 'none'; 
+/* ========== Replay ========== */
+let replayState = { record: null, moveIndex: 0, board: null, playing: false, timer: null, speed: 1000 };
+
+document.getElementById('openReplayBtn').addEventListener('click', () => { closeMenu('sideMenu'); setTimeout(openReplayModal, 250); });
+
+function openReplayModal() {
+    document.getElementById('replayModal').classList.add('open');
+    document.getElementById('replayListContainer').style.display = 'block';
+    document.getElementById('replayViewerContainer').style.display = 'none';
+    renderReplayList();
+}
+
+document.getElementById('replayClose').addEventListener('click', () => { stopReplay(); document.getElementById('replayModal').classList.remove('open'); });
+
+document.getElementById('replayBackToList').addEventListener('click', () => {
+    stopReplay();
+    document.getElementById('replayListContainer').style.display = 'block';
+    document.getElementById('replayViewerContainer').style.display = 'none';
 });
 
-/* =========================================================
-   RESET & INIT
-   ========================================================= */
-function resetGame(silent=false){
-    if(computerTimeout)clearTimeout(computerTimeout);
+function renderReplayList() {
+    const list = document.getElementById('replayList');
+    const history = loadData(STORAGE_KEYS.GAME_HISTORY, []);
+    if (history.length === 0) { list.innerHTML = '<div class="replay-empty">لا توجد مباريات محفوظة بعد.<br>العب مباراة ثم عد هنا لمشاهدتها.</div>'; return; }
+    list.innerHTML = history.map((rec, idx) => {
+        const resultText = rec.result === 'win' ? 'فوز' : rec.result === 'loss' ? 'خسارة' : 'تعادل';
+        const resultClass = rec.result || 'draw';
+        let dateStr = '—';
+        try { dateStr = new Date(rec.startTime).toLocaleString('ar-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch(e) {}
+        const modeText = rec.mode === 'computer' ? `🤖 المرحلة ${rec.stage}` : `📡 ${rec.opponentName || 'أونلاين'}`;
+        return `<div class="replay-item" data-idx="${idx}">
+            <div class="ri-info"><div class="ri-title">${modeText}</div><div class="ri-meta">${dateStr} • ${rec.moves.length} حركة</div></div>
+            <div class="replay-result ${resultClass}">${resultText}</div>
+        </div>`;
+    }).join('');
+    list.querySelectorAll('.replay-item').forEach(el => {
+        el.addEventListener('click', () => {
+            const idx = parseInt(el.dataset.idx);
+            loadReplay(history[idx]);
+            document.getElementById('replayListContainer').style.display = 'none';
+            document.getElementById('replayViewerContainer').style.display = 'flex';
+        });
+    });
+}
+
+function loadReplay(record) {
+    stopReplay();
+    replayState.record = record;
+    replayState.moveIndex = 0;
+    replayState.board = getInitialBoard();
+    updateReplayUI();
+}
+
+function getInitialBoard() {
+    const b = Array(8).fill().map(() => Array(8).fill(null));
+    for (let i = 0; i < 8; i++) { b[1][i] = 'black_pawn'; b[6][i] = 'white_pawn'; }
+    const order = ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook'];
+    for (let i = 0; i < 8; i++) { b[0][i] = 'black_' + order[i]; b[7][i] = 'white_' + order[i]; }
+    return b;
+}
+
+function renderReplayBoard() {
+    const container = document.getElementById('replayBoard');
+    if (!replayState.board) return;
+    let html = '';
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+        const piece = replayState.board[r][c];
+        const isLight = (r + c) % 2 === 0;
+        const pieceSvg = piece ? PIECE_SVG[piece] : '';
+        html += `<div class="replay-cell ${isLight ? 'light' : 'dark'}">${pieceSvg}</div>`;
+    }
+    container.innerHTML = html;
+    if (replayState.moveIndex > 0 && replayState.record) {
+        const move = replayState.record.moves[replayState.moveIndex - 1];
+        if (move) {
+            const cells = container.querySelectorAll('.replay-cell');
+            const fromIdx = move.from[0] * 8 + move.from[1];
+            const toIdx = move.to[0] * 8 + move.to[1];
+            if (cells[fromIdx]) cells[fromIdx].classList.add('highlight');
+            if (cells[toIdx]) cells[toIdx].classList.add('highlight');
+        }
+    }
+}
+
+function applyReplayMove(move) {
+    const b = replayState.board;
+    if (!b || !move) return;
+    const piece = b[move.from[0]][move.from[1]];
+    if (!piece) return;
+    const parts = piece.split('_');
+    const color = parts[0], type = parts[1];
+    b[move.to[0]][move.to[1]] = piece;
+    b[move.from[0]][move.from[1]] = null;
+    if (move.promoteTo && type === 'pawn') b[move.to[0]][move.to[1]] = color + '_' + move.promoteTo;
+    if (type === 'king' && Math.abs(move.to[1] - move.from[1]) === 2) {
+        const rookFrom = move.to[1] > move.from[1] ? 7 : 0;
+        const rookTo = move.to[1] > move.from[1] ? 5 : 3;
+        b[move.from[0]][rookTo] = b[move.from[0]][rookFrom];
+        b[move.from[0]][rookFrom] = null;
+    }
+}
+
+function updateReplayUI() {
+    const rec = replayState.record;
+    if (!rec) return;
+    const total = rec.moves.length, idx = replayState.moveIndex;
+    let statusText = '';
+    if (rec.result === 'win') statusText = '🏆 فوز';
+    else if (rec.result === 'loss') statusText = '😔 خسارة';
+    else if (rec.result === 'draw') statusText = '🤝 تعادل';
+    const modeText = rec.mode === 'computer' ? `🤖 المرحلة ${rec.stage}` : `📡 ${rec.opponentName || 'أونلاين'}`;
+    document.getElementById('replayInfo').textContent = `${modeText} — الحركة ${idx} / ${total} — ${statusText}`;
+    const movesList = document.getElementById('replayMovesList');
+    if (rec.moves.length === 0) { movesList.innerHTML = '<div style="text-align:center;padding:10px;color:#8ba0c8;">لا توجد حركات</div>'; }
+    else {
+        let moveHtml = '';
+        rec.moves.forEach((m, i) => {
+            const pieceShort = m.piece.split('_')[1].charAt(0).toUpperCase();
+            const colorShort = m.piece.split('_')[0] === 'white' ? 'W' : 'B';
+            const label = `${i+1}. ${colorShort}${pieceShort}`;
+            const cls = i === idx - 1 ? 'current' : '';
+            moveHtml += `<div class="replay-move-tag ${cls}" data-mi="${i}">${label}</div>`;
+        });
+        movesList.innerHTML = moveHtml;
+        movesList.querySelectorAll('.replay-move-tag').forEach(el => {
+            el.addEventListener('click', () => goToReplayMove(parseInt(el.dataset.mi) + 1));
+        });
+    }
+    document.getElementById('replayStart').disabled = idx === 0;
+    document.getElementById('replayPrev').disabled = idx === 0;
+    document.getElementById('replayNext').disabled = idx >= total;
+    document.getElementById('replayEnd').disabled = idx >= total;
+    renderReplayBoard();
+}
+
+function goToReplayMove(targetIdx) {
+    if (!replayState.record) return;
+    const total = replayState.record.moves.length;
+    targetIdx = Math.max(0, Math.min(total, targetIdx));
+    replayState.board = getInitialBoard();
+    for (let i = 0; i < targetIdx; i++) applyReplayMove(replayState.record.moves[i]);
+    replayState.moveIndex = targetIdx;
+    updateReplayUI();
+}
+
+function stopReplay() {
+    if (replayState.timer) { clearTimeout(replayState.timer); replayState.timer = null; }
+    replayState.playing = false;
+    const btn = document.getElementById('replayPlay');
+    if (btn) btn.textContent = '▶️';
+}
+
+function playReplay() {
+    if (!replayState.record) return;
+    if (replayState.playing) { stopReplay(); return; }
+    if (replayState.moveIndex >= replayState.record.moves.length) goToReplayMove(0);
+    replayState.playing = true;
+    document.getElementById('replayPlay').textContent = '⏸️';
+    const step = () => {
+        if (!replayState.playing) return;
+        if (replayState.moveIndex >= replayState.record.moves.length) { stopReplay(); return; }
+        goToReplayMove(replayState.moveIndex + 1);
+        replayState.timer = setTimeout(step, replayState.speed);
+    };
+    step();
+}
+
+document.getElementById('replayStart').addEventListener('click', () => goToReplayMove(0));
+document.getElementById('replayPrev').addEventListener('click', () => goToReplayMove(replayState.moveIndex - 1));
+document.getElementById('replayNext').addEventListener('click', () => goToReplayMove(replayState.moveIndex + 1));
+document.getElementById('replayEnd').addEventListener('click', () => goToReplayMove(replayState.record ? replayState.record.moves.length : 0));
+document.getElementById('replayPlay').addEventListener('click', playReplay);
+document.getElementById('replaySpeed').addEventListener('change', (e) => {
+    replayState.speed = parseInt(e.target.value);
+    if (replayState.playing) { stopReplay(); playReplay(); }
+});
+
+/* ========== Reset & Init ========== */
+function resetGame(silent){
+    if(computerTimeout) { clearTimeout(computerTimeout); computerTimeout = null; }
+    if(autosaveTimer) { clearTimeout(autosaveTimer); autosaveTimer = null; }
     board=initBoard(); turn='white'; selectedRow=null; selectedCol=null;
     gameOver=false; winner=null; pendingPromotion=null; isAnimating=false;
     currentGameStats = { moves:0, captures:0, startTime: Date.now() };
@@ -1637,21 +1916,16 @@ function resetGame(silent=false){
     document.getElementById('drawOfferModal').classList.remove('show');
     resetClocks();
     isBoardFlipped = (gameMode === 'online') ? (myColor === 'black') : false;
+    startGameRecord(gameMode, currentStage, myColor, opponentName);
     renderBoard();
     if(gameMode==='computer'&&turn==='black')scheduleComputerMove();
     if(gameMode==='online'&&!silent){ isMyTurn=(turn===myColor); sendGameState(); }
-    if(gameMode === 'computer' && !silent) setTimeout(()=>tryLoadSavedAIGame(), 150);
 }
 function updateMenuStates(){
     document.querySelectorAll('#sideMenu button').forEach(b=>b.classList.remove('active'));
     if(gameMode==='computer')document.getElementById('vsComputerBtn').classList.add('active');
     if(gameMode==='online')document.getElementById('vsOnlineBtn').classList.add('active');
-    for(let i=1;i<=10;i++){
-        if(currentStage===i && gameMode==='computer'){
-            let btn = document.getElementById('stage'+i+'Btn');
-            if(btn && !btn.disabled) btn.classList.add('active');
-        }
-    }
+    for(let i=1;i<=10;i++){ if(currentStage===i && gameMode==='computer'){ let btn = document.getElementById('stage'+i+'Btn'); if(btn && !btn.disabled) btn.classList.add('active'); } }
 }
 function askName(){
     let overlay = document.createElement('div'); overlay.className = 'name-overlay';
@@ -1691,11 +1965,17 @@ function init(){
     let colors = loadData(STORAGE_KEYS.BOARD_COLORS, {light:'#f0d9b5', dark:'#1e1e1e'});
     currentLight = colors.light; currentDark = colors.dark;
     updateEloDisplay(); renderStagesButtons(); updateClockDisplay();
+    getDeviceFingerprint();
     if(!myName) askName();
     resetGame(); updateMenuStates(); hideOnlinePanel();
     document.getElementById('chatWrapper').style.display = 'none';
 }
 init();
+
+window.addEventListener('beforeunload', () => {
+    if (conn) { try { conn.close(); } catch(e) {} }
+    if (peer) { try { peer.destroy(); } catch(e) {} }
+});
 </script>
 </body>
 </html>
