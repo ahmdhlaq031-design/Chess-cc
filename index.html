@@ -78,6 +78,7 @@ body.day-mode .logo-mini .by{color:#4a6080}
 .side-menu button.restart{border-color:rgba(80,220,180,0.6);color:#7ee8c8}
 .side-menu button.replay-btn{border-color:rgba(255,180,50,0.7);color:#ffd75a;background:linear-gradient(145deg,rgba(255,180,50,0.15),rgba(180,120,20,0.1))}
 .side-menu button.upload-btn{border-color:rgba(126,179,255,0.7);color:#a8c8ff;background:linear-gradient(145deg,rgba(126,179,255,0.15),rgba(80,120,200,0.1))}
+.side-menu button.pgn-btn{border-color:rgba(80,220,150,0.6);color:#7ee8c8;background:linear-gradient(145deg,rgba(80,220,150,0.15),rgba(40,150,100,0.1))}
 
 .profile-card{background:linear-gradient(145deg,rgba(90,150,255,0.18),rgba(140,90,255,0.14));border:1.5px solid rgba(126,179,255,0.55);border-radius:16px;padding:12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer;}
 .profile-card .avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(145deg,#7eb3ff,#b39aff);display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:900;color:#0a1024;flex-shrink:0;}
@@ -336,6 +337,7 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
     <div id="stagesContainer"></div>
     <hr>
     <button id="openReplayBtn" class="replay-btn">🎬 سجل المباريات</button>
+    <button id="importPgnBtn" class="pgn-btn">📥 استيراد مباراة (PGN)</button>
     <button id="restoreGameBtn" class="upload-btn">📂 استعادة مباراة (JSON)</button>
     <input type="file" id="restoreFileInput" accept=".json,application/json" style="display:none">
     <button id="openColorsBtn">🎨 الألوان</button>
@@ -507,7 +509,11 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
                         </div>
                         <div style="display: flex; gap: 8px; margin-top: 8px;">
                             <!-- أزرار المشاركة والاستعادة -->
-                            <button id="replayShareBtn" style="flex: 1; background: rgba(0,168,132,0.2); border: 1px solid var(--primary); color: #7ee8c8; padding: 8px; border-radius: 8px; font-family: 'Cairo'; font-weight: 700; cursor: pointer;">📥 تصدير (JSON)</button>
+                            <button id="replayShareJsonBtn" style="flex: 1; background: rgba(0,168,132,0.2); border: 1px solid var(--primary); color: #7ee8c8; padding: 8px; border-radius: 8px; font-family: 'Cairo'; font-weight: 700; cursor: pointer;">📥 JSON</button>
+                            <button id="replaySharePgnBtn" style="flex: 1; background: rgba(80,220,150,0.2); border: 1px solid #4ecb71; color: #7ee8c8; padding: 8px; border-radius: 8px; font-family: 'Cairo'; font-weight: 700; cursor: pointer;">📥 PGN</button>
+                            <button id="replayCopyPgnBtn" style="flex: 1; background: rgba(126,179,255,0.2); border: 1px solid #7eb3ff; color: #a8c8ff; padding: 8px; border-radius: 8px; font-family: 'Cairo'; font-weight: 700; cursor: pointer;">📋 نسخ PGN</button>
+                        </div>
+                        <div style="display: flex; gap: 8px; margin-top: 8px;">
                             <button id="replayRestoreBtn" style="flex: 1; background: rgba(255,180,50,0.2); border: 1px solid #f0c040; color: #ffd75a; padding: 8px; border-radius: 8px; font-family: 'Cairo'; font-weight: 700; cursor: pointer;">↩️ استعادة</button>
                         </div>
                         <div class="replay-speed" style="padding:6px; background:rgba(10,18,40,0.6); border-radius:10px; margin-top: 6px;">
@@ -1886,131 +1892,345 @@ document.getElementById('replaySpeed').addEventListener('change', (e) => {
     if (replayState.playing) { stopReplay(); playReplay(); }
 });
 
-/* ========== Replay Export & Restore (JSON) ========== */
+/* ========== PGN Engine (Generator & Parser) ========== */
 
-// زر تصدير المباراة كملف JSON
-document.getElementById('replayShareBtn').addEventListener('click', () => {
+// تحويل الحالة الحالية إلى PGN (تم إصلاحه بالكامل)
+function generatePGN(record) {
+    try {
+        if (!record || record.moves.length === 0) return "";
+        
+        let pgn = `[Event "${record.mode === 'computer' ? 'Vs. Computer' : 'Online Match'}"]\n`;
+        pgn += `[Site "Chess Master App"]\n`;
+        pgn += `[Date "${new Date().toISOString().split('T')[0]}"]\n`;
+        pgn += `[White "${record.myColor === 'white' ? myName : (record.opponentName || 'Black')}"]\n`;
+        pgn += `[Black "${record.myColor === 'black' ? myName : (record.opponentName || 'White')}"]\n`;
+        
+        let resStr = '1/2-1/2';
+        if (record.result === 'win') resStr = (record.myColor === 'white' ? '1-0' : '0-1');
+        else if (record.result === 'loss') resStr = (record.myColor === 'white' ? '0-1' : '1-0');
+        pgn += `[Result "${resStr}"]\n\n`;
+
+        let moveNum = 1;
+        let turnCount = 0;
+        
+        for (let i = 0; i < record.moves.length; i++) {
+            const m = record.moves[i];
+            if (turnCount === 0) {
+                pgn += `${moveNum}. `;
+            }
+            
+            const type = m.piece.split('_')[1];
+            const fromRow = m.from[0];
+            const fromCol = m.from[1];
+            const toRow = m.to[0];
+            const toCol = m.to[1];
+            
+            // دالة مساعدة لتحويل الإحداثيات (0-7) إلى مربع (a1-h8)
+            const getSq = (r, c) => "abcdefgh"[c] + (8 - r);
+            
+            const toSq = getSq(toRow, toCol);
+            
+            const typeMap = { pawn: '', knight: 'N', bishop: 'B', rook: 'R', queen: 'Q', king: 'K' };
+            let notation = typeMap[type];
+            
+            if (m.capture) {
+                if (type === 'pawn') notation += "abcdefgh"[fromCol]; // العمود الذي أكل منه البيدق
+                notation += 'x';
+            }
+            
+            notation += toSq;
+            
+            if (m.promoteTo) {
+                const pChar = typeMap[m.promoteTo];
+                if (pChar) notation += '=' + pChar;
+            }
+            
+            pgn += notation + " ";
+            
+            turnCount = (turnCount + 1) % 2;
+            if (turnCount === 0) moveNum++;
+        }
+        
+        pgn += resStr;
+        return pgn;
+    } catch(e) {
+        console.error("PGN Generation error:", e);
+        return "";
+    }
+}
+
+// تحليل PGN إلى مصفوفة حركات (نسخة محسنة)
+function parsePGN(pgnText) {
+    // 1. إزالة الترويسة (الأسطر التي تبدأ بـ [ )
+    let cleanText = pgnText.replace(/\[.*?\]/g, '').trim();
+    
+    // 2. إزالة النتائج النهائية
+    cleanText = cleanText.replace(/1-0|0-1|1\/2-1\/2|\*/g, '');
+    
+    // 3. إزالة أرقام الحركات (مثل 1. 2. 3...)
+    cleanText = cleanText.replace(/\d+\./g, ' ');
+    
+    // 4. إزالة التعليقات بين الأقواس المعقوفة { }
+    cleanText = cleanText.replace(/\{[^}]*\}/g, ' ');
+    
+    // 5. إزالة رموز التقييم (+, #, !, ?)
+    cleanText = cleanText.replace(/[+#?!]/g, '');
+    
+    // 6. استخراج الكلمات كحركات
+    const tokens = cleanText.split(/\s+/).filter(t => t.length > 0);
+    
+    let tempBoard = getInitialBoard();
+    let whiteKingMoved = false, blackKingMoved = false;
+    let whiteRookMoved = {left:false,right:false}, blackRookMoved = {left:false,right:false};
+    let turn = 'white';
+    let moves = [];
+    
+    const files = "abcdefgh";
+    const typeMap = { 'N': 'knight', 'B': 'bishop', 'R': 'rook', 'Q': 'queen', 'K': 'king' };
+    
+    for (let i = 0; i < tokens.length; i++) {
+        let token = tokens[i];
+        if (token === '...' || token === '') continue;
+        
+        let type = 'pawn';
+        let targetFile = -1;
+        let targetRank = -1;
+        let isCapture = false;
+        let promoteTo = null;
+        
+        // استخراج نوع القطعة (أول حرف إذا كان كبيراً)
+        if (/^[NBRQK]/.test(token)) {
+            type = typeMap[token[0]];
+            token = token.substring(1);
+        }
+        
+        // استخراج الترقية (مثل e8=Q)
+        if (token.includes('=')) {
+            const parts = token.split('=');
+            token = parts[0];
+            const pChar = parts[1][0];
+            promoteTo = typeMap[pChar] || 'queen';
+        }
+        
+        // استخراج الوجهة (آخر حرفين)
+        const destMatch = token.match(/([a-h][1-8])$/);
+        if (!destMatch) continue; // تخطي إذا لم يجد وجهة
+        const dest = destMatch[1];
+        targetFile = files.indexOf(dest[0]);
+        targetRank = 8 - parseInt(dest[1]);
+        
+        // استخراج الأكل
+        if (token.includes('x')) isCapture = true;
+        
+        // إزالة الوجهة من النص
+        const prefix = token.replace(/([a-h][1-8])$/, '');
+        
+        // البحث عن القطعة المناسبة في اللوحة
+        let bestMove = null;
+        
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                const p = tempBoard[r][c];
+                if (!p || !p.startsWith(turn)) continue;
+                if (p.split('_')[1] !== type) continue;
+                
+                // إذا كان هناك تلميح للموقع (مثل Nbd2)
+                if (prefix.length > 0) {
+                    const fileHint = files.indexOf(prefix[0]);
+                    const rankHint = prefix.length > 1 ? 8 - parseInt(prefix[1]) : -1;
+                    if (fileHint !== -1 && c !== fileHint) continue;
+                    if (rankHint !== -1 && r !== rankHint) continue;
+                }
+                
+                // التحقق من صحة الحركة
+                if (isValidMoveFull(p, r, c, targetRank, targetFile, tempBoard, turn)) {
+                    bestMove = { from: [r, c], to: [targetRank, targetFile], piece: p };
+                    break;
+                }
+            }
+            if (bestMove) break;
+        }
+        
+        if (!bestMove) {
+            console.warn("Could not parse move:", token);
+            continue;
+        }
+        
+        // تسجيل الحركة
+        moves.push({
+            from: bestMove.from,
+            to: bestMove.to,
+            piece: bestMove.piece,
+            capture: isCapture,
+            promoteTo: promoteTo
+        });
+        
+        // تحديث اللوحة المؤقتة
+        const piece = tempBoard[bestMove.from[0]][bestMove.from[1]];
+        
+        // التبييت
+        if (piece.includes('king') && Math.abs(bestMove.to[1] - bestMove.from[1]) === 2) {
+            const rookCol = bestMove.to[1] > bestMove.from[1] ? 7 : 0;
+            const newRookCol = bestMove.to[1] > bestMove.from[1] ? 5 : 3;
+            tempBoard[bestMove.from[0]][newRookCol] = tempBoard[bestMove.from[0]][rookCol];
+            tempBoard[bestMove.from[0]][rookCol] = null;
+        }
+        
+        // تحديث حالة الملك والرخ
+        if (piece.includes('king')) {
+            if (piece.startsWith('white')) whiteKingMoved = true;
+            else blackKingMoved = true;
+        }
+        if (piece.includes('rook')) {
+            if (piece.startsWith('white')) {
+                if (bestMove.from[1] === 0) whiteRookMoved.left = true;
+                if (bestMove.from[1] === 7) whiteRookMoved.right = true;
+            } else {
+                if (bestMove.from[1] === 0) blackRookMoved.left = true;
+                if (bestMove.from[1] === 7) blackRookMoved.right = true;
+            }
+        }
+        
+        tempBoard[bestMove.to[0]][bestMove.to[1]] = piece;
+        tempBoard[bestMove.from[0]][bestMove.from[1]] = null;
+        
+        if (promoteTo) {
+            const color = piece.split('_')[0];
+            tempBoard[bestMove.to[0]][bestMove.to[1]] = `${color}_${promoteTo}`;
+        }
+        
+        turn = turn === 'white' ? 'black' : 'white';
+    }
+    
+    return moves;
+}
+
+/* ========== Export / Import / Copy Buttons ========== */
+
+// تصدير JSON
+document.getElementById('replayShareJsonBtn').addEventListener('click', () => {
     if (!replayState.record || replayState.record.moves.length === 0) {
         showToast('⚠️ لا توجد حركات لتصديرها');
         return;
     }
-    
     try {
         const dataToShare = {
             mode: replayState.record.mode,
             stage: replayState.record.stage,
             result: replayState.record.result,
             moves: replayState.record.moves.map(m => ({
-                f: m.from, 
-                t: m.to, 
-                p: m.piece,
-                pr: m.promoteTo
+                f: m.from, t: m.to, p: m.piece, pr: m.promoteTo
             })),
             opp: replayState.record.opponentName
         };
-        
         const jsonStr = JSON.stringify(dataToShare, null, 2);
         const blob = new Blob([jsonStr], { type: "application/json" });
         const url = URL.createObjectURL(blob);
-        
         const a = document.createElement('a');
         a.href = url;
-        const fileName = `chess_match_${Date.now()}.json`;
-        a.download = fileName;
+        a.download = `chess_match_${Date.now()}.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        
-        showToast('✅ تم تصدير الملف بنجاح!');
+        showToast('✅ تم تصدير JSON');
     } catch (e) {
-        console.error("Export error:", e);
-        showToast('❌ حدث خطأ أثناء التصدير');
+        console.error(e);
+        showToast('❌ حدث خطأ');
     }
 });
 
-// زر الاستعادة من داخل المشاهد (للعودة لنقطة معينة)
-document.getElementById('replayRestoreBtn').addEventListener('click', () => {
-    if (!replayState.record) return;
-    
-    if (replayState.moveIndex === 0) {
-        showToast('⚠️ لا توجد حركات لاستعادتها بعد');
+// تصدير PGN (تحميل ملف)
+document.getElementById('replaySharePgnBtn').addEventListener('click', () => {
+    if (!replayState.record || replayState.record.moves.length === 0) {
+        showToast('⚠️ لا توجد حركات لتصديرها');
         return;
     }
-
-    if (confirm(`هل أنت متأكد من استعادة المباراة من الحركة رقم ${replayState.moveIndex}؟\nسيمكنك اللعب من هذه النقطة ضد الكمبيوتر.`)) {
-        document.getElementById('replayModal').classList.remove('open');
-        stopReplay();
-        
-        const record = replayState.record;
-        const targetMoves = record.moves.slice(0, replayState.moveIndex);
-        
-        resetGame(true);
-        gameMode = 'computer';
-        isBoardFlipped = false;
-        
-        let tempBoard = getInitialBoard();
-        let t = 'white';
-        let wkm = false, bkm = false;
-        let wrm = {left:false, right:false}, brm = {left:false, right:false};
-        let cw = [], cb = [];
-        
-        for (let i = 0; i < targetMoves.length; i++) {
-            const m = targetMoves[i];
-            const piece = tempBoard[m.from[0]][m.from[1]];
-            const target = tempBoard[m.to[0]][m.to[1]];
-            
-            if (target) {
-                if (target.startsWith('white')) cb.push(target.split('_')[1]);
-                else cw.push(target.split('_')[1]);
-            }
-            
-            if (piece.includes('king') && Math.abs(m.to[1] - m.from[1]) === 2) {
-                const rCol = m.to[1] > m.from[1] ? 7 : 0;
-                const nrCol = m.to[1] > m.from[1] ? 5 : 3;
-                tempBoard[m.from[0]][nrCol] = tempBoard[m.from[0]][rCol];
-                tempBoard[m.from[0]][rCol] = null;
-            }
-            
-            if (piece.includes('king')) {
-                if (piece.startsWith('white')) wkm = true;
-                else bkm = true;
-            }
-            if (piece.includes('rook')) {
-                if (piece.startsWith('white')) {
-                    if (m.from[1] === 0) wrm.left = true;
-                    if (m.from[1] === 7) wrm.right = true;
-                } else {
-                    if (m.from[1] === 0) brm.left = true;
-                    if (m.from[1] === 7) brm.right = true;
-                }
-            }
-            
-            tempBoard[m.to[0]][m.to[1]] = piece;
-            tempBoard[m.from[0]][m.from[1]] = null;
-            
-            if (m.promoteTo && piece.includes('pawn')) {
-                const color = piece.split('_')[0];
-                tempBoard[m.to[0]][m.to[1]] = `${color}_${m.promoteTo}`;
-            }
-            
-            t = t === 'white' ? 'black' : 'white';
-        }
-        
-        board = tempBoard; turn = t;
-        whiteKingMoved = wkm; blackKingMoved = bkm;
-        whiteRookMoved = wrm; blackRookMoved = brm;
-        capturedWhite = cw; capturedBlack = cb;
-        lastMove = targetMoves[targetMoves.length - 1] ? {from: targetMoves[targetMoves.length-1].from, to: targetMoves[targetMoves.length-1].to} : null;
-        
-        renderBoard();
-        if (turn === 'black') scheduleComputerMove();
-        
-        showToast('✅ تم استعادة المباراة. يمكنك اللعب الآن!');
+    try {
+        const pgnStr = generatePGN(replayState.record);
+        if (!pgnStr) throw new Error("Empty PGN");
+        const blob = new Blob([pgnStr], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `chess_match_${Date.now()}.pgn`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('✅ تم تصدير PGN');
+    } catch (e) {
+        console.error(e);
+        showToast('❌ حدث خطأ');
     }
 });
 
-// زر الاستعادة من القائمة الجانبية (رفع ملف JSON من الهاتف)
+// نسخ PGN إلى الحافظة
+document.getElementById('replayCopyPgnBtn').addEventListener('click', () => {
+    if (!replayState.record || replayState.record.moves.length === 0) {
+        showToast('⚠️ لا توجد حركات لنسخها');
+        return;
+    }
+    try {
+        const pgnStr = generatePGN(replayState.record);
+        if (!pgnStr) throw new Error("Empty PGN");
+        
+        navigator.clipboard.writeText(pgnStr).then(() => {
+            showToast('✅ تم نسخ PGN إلى الحافظة!');
+        }).catch(err => {
+            console.error('Clipboard error:', err);
+            // خطة بديلة إذا فشل النسخ
+            const textarea = document.createElement('textarea');
+            textarea.value = pgnStr;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast('✅ تم نسخ PGN إلى الحافظة!');
+            } catch (e) {
+                showToast('❌ فشل النسخ، يرجى النسخ يدوياً');
+            }
+            document.body.removeChild(textarea);
+        });
+    } catch (e) {
+        console.error(e);
+        showToast('❌ حدث خطأ');
+    }
+});
+
+// استيراد PGN (لصق النص)
+document.getElementById('importPgnBtn').addEventListener('click', () => {
+    closeMenu('sideMenu');
+    const pgnText = prompt("الصق نص PGN هنا (مثل الذي ينسخ من Chess.com):");
+    if (!pgnText) return;
+    
+    try {
+        const moves = parsePGN(pgnText);
+        if (moves.length === 0) {
+            showToast('⚠️ لم يتم العثور على حركات صالحة');
+            return;
+        }
+        
+        const record = {
+            mode: 'imported',
+            stage: 1,
+            result: 'draw', // افتراضي
+            opponentName: 'Imported',
+            moves: moves
+        };
+        
+        document.getElementById('replayModal').classList.add('open');
+        document.getElementById('replayListContainer').style.display = 'none';
+        document.getElementById('replayViewerContainer').style.display = 'flex';
+        loadReplay(record);
+        showToast('🎬 تم تحميل المباراة من PGN!');
+    } catch (e) {
+        console.error("PGN parse error:", e);
+        showToast('❌ صيغة PGN غير صالحة');
+    }
+});
+
+// استيراد JSON (رفع ملف)
 document.getElementById('restoreGameBtn').addEventListener('click', () => {
     closeMenu('sideMenu');
     document.getElementById('restoreFileInput').click();
@@ -2025,7 +2245,6 @@ document.getElementById('restoreFileInput').addEventListener('change', (e) => {
         try {
             const data = JSON.parse(evt.target.result);
             if (data.moves && data.moves.length > 0) {
-                // إعداد السجل
                 const record = {
                     mode: data.mode || 'computer',
                     stage: data.stage || 1,
@@ -2035,23 +2254,21 @@ document.getElementById('restoreFileInput').addEventListener('change', (e) => {
                         from: m.f, to: m.t, piece: m.p, promoteTo: m.pr || null
                     }))
                 };
-                
-                // فتح المشاهدة مباشرة
                 document.getElementById('replayModal').classList.add('open');
                 document.getElementById('replayListContainer').style.display = 'none';
                 document.getElementById('replayViewerContainer').style.display = 'flex';
                 loadReplay(record);
-                showToast('🎬 تم تحميل المباراة بنجاح!');
+                showToast('🎬 تم تحميل JSON بنجاح!');
             } else {
                 showToast('⚠️ الملف لا يحتوي على حركات صالحة');
             }
         } catch (err) {
-            console.error("Restore error:", err);
+            console.error(err);
             showToast('❌ ملف JSON غير صالح');
         }
     };
     reader.readAsText(file);
-    e.target.value = ''; // تصفير القيمة ليمكن رفع نفس الملف مرة أخرى
+    e.target.value = '';
 });
 
 /* ========== Reset & Init ========== */
