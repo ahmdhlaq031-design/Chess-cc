@@ -6,7 +6,6 @@
 <title>♛ Chess Master - AI Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-<!-- ربط ملف المحرك -->
 <script src="engine.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
@@ -78,6 +77,7 @@ body.day-mode .logo-mini .by{color:#4a6080}
 .side-menu button.undo{border-color:rgba(180,140,255,0.6);color:#c8b3ff}
 .side-menu button.restart{border-color:rgba(80,220,180,0.6);color:#7ee8c8}
 .side-menu button.replay-btn{border-color:rgba(255,180,50,0.7);color:#ffd75a;background:linear-gradient(145deg,rgba(255,180,50,0.15),rgba(180,120,20,0.1))}
+.side-menu button.upload-btn{border-color:rgba(126,179,255,0.7);color:#a8c8ff;background:linear-gradient(145deg,rgba(126,179,255,0.15),rgba(80,120,200,0.1))}
 
 .profile-card{background:linear-gradient(145deg,rgba(90,150,255,0.18),rgba(140,90,255,0.14));border:1.5px solid rgba(126,179,255,0.55);border-radius:16px;padding:12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer;}
 .profile-card .avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(145deg,#7eb3ff,#b39aff);display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:900;color:#0a1024;flex-shrink:0;}
@@ -335,7 +335,9 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
     <div class="menu-title">📈 المراحل (ضد الكمبيوتر)</div>
     <div id="stagesContainer"></div>
     <hr>
-    <button id="openReplayBtn" class="replay-btn">🎬 إعادة آخر المباريات</button>
+    <button id="openReplayBtn" class="replay-btn">🎬 سجل المباريات</button>
+    <button id="restoreGameBtn" class="upload-btn">📂 استعادة مباراة (JSON)</button>
+    <input type="file" id="restoreFileInput" accept=".json,application/json" style="display:none">
     <button id="openColorsBtn">🎨 الألوان</button>
     <button id="toggleSoundBtn">🔊 صوت التحريك: مفعّل</button>
     <button id="toggleThemeBtn">☀️ الوضع النهاري</button>
@@ -481,7 +483,7 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
 <div class="replay-modal" id="replayModal">
     <div class="replay-box">
         <div class="replay-header">
-            <h2>🎬 إعادة المباريات</h2>
+            <h2>🎬 سجل المباريات</h2>
             <button class="replay-close" id="replayClose">✕</button>
         </div>
         <div class="replay-body">
@@ -493,14 +495,22 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
                 <div style="display:flex; gap:12px; padding:8px; flex-wrap:wrap;">
                     <div class="replay-board" id="replayBoard" style="flex-shrink:0;"></div>
                     <div style="flex:1; min-width:180px; display:flex; flex-direction:column; gap:6px;">
-                        <div class="replay-controls">
-                            <button id="replayStart" title="البداية">⏮️</button>
-                            <button id="replayPrev" title="السابق">◀️</button>
-                            <button id="replayPlay" title="تشغيل/إيقاف">▶️</button>
-                            <button id="replayNext" title="التالي">▶️▶️</button>
-                            <button id="replayEnd" title="النهاية">⏭️</button>
+                        <div style="display: flex; gap: 8px; justify-content: center; margin-top: 10px;">
+                            <!-- أزرار التحكم الأساسية -->
+                            <div class="replay-controls" style="flex: 1;">
+                                <button id="replayStart" title="البداية">⏮️</button>
+                                <button id="replayPrev" title="السابق">◀️</button>
+                                <button id="replayPlay" title="تشغيل/إيقاف">▶️</button>
+                                <button id="replayNext" title="التالي">▶️▶️</button>
+                                <button id="replayEnd" title="النهاية">⏭️</button>
+                            </div>
                         </div>
-                        <div class="replay-speed" style="padding:6px; background:rgba(10,18,40,0.6); border-radius:10px;">
+                        <div style="display: flex; gap: 8px; margin-top: 8px;">
+                            <!-- أزرار المشاركة والاستعادة -->
+                            <button id="replayShareBtn" style="flex: 1; background: rgba(0,168,132,0.2); border: 1px solid var(--primary); color: #7ee8c8; padding: 8px; border-radius: 8px; font-family: 'Cairo'; font-weight: 700; cursor: pointer;">📥 تصدير (JSON)</button>
+                            <button id="replayRestoreBtn" style="flex: 1; background: rgba(255,180,50,0.2); border: 1px solid #f0c040; color: #ffd75a; padding: 8px; border-radius: 8px; font-family: 'Cairo'; font-weight: 700; cursor: pointer;">↩️ استعادة</button>
+                        </div>
+                        <div class="replay-speed" style="padding:6px; background:rgba(10,18,40,0.6); border-radius:10px; margin-top: 6px;">
                             <label>السرعة:</label>
                             <select id="replaySpeed">
                                 <option value="2000">0.5x</option>
@@ -509,7 +519,7 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
                                 <option value="250">4x</option>
                             </select>
                         </div>
-                        <button id="replayBackToList" style="background:rgba(126,179,255,0.15); border:1px solid rgba(126,179,255,0.5); color:#a8c8ff; padding:8px 12px; border-radius:10px; cursor:pointer; font-family:'Cairo',sans-serif; font-weight:700; font-size:0.8rem;">
+                        <button id="replayBackToList" style="background:rgba(126,179,255,0.15); border:1px solid rgba(126,179,255,0.5); color:#a8c8ff; padding:8px 12px; border-radius:10px; cursor:pointer; font-family:'Cairo',sans-serif; font-weight:700; font-size:0.8rem; margin-top: 6px;">
                             ← رجوع للقائمة
                         </button>
                     </div>
@@ -1874,6 +1884,174 @@ document.getElementById('replayPlay').addEventListener('click', playReplay);
 document.getElementById('replaySpeed').addEventListener('change', (e) => {
     replayState.speed = parseInt(e.target.value);
     if (replayState.playing) { stopReplay(); playReplay(); }
+});
+
+/* ========== Replay Export & Restore (JSON) ========== */
+
+// زر تصدير المباراة كملف JSON
+document.getElementById('replayShareBtn').addEventListener('click', () => {
+    if (!replayState.record || replayState.record.moves.length === 0) {
+        showToast('⚠️ لا توجد حركات لتصديرها');
+        return;
+    }
+    
+    try {
+        const dataToShare = {
+            mode: replayState.record.mode,
+            stage: replayState.record.stage,
+            result: replayState.record.result,
+            moves: replayState.record.moves.map(m => ({
+                f: m.from, 
+                t: m.to, 
+                p: m.piece,
+                pr: m.promoteTo
+            })),
+            opp: replayState.record.opponentName
+        };
+        
+        const jsonStr = JSON.stringify(dataToShare, null, 2);
+        const blob = new Blob([jsonStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        const fileName = `chess_match_${Date.now()}.json`;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        showToast('✅ تم تصدير الملف بنجاح!');
+    } catch (e) {
+        console.error("Export error:", e);
+        showToast('❌ حدث خطأ أثناء التصدير');
+    }
+});
+
+// زر الاستعادة من داخل المشاهد (للعودة لنقطة معينة)
+document.getElementById('replayRestoreBtn').addEventListener('click', () => {
+    if (!replayState.record) return;
+    
+    if (replayState.moveIndex === 0) {
+        showToast('⚠️ لا توجد حركات لاستعادتها بعد');
+        return;
+    }
+
+    if (confirm(`هل أنت متأكد من استعادة المباراة من الحركة رقم ${replayState.moveIndex}؟\nسيمكنك اللعب من هذه النقطة ضد الكمبيوتر.`)) {
+        document.getElementById('replayModal').classList.remove('open');
+        stopReplay();
+        
+        const record = replayState.record;
+        const targetMoves = record.moves.slice(0, replayState.moveIndex);
+        
+        resetGame(true);
+        gameMode = 'computer';
+        isBoardFlipped = false;
+        
+        let tempBoard = getInitialBoard();
+        let t = 'white';
+        let wkm = false, bkm = false;
+        let wrm = {left:false, right:false}, brm = {left:false, right:false};
+        let cw = [], cb = [];
+        
+        for (let i = 0; i < targetMoves.length; i++) {
+            const m = targetMoves[i];
+            const piece = tempBoard[m.from[0]][m.from[1]];
+            const target = tempBoard[m.to[0]][m.to[1]];
+            
+            if (target) {
+                if (target.startsWith('white')) cb.push(target.split('_')[1]);
+                else cw.push(target.split('_')[1]);
+            }
+            
+            if (piece.includes('king') && Math.abs(m.to[1] - m.from[1]) === 2) {
+                const rCol = m.to[1] > m.from[1] ? 7 : 0;
+                const nrCol = m.to[1] > m.from[1] ? 5 : 3;
+                tempBoard[m.from[0]][nrCol] = tempBoard[m.from[0]][rCol];
+                tempBoard[m.from[0]][rCol] = null;
+            }
+            
+            if (piece.includes('king')) {
+                if (piece.startsWith('white')) wkm = true;
+                else bkm = true;
+            }
+            if (piece.includes('rook')) {
+                if (piece.startsWith('white')) {
+                    if (m.from[1] === 0) wrm.left = true;
+                    if (m.from[1] === 7) wrm.right = true;
+                } else {
+                    if (m.from[1] === 0) brm.left = true;
+                    if (m.from[1] === 7) brm.right = true;
+                }
+            }
+            
+            tempBoard[m.to[0]][m.to[1]] = piece;
+            tempBoard[m.from[0]][m.from[1]] = null;
+            
+            if (m.promoteTo && piece.includes('pawn')) {
+                const color = piece.split('_')[0];
+                tempBoard[m.to[0]][m.to[1]] = `${color}_${m.promoteTo}`;
+            }
+            
+            t = t === 'white' ? 'black' : 'white';
+        }
+        
+        board = tempBoard; turn = t;
+        whiteKingMoved = wkm; blackKingMoved = bkm;
+        whiteRookMoved = wrm; blackRookMoved = brm;
+        capturedWhite = cw; capturedBlack = cb;
+        lastMove = targetMoves[targetMoves.length - 1] ? {from: targetMoves[targetMoves.length-1].from, to: targetMoves[targetMoves.length-1].to} : null;
+        
+        renderBoard();
+        if (turn === 'black') scheduleComputerMove();
+        
+        showToast('✅ تم استعادة المباراة. يمكنك اللعب الآن!');
+    }
+});
+
+// زر الاستعادة من القائمة الجانبية (رفع ملف JSON من الهاتف)
+document.getElementById('restoreGameBtn').addEventListener('click', () => {
+    closeMenu('sideMenu');
+    document.getElementById('restoreFileInput').click();
+});
+
+document.getElementById('restoreFileInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+        try {
+            const data = JSON.parse(evt.target.result);
+            if (data.moves && data.moves.length > 0) {
+                // إعداد السجل
+                const record = {
+                    mode: data.mode || 'computer',
+                    stage: data.stage || 1,
+                    result: data.result || 'draw',
+                    opponentName: data.opp || null,
+                    moves: data.moves.map(m => ({
+                        from: m.f, to: m.t, piece: m.p, promoteTo: m.pr || null
+                    }))
+                };
+                
+                // فتح المشاهدة مباشرة
+                document.getElementById('replayModal').classList.add('open');
+                document.getElementById('replayListContainer').style.display = 'none';
+                document.getElementById('replayViewerContainer').style.display = 'flex';
+                loadReplay(record);
+                showToast('🎬 تم تحميل المباراة بنجاح!');
+            } else {
+                showToast('⚠️ الملف لا يحتوي على حركات صالحة');
+            }
+        } catch (err) {
+            console.error("Restore error:", err);
+            showToast('❌ ملف JSON غير صالح');
+        }
+    };
+    reader.readAsText(file);
+    e.target.value = ''; // تصفير القيمة ليمكن رفع نفس الملف مرة أخرى
 });
 
 /* ========== Reset & Init ========== */
