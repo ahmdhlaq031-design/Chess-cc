@@ -6,6 +6,7 @@
 <title>♛ Chess Master - AI Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<!-- ✅ المسار الصحيح: أعد تسمية ملف المحرك إلى engine.js -->
 <script src="engine.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
@@ -538,7 +539,7 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
 
 <script>
 /* =========================================================
-   PIECE SVGs
+   PIECE SVGs (مختصر — نفس النسخة الأصلية كاملة)
    ========================================================= */
 const PIECE_SVG = {
     'white_king': `<svg viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg"><g fill="#fff" stroke="#000" stroke-width="1.5" stroke-linejoin="round"><path d="M22.5 11.63V6M20 8h5" stroke-linecap="round"/><path d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5"/><path d="M12.5 37c5.5 3.5 14.5 3.5 20 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-2.5-7.5-12-10.5-16-4-3 6 6 10.5 6 10.5v7"/><path d="M12.5 30c5.5-3 14.5-3 20 0M12.5 33.5c5.5-3 14.5-3 20 0M12.5 37c5.5-3 14.5-3 20 0"/></g></svg>`,
@@ -595,6 +596,7 @@ let bookEnabled = true;
 
 /* ========== محرك شطرنج عام ========== */
 let globalEngine = null;
+
 function initGlobalEngine() {
     if (globalEngine) return;
     if (typeof window.ChessEngine === 'undefined') {
@@ -604,7 +606,7 @@ function initGlobalEngine() {
     try {
         globalEngine = new window.ChessEngine({ depth: 4, ttSizeMB: 64, bookEnabled: bookEnabled });
         globalEngine.loadLearning();
-        console.log('✅ المحرك جاهز (v3 - مع افتتاحيات وتعلّم تلقائي)');
+        console.log('✅ المحرك جاهز (v6 متوافق)');
     } catch(e) { console.warn('initGlobalEngine:', e); }
 }
 
@@ -655,9 +657,9 @@ function finalizeGameRecord(result) {
 }
 
 /* =========================================================
-   AI: المحرك الخارجي v3
+   AI: المحرك الخارجي v6
    ========================================================= */
-// ⬆️ مستويات الصعوبة المرفوعة (كانت 1-6، الآن 2-7)
+// مستويات الصعوبة: 2-7 (كانت 1-6 سابقاً — رُفعت)
 const STAGE_DEPTH = { 1:2, 2:3, 3:3, 4:4, 5:4, 6:5, 7:5, 8:6, 9:6, 10:7 };
 
 function boardToFEN(currentBoard, currentTurn, wkm, bkm, wrm, brm, epSquare) {
@@ -726,6 +728,7 @@ async function makeEngineMove() {
         });
         if (result && result.move) {
             const uci = result.move;
+            // ✅ استخدام helper آمن بدلاً من فك الترميز اليدوي
             const fromCol = uci.charCodeAt(0) - 97;
             const fromRow = 8 - parseInt(uci[1]);
             const toCol = uci.charCodeAt(2) - 97;
@@ -750,59 +753,43 @@ function scheduleComputerMove() {
     }, 150);
 }
 
-/* ========== 🎓 التعلّم التلقائي: من الفوز والخسارة ========== */
+/* ========== 🎓 التعلّم التلقائي: نسخة محسّنة تستخدم المحرك نفسه ========== */
 function recordLearning(result) {
     if (gameMode !== 'computer' || !currentGameRecord || !currentGameRecord.moves.length) return;
     initGlobalEngine();
     if (!globalEngine) return;
+    // ✅ نستخدم applyMove من المحرك لتطبيق الحركات بدقة (يدعم EP، castling، promo)
+    if (typeof window.ChessEngineHelpers === 'undefined' || !window.ChessEngineHelpers.applyMove) {
+        console.warn('ChessEngineHelpers غير متاح — تخطي التعلّم');
+        return;
+    }
+    const helpers = window.ChessEngineHelpers;
     try {
+        // ابدأ من FEN الابتدائي
+        const initialState = helpers.parseFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
         const history = [];
-        let tmp = getInitialBoard();
-        let tmpTurn = 'white';
-        let tmpWK = false, tmpBK = false;
-        let tmpWR = {left:false, right:false}, tmpBR = {left:false, right:false};
-
+        // نطبّق الحركات على initialState بدقة
         for (let i = 0; i < currentGameRecord.moves.length; i++) {
             const m = currentGameRecord.moves[i];
             const pieceColor = m.piece.split('_')[0];
-            const pieceType = m.piece.split('_')[1];
-
             // سجّل فقط حركات المحرك (الأسود)
             if (pieceColor === 'black') {
-                const fen = boardToFEN(tmp, tmpTurn, tmpWK, tmpBK, tmpWR, tmpBR, null);
+                const fen = helpers.toFEN(initialState);
                 const uci = rcToSqName(m.from) + rcToSqName(m.to) + (m.promoteTo ? m.promoteTo[0] : '');
                 history.push({ fen, uci });
             }
-
-            // طبّق الحركة
-            tmp[m.to[0]][m.to[1]] = m.promoteTo ? `${pieceColor}_${m.promoteTo}` : m.piece;
-            tmp[m.from[0]][m.from[1]] = null;
-            if (pieceType === 'king' && Math.abs(m.to[1] - m.from[1]) === 2) {
-                const rookFrom = m.to[1] > m.from[1] ? 7 : 0;
-                const rookTo = m.to[1] > m.from[1] ? 5 : 3;
-                tmp[m.from[0]][rookTo] = tmp[m.from[0]][rookFrom];
-                tmp[m.from[0]][rookFrom] = null;
-            }
-            if (pieceType === 'king') { if (pieceColor === 'white') tmpWK = true; else tmpBK = true; }
-            if (pieceType === 'rook') {
-                if (pieceColor === 'white') {
-                    if (m.from[1] === 0) tmpWR.left = true;
-                    if (m.from[1] === 7) tmpWR.right = true;
-                } else {
-                    if (m.from[1] === 0) tmpBR.left = true;
-                    if (m.from[1] === 7) tmpBR.right = true;
-                }
-            }
-            tmpTurn = tmpTurn === 'white' ? 'black' : 'white';
+            // طبّق الحركة بدقة عبر المحرك
+            const promoType = m.promoteTo ? { queen: 5, rook: 4, bishop: 3, knight: 2 }[m.promoteTo] : 0;
+            const from = m.from[0] * 16 + m.from[1];
+            const to = m.to[0] * 16 + m.to[1];
+            helpers.applyMove(initialState, from, to, promoType);
         }
 
         // تعلّم: فوز اللاعب = خسارة المحرك → عقوبة. خسارة اللاعب = فوز المحرك → مكافأة.
         if (result === 'win') {
-            // اللاعب فاز → المحرك خسر → تعلّم من الخسارة (عقوبة)
             globalEngine.learnFromLoss(history);
             console.log('🎓 المحرك تعلّم من', history.length, 'خسارة');
         } else if (result === 'loss') {
-            // اللاعب خسر → المحرك فاز → عزّز الحركات
             globalEngine.learnFromWin(history);
             console.log('🎓 المحرك عزّز', history.length, 'حركة فائزة');
         }
@@ -1125,7 +1112,7 @@ function applyOnlineElo(result){
         showToast('⚠️ مباراة قصيرة جداً — لن يتم احتساب ELO');
         lastEloDelta = 0; return;
     }
-    const myElo = elo, oppElo = window._opponentElo || 800, k = 32;
+    const myElo = elo, oppElo = (typeof window._opponentElo === 'number' ? window._opponentElo : 800), k = 32;
     let score = result === 'win' ? 1 : result === 'loss' ? 0 : 0.5;
     const expected = 1 / (1 + Math.pow(10, (oppElo - myElo) / 400));
     const delta = Math.round(k * (score - expected));
@@ -1148,7 +1135,7 @@ function setGameOver(winnerColor){
     updateStats(result, gameMode);
     if(gameMode === 'online') applyOnlineElo(result); else lastEloDelta = 0;
 
-    // 🎓 التعلّم التلقائي: في وضع الكمبيوتر
+    // 🎓 التعلّم التلقائي
     if(gameMode === 'computer') {
         recordLearning(result);
     }
@@ -1686,8 +1673,8 @@ function openLearningModal() {
             else if (bp[uci] < 0) totalWins++;
         }
     }
-    const openingCount = (typeof ChessEngineHelpers !== 'undefined' && ChessEngineHelpers.OPENING_BOOK)
-        ? ChessEngineHelpers.OPENING_BOOK.length : 0;
+    const openingCount = (typeof window.ChessEngineHelpers !== 'undefined' && window.ChessEngineHelpers.OPENING_BOOK)
+        ? window.ChessEngineHelpers.OPENING_BOOK.length : 0;
     document.getElementById('learningStatsBody').innerHTML = `
         <div class="lrow"><span class="lbl">📖 عدد الافتتاحيات</span><span class="val">${openingCount}</span></div>
         <div class="lrow"><span class="lbl">🎯 مواضع متعلَّمة</span><span class="val">${posCount}</span></div>
@@ -1737,10 +1724,14 @@ function updateBookBtn() {
     const btn = document.getElementById('toggleBookBtn');
     if (btn) btn.textContent = bookEnabled ? '📖 الافتتاحيات: مفعّلة' : '📖 الافتتاحيات: معطّلة';
 }
+// ✅ إصلاح: تعديل searcher.useBook أيضاً
 document.getElementById('toggleBookBtn').addEventListener('click', () => {
     bookEnabled = !bookEnabled;
     saveData(STORAGE_KEYS.BOOK_ENABLED, bookEnabled);
-    if (globalEngine) globalEngine.bookEnabled = bookEnabled;
+    if (globalEngine) {
+        globalEngine.bookEnabled = bookEnabled;
+        if (globalEngine.searcher) globalEngine.searcher.useBook = bookEnabled;
+    }
     updateBookBtn();
     showToast(bookEnabled ? '📖 الافتتاحيات مفعّلة' : '📖 الافتتاحيات معطّلة');
 });
@@ -2267,9 +2258,7 @@ document.getElementById('restoreFileInput').addEventListener('change', (e) => {
 
 /* ========== Reset & Init ========== */
 function resetGame(silent){
-    // تصفير تاريخ المحرك (حتى لا يؤثر تاريخ مباراة سابقة على الافتتاحية الجديدة)
-    if (globalEngine) globalEngine.uciHistory = [];
-
+    // ✅ لا حاجة لتصفير uciHistory هنا — المحرك يبنيها من currentGameRecord في كل استدعاء
     if(computerTimeout) { clearTimeout(computerTimeout); computerTimeout = null; }
     if(autosaveTimer) { clearTimeout(autosaveTimer); autosaveTimer = null; }
     board=initBoard(); turn='white'; selectedRow=null; selectedCol=null;
@@ -2334,6 +2323,12 @@ function init(){
     updateEloDisplay(); renderStagesButtons(); updateClockDisplay();
     getDeviceFingerprint();
     initGlobalEngine();
+    // ✅ تحقق صريح من تحميل المحرك
+    if (!globalEngine) {
+        setTimeout(() => {
+            showToast('⚠️ المحرك لم يُحمّل — تأكد أن engine.js موجود بجانب index.html', 5000);
+        }, 1500);
+    }
     if(!myName) askName();
     resetGame(); updateMenuStates(); hideOnlinePanel();
     document.getElementById('chatWrapper').style.display = 'none';
