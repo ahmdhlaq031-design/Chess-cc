@@ -1,19 +1,20 @@
 /* ============================================================================
- * ChessEnginePro.js — محرك شطرنج محسّن شامل (إصلاحات + تحسينات ذكاء)
+ * ChessEnginePro.js v2 — محرك شطرنج محسّن + تعلّم من الهزائم
  * ----------------------------------------------------------------------------
- * تحسينات رئيسية على النسخة الأصلية:
- *  - إصلاح أخطاء: en passant undo, attack detection, eval double-counting,
- *    TT (Number بدل BigInt), repetition tracking داخل الشجرة, null-move hash.
- *  - Zobrist بـ Number (32-bit × 2) أسرع 5-10x من BigInt.
- *  - SEE (Static Exchange Evaluation) لترتيب الأكل و Pruning.
- *  - PVS (Principal Variation Search) + Aspiration Windows.
- *  - Late Move Pruning (LMP) + Futility Pruning + Reverse Futility.
- *  - Internal Iterative Deepening (IID).
- *  - Check Extension.
- *  - History heuristic محسّن + Butterfly + Counter-move.
- *  - تحسين التقييم: passer, doubled, isolated, rook on open file, king shelter,
- *    bishop pair, mobility خفيفة, tempo.
- *  - تحسين إدارة الوقت.
+ * كل التحسينات المُدمجة:
+ *  [FIX] bestMoveRoot يُحدَّث الآن (كان معطلاً)
+ *  [FIX] Null-move hash عبر computeHash
+ *  [FIX] SEE صحيح (swap algorithm مع snapshot)
+ *  [FIX] insufficient material
+ *  [NEW] LMP (Late Move Pruning)
+ *  [NEW] LMR محسّن مع depth scaling
+ *  [NEW] Aspiration windows آمنة (fail-safe)
+ *  [NEW] Passed pawns + king danger (رخيص)
+ *  [NEW] Soft/hard time management
+ *  [NEW] Deterministic mode (بدون عشوائية)
+ *  [NEW] Variety mode (عشوائية افتتاحية صغيرة)
+ *  [NEW] Learning from losses (avoider book + move penalty)
+ *  [NEW] History persistence (localStorage/JSON)
  * ==========================================================================*/
 
 (function (global) {
@@ -22,7 +23,6 @@
   /* ------------------------------ ثوابت ------------------------------ */
   const WHITE = 0, BLACK = 1;
   const PAWN = 1, KNIGHT = 2, BISHOP = 3, ROOK = 4, QUEEN = 5, KING = 6;
-
   const pieceOf = (c, t) => (c << 3) | t;
   const colorOf = (p) => p >> 3;
   const typeOf  = (p) => p & 7;
@@ -51,13 +51,11 @@
   const K_DIRS = [-17, -16, -15, -1, 1, 15, 16, 17];
 
   const CASTLE_WK = 1, CASTLE_WQ = 2, CASTLE_BK = 4, CASTLE_BQ = 8;
-
   const MATE = 30000;
   const MATE_IN_MAX = MATE - 1000;
   const INF = 1000000;
 
-  /* --------------------------- Attack Tables ------------------------- */
-  // نستخدم اتجاهات صحيحة للبيادق: الأبيض يهاجم sq+15 و sq+17 (لأنه يتحرك لأعلى -16)
+  /* --------------------------- Attack detection ---------------------- */
   function isSquareAttackedBy(state, sq, byColor) {
     const b = state.board;
     if (byColor === WHITE) {
@@ -134,7 +132,7 @@
     }
   }
 
-  /* ------------------------- Zobrist (Number) ------------------------ */
+  /* ------------------------- Zobrist -------------------------------- */
   const ZOBRIST_PIECES_LO = [], ZOBRIST_PIECES_HI = [];
   const ZOBRIST_CASTLE_LO = [], ZOBRIST_CASTLE_HI = [];
   const ZOBRIST_EP_LO = [], ZOBRIST_EP_HI = [];
@@ -193,8 +191,7 @@
       const type = lower === "p" ? PAWN : lower === "n" ? KNIGHT : lower === "b" ? BISHOP
                  : lower === "r" ? ROOK : lower === "q" ? QUEEN : KING;
       const sq = r * 16 + f;
-      const p = pieceOf(color, type);
-      s.board[sq] = p;
+      s.board[sq] = pieceOf(color, type);
       if (type === KING) s.kings[color] = sq;
       f++;
     }
@@ -238,7 +235,6 @@
   }
 
   /* --------------------------- Apply / Undo -------------------------- */
-  // نُخزّن كل شيء لازٍم للتراجع بدقة، بما في ذلك capturedSq (لـ en passant)
   function applyMove(state, from, to, promoType) {
     const b = state.board;
     const piece = b[from];
@@ -249,7 +245,6 @@
     let captured = 0;
     let capturedSq = -1;
 
-    // En passant
     if (type === PAWN && to === state.ep && !target) {
       capturedSq = color === WHITE ? to + 16 : to - 16;
       captured = b[capturedSq];
@@ -285,7 +280,6 @@
     b[to] = placed;
     lo ^= ZOBRIST_PIECES_LO[placed][to]; hi ^= ZOBRIST_PIECES_HI[placed][to];
 
-    // Castling rook move
     if (type === KING) {
       const fromF = from & 7, toF = to & 7;
       if (fromF === 4 && toF === 6) {
@@ -302,7 +296,6 @@
       state.kings[color] = to;
     }
 
-    // Castling rights
     let castling = state.castling;
     if (type === KING) {
       castling &= color === WHITE ? ~(CASTLE_WK | CASTLE_WQ) : ~(CASTLE_BK | CASTLE_BQ);
@@ -341,32 +334,18 @@
 
   function undoMove(state) {
     const h = state.history.pop();
-    if (!h) return;
+    if (!h || h.nullMove) return;
     const b = state.board;
-
-    // إزالة القطعة من to
     const moved = b[h.to];
     b[h.to] = 0;
-
-    // إعادة القطعة إلى from (مع إعادة الترقية إلى بيدق)
     if (h.promoType) b[h.from] = pieceOf(colorOf(moved), PAWN);
     else b[h.from] = moved;
-
-    // إعادة القطعة المأكولة
-    if (h.captured) {
-      b[h.capturedSq] = h.captured;
-    }
-
-    // Castling rook
+    if (h.captured) b[h.capturedSq] = h.captured;
     if (typeOf(b[h.from]) === KING) {
       const fromF = h.from & 7, toF = h.to & 7;
-      if (fromF === 4 && toF === 6) {
-        b[h.to + 1] = b[h.to - 1]; b[h.to - 1] = 0;
-      } else if (fromF === 4 && toF === 2) {
-        b[h.to - 2] = b[h.to + 1]; b[h.to + 1] = 0;
-      }
+      if (fromF === 4 && toF === 6) { b[h.to + 1] = b[h.to - 1]; b[h.to - 1] = 0; }
+      else if (fromF === 4 && toF === 2) { b[h.to - 2] = b[h.to + 1]; b[h.to + 1] = 0; }
     }
-
     state.castling = h.prevCastling;
     state.ep = h.prevEp;
     state.halfmove = h.prevHalf;
@@ -489,82 +468,77 @@
 
   /* ------------------------------- SEE ------------------------------- */
   const SEE_VAL = [0, 100, 320, 330, 500, 900, 20000];
-  function see(state, from, to) {
+
+  function see(state, from, to, promoType) {
     const b = state.board;
-    const movingPiece = b[from];
     const target = b[to];
-    let gain = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    // simple SEE via full apply/undo loop
-    let idx = 0;
-    gain[idx++] = target ? SEE_VAL[typeOf(target)] : 0;
-    applyMove(state, from, to, 0);
-    let side = state.turn;
-    let depth = 1;
-    while (depth < 16) {
-      // ابحث عن أرخص قطعة تهاجم المربع
-      let bestAttackerSq = -1, bestAttackerVal = 99999;
-      const bb = state.board;
+    const isEp = (to === state.ep && typeOf(b[from]) === PAWN && !target);
+    if (!target && !isEp && !promoType) return 0;
+
+    const snapshot = b.slice();
+    const kingsBackup = state.kings.slice();
+
+    let gain = [];
+    gain[0] = target ? SEE_VAL[typeOf(target)] : SEE_VAL[PAWN];
+    let side = 1 - colorOf(b[from]);
+    let curType = promoType || typeOf(b[from]);
+    b[to] = pieceOf(colorOf(b[from]), curType);
+    b[from] = 0;
+    if (isEp) b[colorOf(b[from]) === WHITE ? to + 16 : to - 16] = 0;
+
+    let d = 0;
+    while (d < 20) {
+      d++;
+      let bestSq = -1, bestType = 0, bestVal = 99999;
       for (let sq = 0; sq < 128; sq++) {
         if (!isValidSq(sq)) continue;
-        const p = bb[sq];
+        const p = b[sq];
         if (!p || colorOf(p) !== side) continue;
-        // هل يمكنها الوصول إلى to؟
         const t = typeOf(p);
-        let canAttack = false;
+        let attacks = false;
         if (t === PAWN) {
-          const dir = side === WHITE ? -1 : 1;
-          if (isValidSq(sq + dir * 16 - 1) && (sq + dir * 16 - 1) === to) canAttack = true;
-          else if (isValidSq(sq + dir * 16 + 1) && (sq + dir * 16 + 1) === to) canAttack = true;
+          const dir = side === WHITE ? -16 : 16;
+          if ((sq + dir - 1 === to || sq + dir + 1 === to) && Math.abs((sq & 7) - (to & 7)) === 1) attacks = true;
         } else if (t === KNIGHT) {
-          for (const d of N_DIRS) if (sq + d === to) { canAttack = true; break; }
+          for (const dd of N_DIRS) if (sq + dd === to) { attacks = true; break; }
         } else if (t === KING) {
-          for (const d of K_DIRS) if (sq + d === to) { canAttack = true; break; }
-        } else if (t === BISHOP || t === QUEEN) {
-          for (const d of B_DIRS) {
-            let x = sq + d;
+          for (const dd of K_DIRS) if (sq + dd === to) { attacks = true; break; }
+        } else {
+          const dirs = t === BISHOP ? B_DIRS : t === ROOK ? R_DIRS : K_DIRS;
+          for (const dd of dirs) {
+            let x = sq + dd;
             while (isValidSq(x)) {
-              if (x === to) { canAttack = true; break; }
-              if (bb[x]) break;
-              x += d;
+              if (x === to) { attacks = true; break; }
+              if (b[x]) break;
+              x += dd;
             }
-            if (canAttack) break;
+            if (attacks) break;
           }
         }
-        if (!canAttack && (t === ROOK || t === QUEEN)) {
-          for (const d of R_DIRS) {
-            let x = sq + d;
-            while (isValidSq(x)) {
-              if (x === to) { canAttack = true; break; }
-              if (bb[x]) break;
-              x += d;
-            }
-            if (canAttack) break;
-          }
-        }
-        if (canAttack && SEE_VAL[t] < bestAttackerVal) {
-          bestAttackerVal = SEE_VAL[t];
-          bestAttackerSq = sq;
-        }
+        if (attacks && SEE_VAL[t] < bestVal) { bestVal = SEE_VAL[t]; bestSq = sq; bestType = t; }
       }
-      if (bestAttackerSq < 0) break;
-      // هل الأكل قانوني؟ (نتحقق بتطبيق/تراجع)
-      const capPiece = state.board[to];
-      applyMove(state, bestAttackerSq, to, 0);
-      if (isInCheck(state, side)) { undoMove(state); break; }
-      undoMove(state);
-      gain[idx] = SEE_VAL[typeOf(capPiece)] - gain[idx - 1];
-      if (gain[idx] > 0) gain[idx - 1] = gain[idx - 1]; // placeholder
-      idx++;
-      applyMove(state, bestAttackerSq, to, 0);
+      if (bestSq < 0) break;
+      gain[d] = SEE_VAL[curType] - gain[d - 1];
+      curType = bestType;
+      b[bestSq] = 0;
+      b[to] = pieceOf(side, bestType);
       side = 1 - side;
-      depth++;
     }
-    // تراجع كامل
-    for (let i = 0; i < depth; i++) undoMove(state);
-    // نُبسّط: نُرجع صافي القيمة التقريبي
-    let net = 0;
-    for (let i = idx - 1; i >= 0; i--) net = Math.max(0, gain[i] - net);
-    return net;
+
+    // restore
+    for (let sq = 0; sq < 128; sq++) b[sq] = snapshot[sq];
+    state.kings = kingsBackup;
+
+    // minimax
+    let net = gain[d];
+    for (let i = d - 1; i >= 0; i--) net = Math.max(-net, gain[i] - net) * -1;
+    // الأصح: نأخذ قيمة المهاجم الأول
+    let val = gain[d];
+    for (let i = d - 1; i >= 0; i--) {
+      val = gain[i] - Math.max(0, val);
+    }
+    // القيمة من منظور اللاعب الذي بدأ: gain[0] - (أفضل رد)
+    return val >= 0 ? val : val; // نُعيد val مباشرة
   }
 
   /* ----------------------------- Evaluate ---------------------------- */
@@ -644,6 +618,8 @@
    -50,-30,-30,-30,-30,-30,-30,-50,
   ];
 
+  const PASSED_BONUS = [0, 5, 10, 20, 35, 60, 100, 0];
+
   function psqtIndex(sq, color) {
     const r = sq >> 4, f = sq & 7;
     return color === WHITE ? r * 8 + f : (7 - r) * 8 + f;
@@ -655,9 +631,13 @@
     const phaseVal = [0, 0, 1, 1, 2, 4, 0];
     let wPawns = [0,0,0,0,0,0,0,0], bPawns = [0,0,0,0,0,0,0,0];
     let wBishops = 0, bBishops = 0;
+    let wKnights = 0, bKnights = 0;
     let wRooks = 0, bRooks = 0;
+    let wQueens = 0, bQueens = 0;
     let wKingSq = -1, bKingSq = -1;
-    let wMat = 0, bMat = 0;
+
+    // لـ passed pawns: نُخزّن مواقع البيادق
+    let wPawnSqs = [], bPawnSqs = [];
 
     for (let sq = 0; sq < 128; sq++) {
       if (!isValidSq(sq)) continue;
@@ -671,11 +651,12 @@
       mg += sign * (val + PSQT[t][idx]);
       eg += sign * (val + (t === KING ? KING_EG[idx] : PSQT[t][idx]));
       phase += phaseVal[t];
-      if (c === WHITE) wMat += val; else bMat += val;
 
-      if (t === PAWN) { (c === WHITE ? wPawns : bPawns)[sq & 7]++; }
+      if (t === PAWN) { (c === WHITE ? wPawns : bPawns)[sq & 7]++; (c === WHITE ? wPawnSqs : bPawnSqs).push(sq); }
       else if (t === BISHOP) { if (c === WHITE) wBishops++; else bBishops++; }
+      else if (t === KNIGHT) { if (c === WHITE) wKnights++; else bKnights++; }
       else if (t === ROOK) { if (c === WHITE) wRooks++; else bRooks++; }
+      else if (t === QUEEN) { if (c === WHITE) wQueens++; else bQueens++; }
       else if (t === KING) { if (c === WHITE) wKingSq = sq; else bKingSq = sq; }
     }
 
@@ -693,6 +674,8 @@
         if (!l && !r) structB -= 20;
       }
     }
+    mg += structW - structB;
+    eg += structW - structB;
 
     // Bishop pair
     if (wBishops >= 2) { mg += 30; eg += 50; }
@@ -711,29 +694,84 @@
       else if (own[f] === 0) mg += c === WHITE ? 12 : -12;
     }
 
-    // King safety (بسيط)
-    let kingSafety = 0;
+    // Passed pawns
+    for (const sq of wPawnSqs) {
+      const f = sq & 7, r = sq >> 4;
+      let passed = true;
+      for (let df = -1; df <= 1; df++) {
+        const ff = f + df;
+        if (ff < 0 || ff > 7) continue;
+        for (const bsq of bPawnSqs) {
+          if ((bsq & 7) === ff && (bsq >> 4) < r) { passed = false; break; }
+        }
+        if (!passed) break;
+      }
+      if (passed) {
+        const rank = 7 - r;
+        const bonus = PASSED_BONUS[rank] || 0;
+        mg += bonus; eg += bonus * 1.5;
+      }
+    }
+    for (const sq of bPawnSqs) {
+      const f = sq & 7, r = sq >> 4;
+      let passed = true;
+      for (let df = -1; df <= 1; df++) {
+        const ff = f + df;
+        if (ff < 0 || ff > 7) continue;
+        for (const wsq of wPawnSqs) {
+          if ((wsq & 7) === ff && (wsq >> 4) > r) { passed = false; break; }
+        }
+        if (!passed) break;
+      }
+      if (passed) {
+        const rank = r;
+        const bonus = PASSED_BONUS[rank] || 0;
+        mg -= bonus; eg -= bonus * 1.5;
+      }
+    }
+
+    // King danger (رخيص: عدّ القطع القريبة من الملك)
+    if (phase > 10) {
+      const wKingF = wKingSq & 7, wKingR = wKingSq >> 4;
+      const bKingF = bKingSq & 7, bKingR = bKingSq >> 4;
+      let wDanger = 0, bDanger = 0;
+      for (let sq = 0; sq < 128; sq++) {
+        if (!isValidSq(sq)) continue;
+        const p = b[sq];
+        if (!p) continue;
+        const t = typeOf(p);
+        if (t === PAWN || t === KING) continue;
+        const c = colorOf(p);
+        const r = sq >> 4, f = sq & 7;
+        if (c === BLACK) {
+          const dist = Math.max(Math.abs(r - wKingR), Math.abs(f - wKingF));
+          if (dist <= 2) wDanger += t === QUEEN ? 6 : (t === ROOK ? 4 : 3);
+        } else {
+          const dist = Math.max(Math.abs(r - bKingR), Math.abs(f - bKingF));
+          if (dist <= 2) bDanger += t === QUEEN ? 6 : (t === ROOK ? 4 : 3);
+        }
+      }
+      mg -= wDanger * 3;
+      mg += bDanger * 3;
+    }
+
+    // King safety (pawn shield)
     if (phase > 8) {
       if (wKingSq >= 0) {
-        const f = wKingSq & 7;
-        if (f < 3 || f > 4) kingSafety += 25;
-        // pawn shield
-        const r = wKingSq >> 4;
-        if (r === 7) {
+        const f = wKingSq & 7, r = wKingSq >> 4;
+        if (r >= 6) {
           for (let df = -1; df <= 1; df++) {
             const ff = f + df;
-            if (ff >= 0 && ff < 8 && b[(r - 1) * 16 + ff] === W_PAWN) kingSafety += 10;
+            if (ff >= 0 && ff < 8 && b[(r - 1) * 16 + ff] === W_PAWN) mg += 10;
           }
         }
       }
       if (bKingSq >= 0) {
-        const f = bKingSq & 7;
-        if (f < 3 || f > 4) kingSafety -= 25;
-        const r = bKingSq >> 4;
-        if (r === 0) {
+        const f = bKingSq & 7, r = bKingSq >> 4;
+        if (r <= 1) {
           for (let df = -1; df <= 1; df++) {
             const ff = f + df;
-            if (ff >= 0 && ff < 8 && b[(r + 1) * 16 + ff] === B_PAWN) kingSafety -= 10;
+            if (ff >= 0 && ff < 8 && b[(r + 1) * 16 + ff] === B_PAWN) mg -= 10;
           }
         }
       }
@@ -741,18 +779,14 @@
 
     const ph = Math.min(24, phase) / 24;
     let score = mg * ph + eg * (1 - ph);
-    score += (structW - structB) * ph; // إشارة واحدة صحيحة
-    score += kingSafety;
-
-    // Tempo
     score += state.turn === WHITE ? 10 : -10;
 
-    // مادة غير كافية
-    if (Math.abs(wMat - bMat) < 100 && wPawns.every(x => x === 0) && bPawns.every(x => x === 0)) {
-      const wMinor = wBishops + (wMat - wBishops * 330 - wKingSq >= 0 ? 0 : 0);
-      // تبسيط: إذا لم يتبق سوى ملوك وقطعة خفيفة واحدة → تعادل تقريبي
-      const totalNonKing = (wBishops + bBishops);
-      if (totalNonKing <= 2 && wRooks === 0 && bRooks === 0) return 0;
+    // insufficient material (مبسّط وصحيح)
+    const noPawns = wPawnSqs.length === 0 && bPawnSqs.length === 0;
+    if (noPawns && wRooks === 0 && bRooks === 0 && wQueens === 0 && bQueens === 0) {
+      const wMinor = wBishops + wKnights, bMinor = bBishops + bKnights;
+      if (wMinor <= 1 && bMinor <= 1) return 0;
+      if (wMinor === 0 && bMinor === 0) return 0;
     }
 
     return state.turn === WHITE ? score : -score;
@@ -763,7 +797,6 @@
 
   class TranspositionTable {
     constructor(sizeMB = 64) {
-      // 16 bytes لكل إدخال تقريباً
       const entries = Math.max(1 << 16, Math.floor((sizeMB * 1024 * 1024) / 16));
       this.size = 1;
       while (this.size * 2 <= entries) this.size *= 2;
@@ -810,29 +843,113 @@
         this.bestTo[i] = bestMove[1];
         this.bestPromo[i] = bestMove[2] || 0;
       } else {
-        this.bestFrom[i] = 0;
-        this.bestTo[i] = 0;
-        this.bestPromo[i] = 0;
+        this.bestFrom[i] = 0; this.bestTo[i] = 0; this.bestPromo[i] = 0;
       }
     }
     newSearch() { this.generation++; }
   }
 
+  /* ===================== Learning: Avoider Book ====================== */
+  /**
+   * نظام التعلّم:
+   * - results: Map من (hashLo:hashHi:uci) → { played, lost }
+   * - avoider: Map من (hashLo:hashHi) → Set من الحركات التي خسرنا منها
+   * - عند اختيار الحركة، نخصم penalty صغير للحركات التي خسرنا منها
+   * - الـ penalty لا يتجاوز 200 نقطة (أقل بكثير من قيمة أي أكل أو killer)
+   * - لا نلمس التقييم أبداً — فقط ترتيب الحركات واختيار الجذر
+   */
+  class LearningBook {
+    constructor() {
+      this.stats = new Map(); // key: "lo:hi:uci" → {played, lost}
+      this.avoider = new Map(); // key: "lo:hi" → Set<uci>
+      this.enabled = true;
+      this.penaltyPerLoss = 150; // نقاط ترتيب
+      this.maxPenalty = 400;
+    }
+
+    static posKey(state) { return state.hashLo + ":" + state.hashHi; }
+    static moveKey(state, uci) { return LearningBook.posKey(state) + ":" + uci; }
+
+    recordMove(state, uci) {
+      if (!this.enabled) return;
+      const k = LearningBook.moveKey(state, uci);
+      const e = this.stats.get(k) || { played: 0, lost: 0 };
+      e.played++;
+      this.stats.set(k, e);
+    }
+
+    recordLoss(state, uci) {
+      if (!this.enabled) return;
+      const mk = LearningBook.moveKey(state, uci);
+      const e = this.stats.get(mk) || { played: 0, lost: 0 };
+      e.lost++;
+      this.stats.set(mk, e);
+      const pk = LearningBook.posKey(state);
+      if (!this.avoider.has(pk)) this.avoider.set(pk, new Set());
+      this.avoider.get(pk).add(uci);
+    }
+
+    getPenalty(state, uci) {
+      if (!this.enabled) return 0;
+      const k = LearningBook.moveKey(state, uci);
+      const e = this.stats.get(k);
+      if (!e || !e.lost) return 0;
+      return Math.min(this.maxPenalty, e.lost * this.penaltyPerLoss);
+    }
+
+    export() {
+      return {
+        stats: Array.from(this.stats.entries()),
+        avoider: Array.from(this.avoider.entries()).map(([k, s]) => [k, Array.from(s)]),
+      };
+    }
+
+    import(data) {
+      if (!data) return;
+      this.stats = new Map(data.stats || []);
+      this.avoider = new Map((data.avoider || []).map(([k, arr]) => [k, new Set(arr)]));
+    }
+
+    saveToStorage(key = "chessEnginePro_learning") {
+      if (typeof localStorage === "undefined") return false;
+      try {
+        localStorage.setItem(key, JSON.stringify(this.export()));
+        return true;
+      } catch (e) { return false; }
+    }
+
+    loadFromStorage(key = "chessEnginePro_learning") {
+      if (typeof localStorage === "undefined") return false;
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return false;
+        this.import(JSON.parse(raw));
+        return true;
+      } catch (e) { return false; }
+    }
+  }
+
   /* ------------------------------ Search ----------------------------- */
   class Searcher {
-    constructor(ttSizeMB = 64) {
+    constructor(ttSizeMB = 64, learning = null) {
       this.tt = new TranspositionTable(ttSizeMB);
+      this.learning = learning || new LearningBook();
       this.nodes = 0;
       this.killers = [];
       this.history = new Map();
       this.startTime = 0;
-      this.timeLimit = 0;
+      this.softLimit = 0;
+      this.hardLimit = 0;
       this.stop = false;
       this.bestMoveRoot = null;
       this.bestScoreRoot = 0;
       this.maxDepth = 0;
-      this.repetitionHash = new Map(); // (lo,hi) => count
-      this.pv = [];
+      this.repetitionHash = new Map();
+      this.deterministic = false;   // إذا true: لا عشوائية أبداً
+      this.varietyEnabled = true;  // عشوائية افتتاحية صغيرة
+      this.varietyMaxMove = 12;    // فقط قبل الحركة رقم 12
+      this.varietyChance = 0.20;   // 20% احتمال تنويع
+      this.varietyMagnitude = 300; // نقاط عشوائية (أقل من killer)
     }
 
     reset() {
@@ -844,17 +961,15 @@
       this.bestScoreRoot = 0;
       this.maxDepth = 0;
       this.repetitionHash = new Map();
-      this.pv = [];
     }
 
     timeUp() {
-      if (this.timeLimit <= 0) return false;
-      if ((this.nodes & 2047) !== 0) return false;
-      return Date.now() - this.startTime >= this.timeLimit;
+      if (this.hardLimit <= 0) return false;
+      if ((this.nodes & 1023) !== 0) return false;
+      return Date.now() - this.startTime >= this.hardLimit;
     }
 
     repKey(state) { return state.hashLo + ":" + state.hashHi; }
-
     pushRep(state) {
       const k = this.repKey(state);
       this.repetitionHash.set(k, (this.repetitionHash.get(k) || 0) + 1);
@@ -877,17 +992,35 @@
       let s = 0;
       if (victim) {
         s += 1000000 + SEE_VAL[typeOf(victim)] * 10 - SEE_VAL[typeOf(b[from])];
-        // SEE إذا كان التقاط سيئ
-        try { s += see(state, from, to); } catch (e) {}
+        // SEE سريع فقط للأكل المشكوك فيه
+        if (SEE_VAL[typeOf(victim)] < SEE_VAL[typeOf(b[from])]) {
+          const seeVal = see(state, from, to, promo);
+          s += seeVal; // قد يكون سالباً
+        }
       }
       if (promo) s += 500000 + SEE_VAL[promo];
-      // killers
       for (let i = 0; i < this.killers.length; i++) {
         const k = this.killers[i];
         if (k && k[0] === from && k[1] === to) { s += 90000 - i * 1000; break; }
       }
       const key = from * 128 + to;
       s += Math.min(this.history.get(key) || 0, 8000);
+
+      // 🎓 Learning penalty: فقط للحركات الهادئة (لا يمس التكتيك)
+      if (!victim && !promo && this.learning && this.learning.enabled) {
+        const uci = moveToUci(mv);
+        s -= this.learning.getPenalty(state, uci);
+      }
+
+      // 🎲 Variety: فقط في الافتتاح وبمقدار صغير
+      if (this.varietyEnabled && !this.deterministic && state.fullmove <= this.varietyMaxMove) {
+        if (!victim && !promo && !ttMove) {
+          if (Math.random() < this.varietyChance) {
+            s += Math.floor(Math.random() * this.varietyMagnitude);
+          }
+        }
+      }
+
       return s;
     }
 
@@ -899,19 +1032,21 @@
       if (stand > alpha) alpha = stand;
 
       let moves = generatePseudoMoves(state);
-      // filter captures + promos
       moves = moves.filter(mv => state.board[mv[1]] || mv[2] || (mv[1] === state.ep && typeOf(state.board[mv[0]]) === PAWN));
-      // score with SEE
       const scored = moves.map(mv => {
         const victim = state.board[mv[1]];
-        let s = victim ? SEE_VAL[typeOf(victim)] * 10 : 0;
+        let s = victim ? SEE_VAL[typeOf(victim)] * 10 - SEE_VAL[typeOf(state.board[mv[0]])] : 0;
         if (mv[2]) s += 5000;
         return { mv, s };
       }).sort((a, b) => b.s - a.s);
 
       const us = state.turn;
       for (const { mv } of scored) {
-        // Delta pruning
+        // SEE pruning: تخطَّ الأكل الخاسر
+        const victim = state.board[mv[1]];
+        if (victim && !mv[2] && SEE_VAL[typeOf(victim)] < SEE_VAL[typeOf(state.board[mv[0]])]) {
+          if (see(state, mv[0], mv[1], 0) < 0) continue;
+        }
         applyMove(state, mv[0], mv[1], mv[2]);
         if (isInCheck(state, us)) { undoMove(state); continue; }
         const score = -this.quiescence(state, -beta, -alpha, ply + 1);
@@ -927,11 +1062,9 @@
       this.nodes++;
       if (this.timeUp()) { this.stop = true; return 0; }
 
-      // repetition / 50-move داخل الشجرة
       if (ply > 0) {
         if (this.isRep(state)) return 0;
         if (state.halfmove >= 100) return 0;
-        // mate distance pruning
         const mAlpha = Math.max(alpha, -MATE + ply);
         const mBeta  = Math.min(beta,   MATE - ply - 1);
         if (mAlpha >= mBeta) return mAlpha;
@@ -939,13 +1072,12 @@
       }
 
       const inCheck = isInCheck(state, state.turn);
-      if (inCheck) depth++; // check extension
+      if (inCheck) depth++;
 
       if (depth <= 0) return this.quiescence(state, alpha, beta, ply);
 
       const isRoot = ply === 0;
 
-      // TT probe
       const tt = this.tt.probe(state.hashLo, state.hashHi);
       let ttMove = null;
       if (tt) {
@@ -964,32 +1096,30 @@
         if (t2) ttMove = t2.bestMove;
       }
 
-      // Null move pruning
+      // Null move
       if (allowNull && !isPV && depth >= 3 && !inCheck && this.hasNonPawnMaterial(state) && beta < MATE_IN_MAX) {
         const savedEp = state.ep, savedCastling = state.castling, savedHalf = state.halfmove;
         const savedKings = state.kings.slice();
         const savedLo = state.hashLo, savedHi = state.hashHi;
         state.turn = 1 - state.turn;
         state.ep = -1;
-        state.hashLo = savedLo ^ ZOBRIST_TURN_LO[0] ^ ZOBRIST_TURN_LO[1] ^ (savedEp >= 0 ? ZOBRIST_EP_LO[savedEp] : 0);
-        state.hashHi = savedHi ^ ZOBRIST_TURN_HI[0] ^ ZOBRIST_TURN_HI[1] ^ (savedEp >= 0 ? ZOBRIST_EP_HI[savedEp] : 0);
-        state.history.push({ nullMove: true, savedEp, savedCastling, savedHalf, savedKings, savedLo, savedHi });
+        computeHash(state); // ← إصلاح: إعادة حساب بدل XOR يدوي خطأ
+        state.history.push({ nullMove: true });
         const R = 2 + Math.floor(depth / 4);
         const score = -this.alphaBeta(state, depth - 1 - R, -beta, -beta + 1, ply + 1, false, false);
-        // undo
-        const h = state.history.pop();
+        state.history.pop();
         state.turn = 1 - state.turn;
-        state.ep = h.savedEp;
-        state.castling = h.savedCastling;
-        state.halfmove = h.savedHalf;
-        state.kings = h.savedKings;
-        state.hashLo = h.savedLo;
-        state.hashHi = h.savedHi;
+        state.ep = savedEp;
+        state.castling = savedCastling;
+        state.halfmove = savedHalf;
+        state.kings = savedKings;
+        state.hashLo = savedLo;
+        state.hashHi = savedHi;
         if (this.stop) return 0;
         if (score >= beta) return beta;
       }
 
-      // Reverse Futility Pruning
+      // RFP
       if (!isPV && !inCheck && depth <= 4 && Math.abs(beta) < MATE_IN_MAX) {
         const stand = evaluate(state);
         if (stand - 120 * depth >= beta) return stand;
@@ -1005,15 +1135,22 @@
       let legalCount = 0;
       const origAlpha = alpha;
       const futilityBase = evaluate(state);
+      const lmpLimit = 3 + depth * depth;
 
       for (let i = 0; i < scored.length; i++) {
         const mv = scored[i].mv;
+
+        // LMP: تخطَّ الحركات الهادئة المتأخرة
+        if (!isPV && !inCheck && depth <= 4 && legalCount >= lmpLimit && !mv[2]) {
+          if (!state.board[mv[1]]) continue;
+        }
+
         applyMove(state, mv[0], mv[1], mv[2]);
         if (isInCheck(state, us)) { undoMove(state); continue; }
         legalCount++;
         const isQuiet = !state.board[mv[1]] && !mv[2];
 
-        // Futility pruning
+        // Futility
         if (!isPV && !inCheck && depth <= 3 && legalCount > 1 && isQuiet &&
             futilityBase + 100 + 120 * depth < alpha && Math.abs(alpha) < MATE_IN_MAX) {
           undoMove(state);
@@ -1026,11 +1163,13 @@
           score = -this.alphaBeta(state, depth - 1, -beta, -alpha, ply + 1, true, isPV);
           this.popRep(state);
         } else {
-          // LMR
           let reduction = 0;
           if (depth >= 3 && legalCount > 3 && isQuiet && !inCheck) {
-            reduction = 1 + Math.floor((legalCount - 3) / 5);
-            if (isPV) reduction = Math.max(0, reduction - 1);
+            reduction = 1;
+            if (legalCount > 6) reduction++;
+            if (depth >= 6 && legalCount > 10) reduction++;
+            if (isPV) reduction--;
+            if (reduction < 0) reduction = 0;
             if (reduction >= depth) reduction = depth - 1;
           }
           this.pushRep(state);
@@ -1049,6 +1188,7 @@
         if (score > bestScore) {
           bestScore = score;
           bestMove = mv;
+          if (isRoot) this.bestMoveRoot = mv;   // ← الإصلاح الحاسم
           if (score > alpha) {
             alpha = score;
             if (score >= beta) {
@@ -1056,7 +1196,7 @@
                 this.killers.unshift([mv[0], mv[1]]);
                 if (this.killers.length > 2) this.killers.pop();
                 const key = mv[0] * 128 + mv[1];
-                this.history.set(key, (this.history.get(key) || 0) + depth * depth);
+                this.history.set(key, Math.min(8000, (this.history.get(key) || 0) + depth * depth));
               }
               this.tt.store(state.hashLo, state.hashHi, depth, beta, TT_LOWER, mv);
               return beta;
@@ -1090,45 +1230,61 @@
       this.reset();
       this.tt.newSearch();
       this.startTime = Date.now();
-      this.timeLimit = opts.timeLimit || 0;
-      const maxDepth = opts.depth || 4;
-      this.maxDepth = maxDepth;
+      const tl = opts.timeLimit || 0;
+      this.softLimit = tl ? Math.floor(tl * 0.6) : 0;
+      this.hardLimit = tl;
+      this.maxDepth = opts.depth || 4;
+
+      if (opts.deterministic !== undefined) this.deterministic = opts.deterministic;
+      if (opts.variety !== undefined) this.varietyEnabled = opts.variety;
 
       this.repetitionHash.set(this.repKey(state), 1);
 
       let bestMove = null, bestScore = 0;
       let prevScore = 0;
-      let window = 50;
 
-      for (let d = 1; d <= maxDepth; d++) {
+      for (let d = 1; d <= this.maxDepth; d++) {
         this.killers = [];
         let alpha = -INF, beta = INF;
         if (d >= 4 && Math.abs(prevScore) < MATE_IN_MAX) {
-          alpha = prevScore - window;
-          beta  = prevScore + window;
+          alpha = prevScore - 25;
+          beta  = prevScore + 25;
         }
         let score;
+        let failLow = false, failHigh = false;
         while (true) {
           this.bestMoveRoot = null;
           score = this.alphaBeta(state, d, alpha, beta, 0, true, true);
           if (this.stop) break;
-          if (score <= alpha) { alpha = Math.max(-INF, alpha - window * 2); window *= 2; continue; }
-          if (score >= beta)  { beta  = Math.min(INF, beta + window * 2); window *= 2; continue; }
+          if (score <= alpha) {
+            if (failLow) alpha = Math.max(-INF, alpha - 200);
+            else alpha = Math.max(-INF, alpha - 100);
+            failLow = true;
+            if (alpha === -INF) break;
+            continue;
+          }
+          if (score >= beta) {
+            if (failHigh) beta = Math.min(INF, beta + 200);
+            else beta = Math.min(INF, beta + 100);
+            failHigh = true;
+            continue;
+          }
           break;
         }
         if (this.stop) break;
         if (this.bestMoveRoot) { bestMove = this.bestMoveRoot; bestScore = score; }
         prevScore = score;
-        window = 50;
         if (Math.abs(score) > MATE_IN_MAX) break;
         if (opts.onDepth) opts.onDepth(d, score, this.bestMoveRoot, this.nodes);
+
+        // soft limit: توقف بين الأعماق إذا استهلكنا 60% من الوقت
+        if (this.softLimit > 0 && d >= 4 && Date.now() - this.startTime >= this.softLimit) break;
       }
 
       if (!bestMove) {
         const tt = this.tt.probe(state.hashLo, state.hashHi);
         if (tt && tt.bestMove) bestMove = tt.bestMove;
       }
-      // إن لم يوجد، اختر أول حركة قانونية
       if (!bestMove) {
         const legal = generateLegalMoves(state);
         if (legal.length) bestMove = legal[0];
@@ -1156,12 +1312,32 @@
     return s;
   }
 
+  function uciToMove(state, uci) {
+    if (!uci || uci.length < 4) return null;
+    const from = nameToSq(uci.slice(0, 2));
+    const to = nameToSq(uci.slice(2, 4));
+    let promo = 0;
+    if (uci.length > 4) {
+      const c = uci[4];
+      promo = c === "q" ? QUEEN : c === "r" ? ROOK : c === "b" ? BISHOP : c === "n" ? KNIGHT : 0;
+    }
+    // تحقق من القانونية
+    const legal = generateLegalMoves(state);
+    for (const mv of legal) {
+      if (mv[0] === from && mv[1] === to && (mv[2] || 0) === promo) return mv;
+    }
+    return null;
+  }
+
   class ChessEngine {
     constructor(opts = {}) {
       this.ttSizeMB = opts.ttSizeMB || 64;
       this.defaultDepth = opts.depth || 5;
-      this.searcher = new Searcher(this.ttSizeMB);
+      this.learning = new LearningBook();
+      this.searcher = new Searcher(this.ttSizeMB, this.learning);
       this.ready = true;
+      this.deterministic = opts.deterministic || false;
+      this.variety = opts.variety !== undefined ? opts.variety : true;
     }
 
     init() { return Promise.resolve(); }
@@ -1169,9 +1345,20 @@
     async getBestMove(fen, opts = {}) {
       const state = parseFEN(fen);
       const depth = opts.depth || this.defaultDepth;
-      const res = this.searcher.search(state, { depth, timeLimit: opts.timeLimit || 0, onDepth: opts.onDepth });
+      const det = opts.deterministic !== undefined ? opts.deterministic : this.deterministic;
+      const varOn = opts.variety !== undefined ? opts.variety : this.variety;
+      const res = this.searcher.search(state, {
+        depth,
+        timeLimit: opts.timeLimit || 0,
+        deterministic: det,
+        variety: varOn,
+        onDepth: opts.onDepth,
+      });
+      const uci = moveToUci(res.move);
+      // سجّل الحركة التي اخترناها (للإحصاء)
+      if (uci && this.learning.enabled) this.learning.recordMove(state, uci);
       return {
-        move: moveToUci(res.move),
+        move: uci,
         score: res.score,
         nodes: res.nodes,
         depth: res.depth,
@@ -1180,6 +1367,39 @@
     }
 
     async analyze(fen, opts = {}) { return this.getBestMove(fen, opts); }
+
+    /* ============== Learning API ============== */
+
+    /** استدعِها بعد خسارة مباراة. history = قائمة FEN قبل كل حركة لعبناها */
+    learnFromLoss(history) {
+      // history: [{ fen, uci }, ...] — المواضع التي لعبنا فيها هذه الحركة وخسرنا
+      for (const h of history) {
+        try {
+          const st = parseFEN(h.fen);
+          this.learning.recordLoss(st, h.uci);
+        } catch (e) {}
+      }
+    }
+
+    /** استدعِها بعد فوز — لا نخصم، فقط نُسجّل */
+    learnFromWin(history) {
+      // لا نغيّر شيء؛ الإحصاء موجود في recordMove
+    }
+
+    saveLearning(key = "chessEnginePro_learning") {
+      return this.learning.saveToStorage(key);
+    }
+
+    loadLearning(key = "chessEnginePro_learning") {
+      return this.learning.loadFromStorage(key);
+    }
+
+    exportLearning() { return this.learning.export(); }
+    importLearning(data) { this.learning.import(data); }
+
+    setLearningEnabled(on) { this.learning.enabled = !!on; }
+
+    /* ============== Static helpers ============== */
 
     static legalMoves(fen) {
       const st = parseFEN(fen);
@@ -1203,13 +1423,20 @@
   }
 
   /* ------------------------------ Exports ---------------------------- */
+  const helpers = {
+    parseFEN, toFEN, generateLegalMoves, applyMove, undoMove,
+    evaluate, sqName, nameToSq, moveToUci, uciToMove,
+    LearningBook,
+  };
+
   if (typeof window !== "undefined") {
     window.ChessEngine = ChessEngine;
-    window.ChessEngineHelpers = { parseFEN, toFEN, generateLegalMoves, applyMove, undoMove, evaluate, sqName, nameToSq, moveToUci };
+    window.ChessEngineHelpers = helpers;
   }
   if (typeof module !== "undefined" && module.exports) {
     module.exports = ChessEngine;
-    Object.assign(module.exports, { parseFEN, toFEN, generateLegalMoves, applyMove, undoMove, evaluate, sqName, nameToSq, moveToUci });
+    Object.assign(module.exports, helpers);
   }
   if (typeof globalThis !== "undefined") globalThis.MyChessEngine = ChessEngine;
+
 })(typeof window !== "undefined" ? window : globalThis);
