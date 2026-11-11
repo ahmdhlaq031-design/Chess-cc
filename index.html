@@ -10,42 +10,17 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
 html{width:100%;min-height:100%;background:#04060f;overflow-x:hidden;}
-body{
-    width:100%;min-height:100vh;min-height:100dvh;
-    font-family:'Cairo','Segoe UI',sans-serif;
-    color:#e6eeff;overflow-x:hidden;position:relative;
-    background:
-        linear-gradient(180deg, rgba(6,12,28,0.72) 0%, rgba(10,18,40,0.68) 50%, rgba(4,8,20,0.78) 100%),
-        url('https://i.ibb.co/cS43HTCF/5.jpg') center/cover no-repeat fixed;
-    transition:background 0.4s ease;
-}
-body.day-mode{
-    background:
-        linear-gradient(180deg, rgba(240,246,255,0.55) 0%, rgba(228,238,255,0.5) 50%, rgba(215,228,250,0.6) 100%),
-        url('https://i.ibb.co/dw03cG0D/Screenshot-1.jpg') center/cover no-repeat fixed;
-    color:#0a1832;
-}
-body::before{
-    content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-    background-image:
-        radial-gradient(1.5px 1.5px at 15% 25%, rgba(120,180,255,0.85), transparent),
-        radial-gradient(1px 1px at 55% 65%, rgba(180,220,255,0.6), transparent),
-        radial-gradient(2px 2px at 85% 15%, rgba(120,180,255,0.75), transparent),
-        radial-gradient(1px 1px at 35% 85%, rgba(200,220,255,0.55), transparent),
-        radial-gradient(1.5px 1.5px at 75% 75%, rgba(150,120,255,0.7), transparent),
-        radial-gradient(1px 1px at 10% 55%, rgba(180,200,255,0.5), transparent);
-    animation:stars 20s linear infinite;
-}
+body{width:100%;min-height:100vh;min-height:100dvh;font-family:'Cairo','Segoe UI',sans-serif;color:#e6eeff;overflow-x:hidden;position:relative;background:linear-gradient(180deg, rgba(6,12,28,0.72) 0%, rgba(10,18,40,0.68) 50%, rgba(4,8,20,0.78) 100%),url('https://i.ibb.co/cS43HTCF/5.jpg') center/cover no-repeat fixed;transition:background 0.4s ease;}
+body.day-mode{background:linear-gradient(180deg, rgba(240,246,255,0.55) 0%, rgba(228,238,255,0.5) 50%, rgba(215,228,250,0.6) 100%),url('https://i.ibb.co/dw03cG0D/Screenshot-1.jpg') center/cover no-repeat fixed;color:#0a1832;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background-image:radial-gradient(1.5px 1.5px at 15% 25%, rgba(120,180,255,0.85), transparent),radial-gradient(1px 1px at 55% 65%, rgba(180,220,255,0.6), transparent),radial-gradient(2px 2px at 85% 15%, rgba(120,180,255,0.75), transparent),radial-gradient(1px 1px at 35% 85%, rgba(200,220,255,0.55), transparent),radial-gradient(1.5px 1.5px at 75% 75%, rgba(150,120,255,0.7), transparent),radial-gradient(1px 1px at 10% 55%, rgba(180,200,255,0.5), transparent);animation:stars 20s linear infinite;}
 body.day-mode::before{opacity:0.25}
 @keyframes stars{0%,100%{opacity:0.55}50%{opacity:1}}
-
 .top-bar{position:fixed;top:calc(6px + env(safe-area-inset-top));left:8px;right:56px;z-index:9990;display:flex;align-items:center;justify-content:space-between;gap:8px;pointer-events:none;min-height:40px;}
 .top-bar .logo-mini{display:flex;align-items:baseline;gap:3px;flex-shrink:0;pointer-events:auto;min-width:0;max-width:48%;cursor:pointer}
 .logo-mini h1{font-size:0.56rem;font-weight:900;background:linear-gradient(135deg,#7eb3ff 0%,#e0ecff 30%,#7eb3ff 60%,#b39aff 100%);background-size:200% 200%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:0.2px;line-height:1;white-space:nowrap;animation:shine 4s ease-in-out infinite;filter:drop-shadow(0 0 8px rgba(126,179,255,0.75));overflow:hidden;text-overflow:ellipsis;max-width:100%;}
 @keyframes shine{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
 .logo-mini .by{color:#8fa4c8;font-size:0.4rem;font-weight:700;white-space:nowrap}
 body.day-mode .logo-mini .by{color:#4a6080}
-
 .clocks-center{display:flex;align-items:center;justify-content:center;gap:5px;flex-shrink:0;pointer-events:none;}
 .player-clock{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3px 8px;border-radius:12px;min-width:52px;backdrop-filter:blur(16px);transition:box-shadow 0.3s, transform 0.3s;}
 .player-clock.white-clock{background:linear-gradient(145deg,rgba(220,235,255,0.9),rgba(180,205,240,0.82));border:1.5px solid rgba(200,225,255,0.95);box-shadow:0 4px 18px rgba(100,150,255,0.4),inset 0 1px 0 rgba(255,255,255,0.8);}
@@ -59,10 +34,8 @@ body.day-mode .logo-mini .by{color:#4a6080}
 .player-clock .time{font-size:0.72rem;line-height:1}
 .player-clock .moves{font-family:'Courier New',monospace;font-weight:700;font-size:0.5rem;line-height:1;margin-top:1px}
 .clock-divider{color:#4a5f8a;font-size:0.55rem;font-weight:700}
-
 .menu-icon{position:fixed;top:calc(6px + env(safe-area-inset-top));right:8px;width:40px;height:40px;font-size:16px;background:linear-gradient(145deg,rgba(30,50,90,0.85),rgba(15,25,55,0.85));color:#7eb3ff;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1.5px solid rgba(126,179,255,0.55);z-index:9999;box-shadow:0 4px 22px rgba(126,179,255,0.4);transition:transform 0.2s;}
 .menu-icon:active{transform:scale(0.9);box-shadow:0 0 32px rgba(126,179,255,0.9)}
-
 .side-menu{position:fixed;top:0;right:0;width:290px;max-width:85vw;height:100vh;height:100dvh;background:linear-gradient(180deg,rgba(15,25,50,0.94),rgba(8,14,32,0.97));border-left:1.5px solid rgba(126,179,255,0.4);padding:calc(16px + env(safe-area-inset-top)) 12px 24px;z-index:10000;overflow-y:auto;display:flex;flex-direction:column;gap:6px;box-shadow:-15px 0 60px rgba(0,0,0,0.9);backdrop-filter:blur(26px);transform:translate3d(100%,0,0);transition:transform 0.32s cubic-bezier(0.22,1,0.36,1);}
 .side-menu.open{transform:translate3d(0,0,0)}
 .side-menu button{background:linear-gradient(145deg,rgba(45,75,135,0.5),rgba(20,35,70,0.5));border:1px solid rgba(126,179,255,0.32);padding:10px 12px;border-radius:12px;color:#dceaff;font-weight:700;font-size:0.8rem;cursor:pointer;width:100%;text-align:center;font-family:'Cairo',sans-serif;flex-shrink:0;}
@@ -79,23 +52,20 @@ body.day-mode .logo-mini .by{color:#4a6080}
 .side-menu button.replay-btn{border-color:rgba(255,180,50,0.7);color:#ffd75a;background:linear-gradient(145deg,rgba(255,180,50,0.15),rgba(180,120,20,0.1))}
 .side-menu button.upload-btn{border-color:rgba(126,179,255,0.7);color:#a8c8ff;background:linear-gradient(145deg,rgba(126,179,255,0.15),rgba(80,120,200,0.1))}
 .side-menu button.pgn-btn{border-color:rgba(80,220,150,0.6);color:#7ee8c8;background:linear-gradient(145deg,rgba(80,220,150,0.15),rgba(40,150,100,0.1))}
-
+.side-menu button.brain-btn{border-color:rgba(180,140,255,0.7);color:#c8b3ff;background:linear-gradient(145deg,rgba(180,140,255,0.15),rgba(120,80,200,0.1))}
 .profile-card{background:linear-gradient(145deg,rgba(90,150,255,0.18),rgba(140,90,255,0.14));border:1.5px solid rgba(126,179,255,0.55);border-radius:16px;padding:12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer;}
 .profile-card .avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(145deg,#7eb3ff,#b39aff);display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:900;color:#0a1024;flex-shrink:0;}
 .profile-card .pinfo{flex:1;min-width:0;text-align:right}
 .profile-card .pname{color:#a8c8ff;font-weight:900;font-size:0.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.1;}
 .profile-card .pelo{color:#7eb3ff;font-size:0.65rem;font-weight:700;margin-top:2px;}
 .profile-card .phint{color:#5a6d92;font-size:0.55rem;margin-top:2px;}
-
 .board-outer{position:relative;width:100%;padding:20px;}
 .board-wrapper{position:relative;width:100%;aspect-ratio:1/1;border-radius:18px;padding:2px;background:linear-gradient(145deg, rgba(126,179,255,0.08), rgba(140,90,255,0.06));box-shadow:0 25px 65px rgba(0,0,0,0.75),0 0 45px rgba(80,140,255,0.35);isolation:isolate;}
 .board-wrapper::before{content:'';position:absolute;inset:-2px;border-radius:20px;background:conic-gradient(from 0deg,transparent 0deg,rgba(126,179,255,0.85) 40deg,rgba(180,220,255,1) 60deg,rgba(140,120,255,0.85) 80deg,transparent 130deg,transparent 360deg);animation:frameRotate 7s linear infinite;z-index:-1;filter:blur(3px);opacity:0.75;}
 .board-wrapper::after{content:'';position:absolute;inset:-2px;border-radius:20px;background:conic-gradient(from 180deg,transparent 0deg,rgba(126,179,255,0.45) 30deg,transparent 90deg,transparent 360deg);animation:frameRotate 7s linear infinite;z-index:-1;filter:blur(6px);opacity:0.45;}
 @keyframes frameRotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transparent 0deg,rgba(90,150,255,0.7) 40deg,rgba(140,120,255,0.8) 70deg,transparent 130deg,transparent 360deg);opacity:0.65;}
-
 .board{position:absolute;inset:2px;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);user-select:none;border-radius:16px;overflow:hidden;background:#1a2540;direction:ltr;}
-
 .coord{position:absolute;font-size:0.55rem;font-weight:900;color:#a8c8ff;text-shadow:0 1px 4px rgba(0,0,0,0.9);pointer-events:none;z-index:5;font-family:'Courier New',monospace;display:flex;align-items:center;justify-content:center;}
 .coord.file{width:12.5%;height:20px;text-align:center;}
 .coord.file.top{top:0;}.coord.file.bottom{bottom:0;}
@@ -105,7 +75,6 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
 .coord.rank.right{right:0;}.coord.rank.left{left:0;}
 .coord.rank.r0{top:0}.coord.rank.r1{top:12.5%}.coord.rank.r2{top:25%}.coord.rank.r3{top:37.5%}
 .coord.rank.r4{top:50%}.coord.rank.r5{top:62.5%}.coord.rank.r6{top:75%}.coord.rank.r7{top:87.5%}
-
 .cell{position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background-color 0.15s;overflow:visible;width:100%;height:100%;}
 .cell.selected{background:linear-gradient(135deg,rgba(90,150,255,0.55),rgba(140,90,255,0.55))!important;box-shadow:inset 0 0 0 3px #7eb3ff,inset 0 0 24px rgba(126,179,255,0.6);}
 .cell.valid-move::after{content:"";position:absolute;width:30%;height:30%;border-radius:50%;background:radial-gradient(circle,rgba(126,179,255,1),rgba(126,179,255,0.3));box-shadow:0 0 18px rgba(126,179,255,1);pointer-events:none;animation:dotPulse 1.2s ease-in-out infinite}
@@ -117,7 +86,6 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
 .cell.last-move{box-shadow:inset 0 0 0 2px rgba(126,179,255,0.65);background:rgba(126,179,255,0.18)!important;}
 .piece{width:88%;height:88%;display:flex;align-items:center;justify-content:center;pointer-events:none;filter:drop-shadow(0 3px 5px rgba(0,0,0,0.6));z-index:2;position:relative}
 .piece svg{width:100%;height:100%;display:block}
-
 .online-panel{display:none;margin-top:6px;width:100%;background:linear-gradient(145deg,rgba(30,50,90,0.85),rgba(15,25,55,0.85));padding:10px;border-radius:14px;border:1px solid rgba(126,179,255,0.4);backdrop-filter:blur(14px);}
 .online-panel.hidden{display:none!important}
 .online-panel .row-input{display:flex;gap:5px;align-items:center;}
@@ -125,7 +93,6 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
 .online-panel input:focus{outline:none;border-color:#7eb3ff;}
 .online-panel button{background:linear-gradient(145deg,rgba(60,100,180,0.85),rgba(35,65,130,0.85));border:1px solid rgba(126,179,255,0.45);padding:8px 12px;border-radius:11px;color:#dceaff;font-weight:700;cursor:pointer;font-size:0.78rem;font-family:'Cairo',sans-serif;}
 .online-panel .status-text{color:#7eb3ff;font-size:0.68rem;text-align:center;font-weight:700;margin-top:5px;min-height:14px;}
-
 .chat-wrapper{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));right:14px;z-index:9990;display:none;}
 .chat-toggle-btn{background:linear-gradient(145deg,rgba(30,50,90,0.92),rgba(15,25,55,0.92));border:1.5px solid rgba(126,179,255,0.6);color:#7eb3ff;width:46px;height:46px;border-radius:50%;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;}
 .chat-toggle-btn .unread{position:absolute;top:-4px;right:-4px;background:linear-gradient(145deg,#ff3c5a,#c00030);color:#fff;font-size:0.6rem;font-weight:900;min-width:18px;height:18px;padding:0 5px;border-radius:9px;display:none;align-items:center;justify-content:center;}
@@ -149,7 +116,6 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
 .chat-input-row .emoji-toggle.active{background:#7eb3ff;color:#0a1024}
 .chat-input-row input{flex:1;padding:11px 14px;border-radius:24px;border:1.5px solid rgba(126,179,255,0.4);background:rgba(10,18,40,0.9);color:#fff;font-family:'Cairo',sans-serif;font-size:0.85rem;min-width:0;}
 .chat-input-row button.send-btn{background:linear-gradient(145deg,rgba(90,150,255,0.95),rgba(55,105,220,0.95));border:none;color:#fff;width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:1.1rem;flex-shrink:0;}
-
 .captured-wrapper{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));left:14px;z-index:9990;}
 .captured-btn{background:linear-gradient(145deg,rgba(30,50,90,0.92),rgba(15,25,55,0.92));border:1.5px solid rgba(126,179,255,0.6);color:#7eb3ff;padding:7px 12px;border-radius:24px;font-family:'Cairo',sans-serif;font-weight:700;font-size:0.72rem;cursor:pointer;display:flex;align-items:center;gap:5px;}
 .captured-btn .badge{background:linear-gradient(145deg,#7eb3ff,#5588e6);color:#0a1024;font-size:0.6rem;min-width:16px;height:16px;padding:0 4px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-weight:900;}
@@ -163,7 +129,6 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
 .captured-dropdown .row{display:flex;flex-wrap:wrap;gap:2px;min-height:22px;align-items:center;}
 .captured-dropdown .row svg{width:22px;height:22px;}
 .captured-dropdown .empty{color:#4a5d80;font-size:0.66rem;font-style:italic;}
-
 .promotion-overlay{position:fixed;inset:0;background:rgba(0,5,20,0.9);display:flex;justify-content:center;align-items:center;z-index:11000;padding:20px;}
 .promotion-box{background:linear-gradient(145deg,rgba(20,35,70,0.98),rgba(10,18,40,0.98));padding:22px 20px;border-radius:22px;text-align:center;border:2px solid rgba(126,179,255,0.7);max-width:340px;width:100%;}
 .promotion-box h3{color:#a8c8ff;margin-bottom:14px;font-size:1rem}
@@ -171,7 +136,6 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
 .promotion-btn{background:linear-gradient(145deg,rgba(45,75,135,0.7),rgba(20,35,70,0.7));border:1px solid rgba(126,179,255,0.4);padding:10px;border-radius:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;}
 .promotion-btn svg{width:40px;height:40px}
 .promotion-btn span{font-size:0.72rem;font-weight:700;color:#a8c8ff}
-
 .winner-overlay{position:fixed;inset:0;background:rgba(0,5,20,0.92);display:flex;justify-content:center;align-items:center;z-index:12000;padding:20px;}
 .winner-box{background:linear-gradient(145deg,rgba(20,35,70,0.98),rgba(10,18,40,0.98));padding:30px 24px;border-radius:24px;text-align:center;border:2px solid rgba(126,179,255,0.8);max-width:340px;width:100%;animation:winnerPop 0.6s cubic-bezier(0.34,1.56,0.64,1);}
 @keyframes winnerPop{from{transform:scale(0.3);opacity:0}to{transform:scale(1);opacity:1}}
@@ -180,18 +144,16 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
 .winner-box .elo-change{font-size:0.9rem;font-weight:900;margin-bottom:16px;padding:8px 16px;border-radius:14px;display:inline-block;}
 .winner-box .elo-change.up{background:rgba(80,220,180,0.2);color:#7ee8c8;border:1px solid #7ee8c8}
 .winner-box .elo-change.down{background:rgba(255,90,120,0.2);color:#ff8aa3;border:1px solid #ff8aa3}
-.winner-box button{background:linear-gradient(145deg,rgba(90,150,255,0.95),rgba(55,105,220,0.95));border:none;padding:12px 28px;border-radius:28px;color:white;font-weight:700;font-size:0.9rem;cursor:pointer;font-family:'Cairo',sans-serif;}
-
+.winner-box button{background:linear-gradient(145deg,rgba(90,150,255,0.95),rgba(55,105,220,0.95));border:none;padding:12px 20px;border-radius:28px;color:white;font-weight:700;font-size:0.85rem;cursor:pointer;font-family:'Cairo',sans-serif;margin:4px;}
+.winner-box .share-ask{margin-top:12px;padding-top:12px;border-top:1px solid rgba(126,179,255,0.3);font-size:0.8rem;color:#a8c8ff;}
 .toast{position:fixed;bottom:calc(120px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(120px);background:linear-gradient(145deg,rgba(20,35,70,0.98),rgba(10,18,40,0.98));color:#a8c8ff;padding:10px 20px;border-radius:26px;border:1px solid rgba(126,179,255,0.7);font-weight:700;font-size:0.78rem;transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);z-index:13000;max-width:90vw;text-align:center;}
 .toast.show{transform:translateX(-50%) translateY(0)}
-
 .name-overlay{position:fixed;inset:0;background:rgba(0,5,20,0.96);display:flex;justify-content:center;align-items:center;z-index:14000;padding:20px;}
 .name-box{background:linear-gradient(145deg,rgba(20,35,70,0.98),rgba(10,18,40,0.98));padding:30px 24px;border-radius:24px;text-align:center;border:2px solid rgba(126,179,255,0.7);max-width:340px;width:100%;}
 .name-box h2{color:#a8c8ff;font-size:1.2rem;margin-bottom:6px}
 .name-box p{color:#7a8bb0;font-size:0.72rem;margin-bottom:16px}
 .name-box input{width:100%;padding:12px;border-radius:14px;border:2px solid rgba(126,179,255,0.5);background:rgba(10,18,40,0.9);color:#7eb3ff;font-family:'Cairo',sans-serif;font-size:1rem;font-weight:700;text-align:center;margin-bottom:12px;}
 .name-box button{background:linear-gradient(145deg,rgba(90,150,255,0.95),rgba(55,105,220,0.95));border:none;padding:12px 30px;border-radius:28px;color:white;font-weight:700;font-size:0.9rem;cursor:pointer;font-family:'Cairo',sans-serif;width:100%;}
-
 .stats-overlay{position:fixed;inset:0;background:rgba(0,5,20,0.96);display:flex;justify-content:center;align-items:center;z-index:13500;padding:16px;overflow-y:auto;}
 .stats-box{background:linear-gradient(145deg,rgba(15,25,50,0.98),rgba(8,14,32,0.98));padding:22px 18px;border-radius:22px;border:2px solid rgba(126,179,255,0.7);max-width:440px;width:100%;max-height:90vh;overflow-y:auto;}
 .stats-box h2{color:#a8c8ff;font-size:1.1rem;text-align:center;margin-bottom:14px}
@@ -200,7 +162,6 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
 .stats-box .stat-row .stat-value{color:#7eb3ff;font-weight:900;font-family:'Courier New',monospace}
 .stats-box .stats-section{color:#7eb3ff;font-size:0.7rem;font-weight:900;margin:12px 0 6px;text-align:center;border-bottom:1px solid rgba(126,179,255,0.2);padding-bottom:4px;}
 .stats-box .stats-close{background:linear-gradient(145deg,rgba(90,150,255,0.95),rgba(55,105,220,0.95));border:none;padding:10px 24px;border-radius:26px;color:white;font-weight:700;font-size:0.8rem;cursor:pointer;font-family:'Cairo',sans-serif;width:100%;margin-top:12px;}
-
 .draw-offer-modal{position:fixed;inset:0;background:rgba(0,5,20,0.9);display:none;justify-content:center;align-items:center;z-index:14500;padding:20px;}
 .draw-offer-modal.show{display:flex}
 .draw-offer-box{background:linear-gradient(145deg,rgba(20,45,110,0.98),rgba(15,30,80,0.98));padding:26px 24px;border-radius:24px;text-align:center;border:2px solid rgba(126,179,255,0.85);max-width:340px;width:100%;}
@@ -211,10 +172,8 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
 .draw-offer-box .draw-actions button{padding:11px;border-radius:16px;border:none;font-weight:900;font-size:0.8rem;cursor:pointer;font-family:'Cairo',sans-serif;}
 .draw-offer-box .draw-actions .accept{background:linear-gradient(145deg,#4ee0b0,#22b888);color:#042020}
 .draw-offer-box .draw-actions .reject{background:linear-gradient(145deg,#ff5577,#cc2244);color:#fff}
-
 .autosave-indicator{position:fixed;top:calc(52px + env(safe-area-inset-top));right:12px;z-index:9989;background:linear-gradient(145deg,rgba(80,220,180,0.95),rgba(40,180,140,0.95));color:#042020;padding:5px 12px;border-radius:16px;font-size:0.6rem;font-weight:900;display:none;align-items:center;gap:4px;}
 .autosave-indicator.show{display:flex;}
-
 .time-settings-overlay{position:fixed;inset:0;background:rgba(0,5,20,0.95);display:none;justify-content:center;align-items:center;z-index:14500;padding:20px;}
 .time-settings-overlay.show{display:flex}
 .time-settings-box{background:linear-gradient(145deg,rgba(15,25,50,0.98),rgba(8,14,32,0.98));padding:26px 24px;border-radius:22px;text-align:center;border:2px solid rgba(126,179,255,0.7);max-width:400px;width:100%;}
@@ -228,15 +187,12 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
 .custom-time-row input{width:90px;padding:9px;border-radius:12px;border:1.5px solid rgba(126,179,255,0.5);background:rgba(10,18,40,0.9);color:#7eb3ff;text-align:center;font-family:'Courier New',monospace;font-weight:900;}
 .custom-time-row button{background:linear-gradient(145deg,#4ee0b0,#22b888);border:none;padding:9px 16px;border-radius:12px;color:#042020;font-weight:700;font-size:0.8rem;cursor:pointer;font-family:'Cairo',sans-serif;}
 .time-close-btn{background:linear-gradient(145deg,rgba(90,150,255,0.95),rgba(55,105,220,0.95));border:none;padding:10px 24px;border-radius:26px;color:white;font-weight:700;font-size:0.8rem;cursor:pointer;font-family:'Cairo',sans-serif;width:100%;}
-
-/* ========== Replay Modal ========== */
 .replay-modal{position:fixed;inset:0;background:rgba(0,5,20,0.92);z-index:16000;display:none;justify-content:center;align-items:center;padding:12px;backdrop-filter:blur(16px);}
 .replay-modal.open{display:flex;}
 .replay-box{background:linear-gradient(145deg,rgba(20,35,70,0.98),rgba(10,18,40,0.98));border:2px solid rgba(126,179,255,0.7);border-radius:20px;width:100%;max-width:800px;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,0.85);}
 .replay-header{padding:12px 16px;border-bottom:1px solid rgba(126,179,255,0.3);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:rgba(10,18,40,0.6);}
 .replay-header h2{color:#a8c8ff;font-size:1rem;font-weight:900;}
 .replay-close{background:rgba(255,90,120,0.15);border:1px solid rgba(255,90,120,0.5);color:#ff8aa3;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:0.95rem;font-family:inherit;}
-.replay-close:hover{background:rgba(255,90,120,0.3);}
 .replay-body{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;}
 .replay-list{display:flex;flex-direction:column;gap:6px;}
 .replay-item{padding:10px 14px;background:rgba(126,179,255,0.08);border:1px solid rgba(126,179,255,0.3);border-radius:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;transition:all 0.2s;}
@@ -266,7 +222,35 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
 .replay-move-tag:hover{background:rgba(126,179,255,0.2);}
 .replay-move-tag.current{background:rgba(126,179,255,0.45);color:#fff;font-weight:900;}
 .replay-empty{text-align:center;padding:30px 20px;color:#8ba0c8;font-size:0.82rem;}
-
+.share-modal{position:fixed;inset:0;z-index:17000;background:rgba(0,5,20,0.92);display:none;justify-content:center;align-items:center;padding:20px;backdrop-filter:blur(10px);}
+.share-modal.open{display:flex;}
+.share-box{background:linear-gradient(145deg,rgba(20,35,70,0.98),rgba(10,18,40,0.98));border:2px solid rgba(126,179,255,0.7);border-radius:22px;padding:26px 22px;max-width:400px;width:100%;text-align:center;}
+.share-box h2{color:#a8c8ff;font-size:1.15rem;margin-bottom:8px;}
+.share-box p{color:#8ba0c8;font-size:0.78rem;margin-bottom:18px;}
+.share-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.share-actions button{padding:12px;border-radius:14px;border:none;font-family:'Cairo',sans-serif;font-weight:700;font-size:0.8rem;cursor:pointer;}
+.share-actions .sa-copy{background:linear-gradient(145deg,#7eb3ff,#5588e6);color:#0a1024;}
+.share-actions .sa-json{background:rgba(0,168,132,0.25);color:#7ee8c8;border:1px solid #4ecb71;}
+.share-actions .sa-pgn{background:rgba(255,180,50,0.25);color:#ffd75a;border:1px solid #f0c040;}
+.share-actions .sa-link{background:rgba(180,140,255,0.25);color:#c8b3ff;border:1px solid #b48cff;}
+.share-box .share-close{background:rgba(126,179,255,0.15);border:1px solid rgba(126,179,255,0.5);color:#a8c8ff;padding:10px 24px;border-radius:26px;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;font-size:0.8rem;width:100%;margin-top:8px;}
+.overlay{position:fixed;inset:0;background:rgba(0,5,20,0.7);z-index:9998;display:none;backdrop-filter:blur(8px);opacity:0;transition:opacity 0.28s ease;}
+.overlay.show{display:block;opacity:1}
+#colorMenu .color-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
+#colorMenu .color-opt{padding:8px 5px;font-size:0.7rem}
+.learning-modal{position:fixed;inset:0;z-index:16500;background:rgba(0,5,20,0.94);display:none;justify-content:center;align-items:center;padding:16px;backdrop-filter:blur(12px);}
+.learning-modal.open{display:flex;}
+.learning-box{background:linear-gradient(145deg,rgba(20,35,70,0.98),rgba(10,18,40,0.98));border:2px solid rgba(180,140,255,0.7);border-radius:22px;padding:22px 20px;max-width:440px;width:100%;max-height:88vh;overflow-y:auto;}
+.learning-box h2{color:#c8b3ff;font-size:1.1rem;text-align:center;margin-bottom:14px;}
+.learning-box .lrow{display:flex;justify-content:space-between;padding:8px 12px;border-radius:12px;background:rgba(180,140,255,0.08);margin-bottom:6px;font-size:0.78rem;}
+.learning-box .lrow .lbl{color:#9a8ab8;font-weight:700}
+.learning-box .lrow .val{color:#c8b3ff;font-weight:900;font-family:'Courier New',monospace}
+.learning-box .lsection{color:#c8b3ff;font-size:0.72rem;font-weight:900;margin:12px 0 6px;text-align:center;border-bottom:1px solid rgba(180,140,255,0.25);padding-bottom:4px;}
+.learning-box .lbtn{background:linear-gradient(145deg,rgba(180,140,255,0.95),rgba(120,80,200,0.95));border:none;padding:10px 24px;border-radius:26px;color:#fff;font-weight:700;font-size:0.8rem;cursor:pointer;font-family:'Cairo',sans-serif;width:100%;margin-top:12px;}
+.learning-box .lbtn.danger{background:linear-gradient(145deg,rgba(255,90,120,0.9),rgba(180,40,70,0.9));margin-top:6px;}
+.app{width:100%;max-width:640px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:calc(58px + env(safe-area-inset-top)) 8px calc(56px + env(safe-area-inset-bottom));position:relative;z-index:1;}
+.game-container{background:linear-gradient(145deg,rgba(25,45,85,0.5),rgba(10,20,45,0.55));padding:10px;border-radius:22px;border:1.5px solid rgba(126,179,255,0.35);box-shadow:0 25px 60px rgba(0,0,0,0.85);width:100%;position:relative;backdrop-filter:blur(20px);}
+.day-mode .game-container{background:linear-gradient(145deg,rgba(255,255,255,0.65),rgba(230,240,255,0.6));}
 @media (max-width:380px){
     .logo-mini h1{font-size:0.5rem}
     .player-clock{min-width:46px;padding:3px 5px}
@@ -277,14 +261,6 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
     .replay-board{width:min(80vw,280px)}
 }
 @media (min-width:700px){.app{max-width:560px}}
-
-.app{width:100%;max-width:640px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:calc(58px + env(safe-area-inset-top)) 8px calc(56px + env(safe-area-inset-bottom));position:relative;z-index:1;}
-.game-container{background:linear-gradient(145deg,rgba(25,45,85,0.5),rgba(10,20,45,0.55));padding:10px;border-radius:22px;border:1.5px solid rgba(126,179,255,0.35);box-shadow:0 25px 60px rgba(0,0,0,0.85);width:100%;position:relative;backdrop-filter:blur(20px);}
-.day-mode .game-container{background:linear-gradient(145deg,rgba(255,255,255,0.65),rgba(230,240,255,0.6));}
-.overlay{position:fixed;inset:0;background:rgba(0,5,20,0.7);z-index:9998;display:none;backdrop-filter:blur(8px);opacity:0;transition:opacity 0.28s ease;}
-.overlay.show{display:block;opacity:1}
-#colorMenu .color-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
-#colorMenu .color-opt{padding:8px 5px;font-size:0.7rem}
 </style>
 </head>
 <body>
@@ -335,6 +311,11 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
     <hr>
     <div class="menu-title">📈 المراحل (ضد الكمبيوتر)</div>
     <div id="stagesContainer"></div>
+    <hr>
+    <div class="menu-title">🧠 ذكاء المحرك</div>
+    <button id="showLearningBtn" class="brain-btn">📊 إحصائيات التعلّم</button>
+    <button id="clearLearningBtn" class="danger">🗑️ مسح سجل التعلّم</button>
+    <button id="toggleBookBtn" class="brain-btn">📖 الافتتاحيات: مفعّلة</button>
     <hr>
     <button id="openReplayBtn" class="replay-btn">🎬 سجل المباريات</button>
     <button id="importPgnBtn" class="pgn-btn">📥 استيراد مباراة (PGN)</button>
@@ -393,7 +374,6 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
             <div class="coord rank left r4">4</div><div class="coord rank left r5">3</div>
             <div class="coord rank left r6">2</div><div class="coord rank left r7">1</div>
         </div>
-
         <div class="online-panel" id="onlinePanel">
             <div class="row-input">
                 <input type="text" id="roomInput" placeholder="123" maxlength="3" inputmode="numeric" pattern="[0-9]*" />
@@ -481,7 +461,6 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
     </div>
 </div>
 
-<!-- Replay Modal -->
 <div class="replay-modal" id="replayModal">
     <div class="replay-box">
         <div class="replay-header">
@@ -498,7 +477,6 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
                     <div class="replay-board" id="replayBoard" style="flex-shrink:0;"></div>
                     <div style="flex:1; min-width:180px; display:flex; flex-direction:column; gap:6px;">
                         <div style="display: flex; gap: 8px; justify-content: center; margin-top: 10px;">
-                            <!-- أزرار التحكم الأساسية -->
                             <div class="replay-controls" style="flex: 1;">
                                 <button id="replayStart" title="البداية">⏮️</button>
                                 <button id="replayPrev" title="السابق">◀️</button>
@@ -508,8 +486,7 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
                             </div>
                         </div>
                         <div style="display: flex; gap: 8px; margin-top: 8px;">
-                            <!-- أزرار المشاركة والاستعادة -->
-                            <button id="replayShareJsonBtn" style="flex: 1; background: rgba(0,168,132,0.2); border: 1px solid var(--primary); color: #7ee8c8; padding: 8px; border-radius: 8px; font-family: 'Cairo'; font-weight: 700; cursor: pointer;">📥 JSON</button>
+                            <button id="replayShareJsonBtn" style="flex: 1; background: rgba(0,168,132,0.2); border: 1px solid #4ecb71; color: #7ee8c8; padding: 8px; border-radius: 8px; font-family: 'Cairo'; font-weight: 700; cursor: pointer;">📥 JSON</button>
                             <button id="replaySharePgnBtn" style="flex: 1; background: rgba(80,220,150,0.2); border: 1px solid #4ecb71; color: #7ee8c8; padding: 8px; border-radius: 8px; font-family: 'Cairo'; font-weight: 700; cursor: pointer;">📥 PGN</button>
                             <button id="replayCopyPgnBtn" style="flex: 1; background: rgba(126,179,255,0.2); border: 1px solid #7eb3ff; color: #a8c8ff; padding: 8px; border-radius: 8px; font-family: 'Cairo'; font-weight: 700; cursor: pointer;">📋 نسخ PGN</button>
                         </div>
@@ -533,6 +510,29 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
                 <div class="replay-moves-list" id="replayMovesList"></div>
             </div>
         </div>
+    </div>
+</div>
+
+<div class="learning-modal" id="learningModal">
+    <div class="learning-box">
+        <h2>🧠 إحصائيات التعلّم</h2>
+        <div id="learningStatsBody"></div>
+        <button class="lbtn" id="learningCloseBtn">إغلاق</button>
+        <button class="lbtn danger" id="learningResetBtn">🗑️ مسح كل التعلّم</button>
+    </div>
+</div>
+
+<div class="share-modal" id="shareModal">
+    <div class="share-box">
+        <h2>📤 مشاركة المباراة</h2>
+        <p>اختر طريقة مشاركة المباراة الأخيرة</p>
+        <div class="share-actions">
+            <button class="sa-copy" id="shareCopyPgn">📋 نسخ PGN</button>
+            <button class="sa-pgn" id="shareDownloadPgn">📥 تنزيل PGN</button>
+            <button class="sa-json" id="shareDownloadJson">📥 تنزيل JSON</button>
+            <button class="sa-link" id="shareCopyLink">🔗 نسخ رابط</button>
+        </div>
+        <button class="share-close" id="shareClose">إغلاق</button>
     </div>
 </div>
 
@@ -567,7 +567,8 @@ const STORAGE_KEYS = {
     CURRENT_STREAK:'chess_current_streak', BEST_STREAK:'chess_best_streak',
     UNLOCKED_STAGE:'chess_unlocked_stage', SOUND_ENABLED:'chess_sound_enabled',
     SAVED_AI_GAME:'chess_saved_ai_game', INITIAL_TIME:'chess_initial_time',
-    GAME_HISTORY:'chess_game_history', DEVICE_FP:'chess_device_fp'
+    GAME_HISTORY:'chess_game_history', DEVICE_FP:'chess_device_fp',
+    BOOK_ENABLED:'chess_book_enabled'
 };
 
 function loadData(key, fallback){ try{ let v = localStorage.getItem(key); return v !== null ? JSON.parse(v) : fallback; }catch(e){ return fallback; } }
@@ -590,6 +591,22 @@ let cellElements=[], isAnimating=false;
 let isBoardFlipped = false, moveHistory = [];
 let drawOfferPending = false, autosaveTimer = null, drawOfferTimeout = null, lastEloDelta = 0;
 let INITIAL_TIME = 10 * 60, whiteTime = INITIAL_TIME, blackTime = INITIAL_TIME, selectedTimeOption = '10';
+let bookEnabled = true;
+
+/* ========== محرك شطرنج عام ========== */
+let globalEngine = null;
+function initGlobalEngine() {
+    if (globalEngine) return;
+    if (typeof window.ChessEngine === 'undefined') {
+        console.warn('⚠️ ChessEngine غير محمّل — تأكد أن engine.js موجود بجانب index.html');
+        return;
+    }
+    try {
+        globalEngine = new window.ChessEngine({ depth: 4, ttSizeMB: 64, bookEnabled: bookEnabled });
+        globalEngine.loadLearning();
+        console.log('✅ المحرك جاهز (v3 - مع افتتاحيات وتعلّم تلقائي)');
+    } catch(e) { console.warn('initGlobalEngine:', e); }
+}
 
 /* ========== Device fingerprint ========== */
 let DEVICE_FP = null;
@@ -615,18 +632,15 @@ function getDeviceFingerprint() {
     return DEVICE_FP;
 }
 
-/* ========== Game Record (for replay) ========== */
+/* ========== Game Record ========== */
 let currentGameRecord = { mode: null, stage: 1, myColor: 'white', startTime: null, endTime: null, result: null, moves: [], finalBoard: null, opponentName: null };
-
 function startGameRecord(mode, stage, color, oppName) {
     currentGameRecord = { mode: mode, stage: stage || 1, myColor: color || 'white', startTime: Date.now(), endTime: null, result: null, moves: [], finalBoard: null, opponentName: oppName || null };
 }
-
 function recordMove(from, to, piece, capture, promoteTo) {
     if (!currentGameRecord || currentGameRecord.result !== null) return;
     currentGameRecord.moves.push({ from: [from[0], from[1]], to: [to[0], to[1]], piece: piece, capture: !!capture, promoteTo: promoteTo || null, timestamp: Date.now() });
 }
-
 function finalizeGameRecord(result) {
     if (!currentGameRecord) return;
     currentGameRecord.result = result;
@@ -641,50 +655,19 @@ function finalizeGameRecord(result) {
 }
 
 /* =========================================================
-   AI: Minimax + Alpha-Beta (Old fallback)
+   AI: المحرك الخارجي v3
    ========================================================= */
-const PIECE_VALUES = { pawn: 100, knight: 320, bishop: 330, rook: 500, queen: 900, king: 20000 };
-const PAWN_TABLE = [[0,0,0,0,0,0,0,0],[50,50,50,50,50,50,50,50],[10,10,20,30,30,20,10,10],[5,5,10,25,25,10,5,5],[0,0,0,20,20,0,0,0],[5,-5,-10,0,0,-10,-5,5],[5,10,10,-20,-20,10,10,5],[0,0,0,0,0,0,0,0]];
-const KNIGHT_TABLE = [[-50,-40,-30,-30,-30,-30,-40,-50],[-40,-20,0,0,0,0,-20,-40],[-30,0,10,15,15,10,0,-30],[-30,5,15,20,20,15,5,-30],[-30,0,15,20,20,15,0,-30],[-30,5,10,15,15,10,5,-30],[-40,-20,0,5,5,0,-20,-40],[-50,-40,-30,-30,-30,-30,-40,-50]];
-const BISHOP_TABLE = [[-20,-10,-10,-10,-10,-10,-10,-20],[-10,0,0,0,0,0,0,-10],[-10,0,5,10,10,5,0,-10],[-10,5,5,10,10,5,5,-10],[-10,0,10,10,10,10,0,-10],[-10,10,10,10,10,10,10,-10],[-10,5,0,0,0,0,5,-10],[-20,-10,-10,-10,-10,-10,-10,-20]];
-const ROOK_TABLE = [[0,0,0,0,0,0,0,0],[5,10,10,10,10,10,10,5],[-5,0,0,0,0,0,0,-5],[-5,0,0,0,0,0,0,-5],[-5,0,0,0,0,0,0,-5],[-5,0,0,0,0,0,0,-5],[-5,0,0,0,0,0,0,-5],[0,0,0,5,5,0,0,0]];
-const KING_TABLE = [[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-20,-30,-30,-40,-40,-30,-30,-20],[-10,-20,-20,-20,-20,-20,-20,-10],[20,20,0,0,0,0,20,20],[20,30,10,0,0,10,30,20]];
-const STAGE_DEPTH = { 1:1, 2:2, 3:2, 4:3, 5:3, 6:4, 7:4, 8:5, 9:5, 10:6 };
+// ⬆️ مستويات الصعوبة المرفوعة (كانت 1-6، الآن 2-7)
+const STAGE_DEPTH = { 1:2, 2:3, 3:3, 4:4, 5:4, 6:5, 7:5, 8:6, 9:6, 10:7 };
 
-function evaluateBoard(b) {
-    let score = 0;
-    for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-            const piece = b[r][c];
-            if (!piece) continue;
-            const parts = piece.split('_');
-            const color = parts[0], type = parts[1];
-            let val = PIECE_VALUES[type] || 0;
-            let pos = 0;
-            const tableRow = (color === 'black') ? r : (7 - r);
-            if (type === 'pawn') pos = PAWN_TABLE[tableRow][c];
-            else if (type === 'knight') pos = KNIGHT_TABLE[tableRow][c];
-            else if (type === 'bishop') pos = BISHOP_TABLE[tableRow][c];
-            else if (type === 'rook') pos = ROOK_TABLE[tableRow][c];
-            else if (type === 'king') pos = KING_TABLE[tableRow][c];
-            const total = val + pos;
-            if (color === 'black') score += total;
-            else score -= total;
-        }
-    }
-    return score;
-}
-
-/* ========== دمج المحرك الجديد ========== */
 function boardToFEN(currentBoard, currentTurn, wkm, bkm, wrm, brm, epSquare) {
     let fen = "";
     for (let r = 0; r < 8; r++) {
         let empty = 0;
         for (let c = 0; c < 8; c++) {
             const piece = currentBoard[r][c];
-            if (!piece) {
-                empty++;
-            } else {
+            if (!piece) { empty++; }
+            else {
                 if (empty > 0) { fen += empty; empty = 0; }
                 const color = piece.split('_')[0];
                 const type = piece.split('_')[1];
@@ -707,27 +690,47 @@ function boardToFEN(currentBoard, currentTurn, wkm, bkm, wrm, brm, epSquare) {
         if (!brm.left) castling += "q";
     }
     fen += (castling || "-") + " ";
-    fen += (epSquare || "-") + " 0 1"; 
+    fen += (epSquare || "-") + " 0 1";
     return fen;
+}
+
+function rcToSqName(rc) {
+    return "abcdefgh"[rc[1]] + (8 - rc[0]);
 }
 
 async function makeEngineMove() {
     if (gameOver || gameMode !== 'computer' || turn !== 'black') return;
-    
+    initGlobalEngine();
+    if (!globalEngine) { scheduleComputerMove(); return; }
+
+    // ابنِ تاريخ UCI من currentGameRecord لمطابقة الافتتاحيات
+    const uciHistory = (currentGameRecord?.moves || []).map(m => {
+        const from = rcToSqName(m.from);
+        const to = rcToSqName(m.to);
+        const promo = m.promoteTo ? m.promoteTo[0] : '';
+        return from + to + promo;
+    });
+
     const fen = boardToFEN(board, 'black', whiteKingMoved, blackKingMoved, whiteRookMoved, blackRookMoved, null);
     const depth = STAGE_DEPTH[currentStage] || 3;
-    
+    // المراحل السهلة: تنويع أعلى (لتجنب الرتابة)
+    const rootVariety = currentStage <= 3 ? 40 : (currentStage <= 6 ? 25 : 15);
+
     try {
-        const engine = new window.ChessEngine({ depth: depth, ttSizeMB: 32 });
-        const result = await engine.getBestMove(fen);
-        
+        const result = await globalEngine.getBestMove(fen, {
+            depth: depth,
+            uciHistory: uciHistory,
+            useBook: bookEnabled,
+            bookChance: 0.85,
+            rootVariety: rootVariety,
+        });
         if (result && result.move) {
             const uci = result.move;
-            const fromCol = uci.charCodeAt(0) - 97; 
-            const fromRow = 8 - parseInt(uci[1]);   
-            const toCol = uci.charCodeAt(2) - 97;   
-            const toRow = 8 - parseInt(uci[3]);     
-            
+            const fromCol = uci.charCodeAt(0) - 97;
+            const fromRow = 8 - parseInt(uci[1]);
+            const toCol = uci.charCodeAt(2) - 97;
+            const toRow = 8 - parseInt(uci[3]);
+            if (result.book) console.log('📖 لعب من الافتتاحية:', uci);
             makeMove(fromRow, fromCol, toRow, toCol, true);
         } else {
             scheduleComputerMove();
@@ -746,7 +749,66 @@ function scheduleComputerMove() {
         }
     }, 150);
 }
-/* ========================================================= */
+
+/* ========== 🎓 التعلّم التلقائي: من الفوز والخسارة ========== */
+function recordLearning(result) {
+    if (gameMode !== 'computer' || !currentGameRecord || !currentGameRecord.moves.length) return;
+    initGlobalEngine();
+    if (!globalEngine) return;
+    try {
+        const history = [];
+        let tmp = getInitialBoard();
+        let tmpTurn = 'white';
+        let tmpWK = false, tmpBK = false;
+        let tmpWR = {left:false, right:false}, tmpBR = {left:false, right:false};
+
+        for (let i = 0; i < currentGameRecord.moves.length; i++) {
+            const m = currentGameRecord.moves[i];
+            const pieceColor = m.piece.split('_')[0];
+            const pieceType = m.piece.split('_')[1];
+
+            // سجّل فقط حركات المحرك (الأسود)
+            if (pieceColor === 'black') {
+                const fen = boardToFEN(tmp, tmpTurn, tmpWK, tmpBK, tmpWR, tmpBR, null);
+                const uci = rcToSqName(m.from) + rcToSqName(m.to) + (m.promoteTo ? m.promoteTo[0] : '');
+                history.push({ fen, uci });
+            }
+
+            // طبّق الحركة
+            tmp[m.to[0]][m.to[1]] = m.promoteTo ? `${pieceColor}_${m.promoteTo}` : m.piece;
+            tmp[m.from[0]][m.from[1]] = null;
+            if (pieceType === 'king' && Math.abs(m.to[1] - m.from[1]) === 2) {
+                const rookFrom = m.to[1] > m.from[1] ? 7 : 0;
+                const rookTo = m.to[1] > m.from[1] ? 5 : 3;
+                tmp[m.from[0]][rookTo] = tmp[m.from[0]][rookFrom];
+                tmp[m.from[0]][rookFrom] = null;
+            }
+            if (pieceType === 'king') { if (pieceColor === 'white') tmpWK = true; else tmpBK = true; }
+            if (pieceType === 'rook') {
+                if (pieceColor === 'white') {
+                    if (m.from[1] === 0) tmpWR.left = true;
+                    if (m.from[1] === 7) tmpWR.right = true;
+                } else {
+                    if (m.from[1] === 0) tmpBR.left = true;
+                    if (m.from[1] === 7) tmpBR.right = true;
+                }
+            }
+            tmpTurn = tmpTurn === 'white' ? 'black' : 'white';
+        }
+
+        // تعلّم: فوز اللاعب = خسارة المحرك → عقوبة. خسارة اللاعب = فوز المحرك → مكافأة.
+        if (result === 'win') {
+            // اللاعب فاز → المحرك خسر → تعلّم من الخسارة (عقوبة)
+            globalEngine.learnFromLoss(history);
+            console.log('🎓 المحرك تعلّم من', history.length, 'خسارة');
+        } else if (result === 'loss') {
+            // اللاعب خسر → المحرك فاز → عزّز الحركات
+            globalEngine.learnFromWin(history);
+            console.log('🎓 المحرك عزّز', history.length, 'حركة فائزة');
+        }
+        globalEngine.saveLearning();
+    } catch(e) { console.warn('recordLearning:', e); }
+}
 
 /* ========== Audio ========== */
 let audioCtx = null;
@@ -941,11 +1003,15 @@ function canPlayerMove(color){
     if(gameMode==='online') return color===myColor && isMyTurn && turn===myColor;
     return false;
 }
-function initBoard(){
+function getInitialBoard(){
     let b=Array(8).fill().map(()=>Array(8).fill(null));
     for(let i=0;i<8;i++){b[1][i]='black_pawn';b[6][i]='white_pawn';}
     const order=['rook','knight','bishop','queen','king','bishop','knight','rook'];
     for(let i=0;i<8;i++){b[0][i]=`black_${order[i]}`;b[7][i]=`white_${order[i]}`;}
+    return b;
+}
+function initBoard(){
+    let b=getInitialBoard();
     whiteKingMoved=false;blackKingMoved=false;
     whiteRookMoved={left:false,right:false};blackRookMoved={left:false,right:false};
     capturedWhite=[];capturedBlack=[];lastMove=null; return b;
@@ -1041,17 +1107,6 @@ function getAllValidMoves(color,b){
     }
     return moves;
 }
-function generateMovesFast(b, color) {
-    const moves = [];
-    for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
-        const piece = b[r][c];
-        if (!piece || !piece.startsWith(color)) continue;
-        for (let tr = 0; tr < 8; tr++) for (let tc = 0; tc < 8; tc++) {
-            if (isValidMoveBasic(piece, r, c, tr, tc, b)) moves.push({ from: [r, c], to: [tr, tc], piece: piece });
-        }
-    }
-    return moves;
-}
 function getGameState(b,currentTurn){
     let inCheck=isKingInCheck(b,currentTurn);
     let hasMoves=getAllValidMoves(currentTurn,b).length>0;
@@ -1064,8 +1119,7 @@ function getGameState(b,currentTurn){
 function applyOnlineElo(result){
     if (window._sameDevice === true) {
         showToast('⚠️ نفس الجهاز — لن تحتسب ELO');
-        lastEloDelta = 0; 
-        return;
+        lastEloDelta = 0; return;
     }
     if (currentGameStats.moves < 5 && result === 'win') {
         showToast('⚠️ مباراة قصيرة جداً — لن يتم احتساب ELO');
@@ -1093,6 +1147,12 @@ function setGameOver(winnerColor){
     finalizeGameRecord(result);
     updateStats(result, gameMode);
     if(gameMode === 'online') applyOnlineElo(result); else lastEloDelta = 0;
+
+    // 🎓 التعلّم التلقائي: في وضع الكمبيوتر
+    if(gameMode === 'computer') {
+        recordLearning(result);
+    }
+
     if(gameMode === 'computer' && result === 'win'){
         if(currentStage === unlockedStage && unlockedStage < 10){ unlockedStage++; saveData(STORAGE_KEYS.UNLOCKED_STAGE, unlockedStage); renderStagesButtons(); setTimeout(()=>showToast(`🎉 فتحت المرحلة ${unlockedStage}!`, 3000), 1500); }
     }
@@ -1105,9 +1165,19 @@ function showWinnerScreen(){
     let text=winner==='تعادل'?'تعادل!':`فاز ${escapeHtml(winner || '؟')}!`;
     let eloHtml = '';
     if(gameMode === 'online'){ let d = lastEloDelta; if(d > 0) eloHtml = `<div class="elo-change up">+${d} ELO</div>`; else if(d < 0) eloHtml = `<div class="elo-change down">${d} ELO</div>`; }
-    overlay.innerHTML=`<div class="winner-box"><div class="emoji">${emoji}</div><h2>${text}</h2>${eloHtml}<button id="newGameFromWinner">لعبة جديدة</button></div>`;
+    overlay.innerHTML=`<div class="winner-box">
+        <div class="emoji">${emoji}</div>
+        <h2>${text}</h2>
+        ${eloHtml}
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+            <button id="newGameFromWinner">🎮 لعبة جديدة</button>
+            <button id="shareFromWinner" style="background:linear-gradient(145deg,#4ecb71,#2ea05c);">📤 مشاركة</button>
+        </div>
+        <div class="share-ask">هل تريد مشاركة المباراة؟</div>
+    </div>`;
     document.body.appendChild(overlay);
     overlay.querySelector('#newGameFromWinner').onclick=()=>{overlay.remove();resetGame();};
+    overlay.querySelector('#shareFromWinner').onclick=()=>{overlay.remove();openShareModal();};
 }
 function showPromotionDialog(row,col,color){
     pendingPromotion={row,col,color};
@@ -1421,13 +1491,8 @@ function createRoom(){
     lockOnlineControls(); destroyPeer(); myColor = 'white';
     let peerId = 'chess-room-v3-' + code;
     let p;
-    try {
-        p = new Peer(peerId, PEER_CONFIG);
-    } catch(e) {
-        showToast('❌ فشل إنشاء الاتصال');
-        showOnlinePanel();
-        return;
-    }
+    try { p = new Peer(peerId, PEER_CONFIG); }
+    catch(e) { showToast('❌ فشل إنشاء الاتصال'); showOnlinePanel(); return; }
     let openTimeout = setTimeout(()=>{ if(p && !p.open){ showToast('⚠️ تأخر الاتصال - جرّب كوداً آخر'); try{ p.destroy(); }catch(e){} showOnlinePanel(); } }, 15000);
     p.on('open', (id)=>{
         clearTimeout(openTimeout);
@@ -1465,13 +1530,8 @@ function joinRoom(){
     lockOnlineControls(); myColor = 'black'; destroyPeer();
     let peerId = 'chess-room-v3-' + code;
     let p;
-    try {
-        p = new Peer(PEER_CONFIG);
-    } catch(e) {
-        showToast('❌ فشل الاتصال');
-        showOnlinePanel();
-        return;
-    }
+    try { p = new Peer(PEER_CONFIG); }
+    catch(e) { showToast('❌ فشل الاتصال'); showOnlinePanel(); return; }
     let connected = false;
     let timeout = setTimeout(()=>{
         if(connected) return;
@@ -1484,11 +1544,7 @@ function joinRoom(){
     p.on('open', ()=>{
         peer = p;
         let c = p.connect(peerId, {reliable:true});
-        if (!c) {
-            showToast('❌ فشل الاتصال');
-            showOnlinePanel();
-            return;
-        }
+        if (!c) { showToast('❌ فشل الاتصال'); showOnlinePanel(); return; }
         conn = c;
         setupConnection(c);
         c.on('open', ()=>{
@@ -1617,6 +1673,78 @@ function saveAIGame(){
     }catch(e){}
 }
 
+/* ========== 🧠 Learning UI ========== */
+function openLearningModal() {
+    if (!globalEngine) { showToast('⚠️ المحرك غير جاهز'); return; }
+    const data = globalEngine.exportLearning();
+    const posCount = data.bookPenalty.length;
+    let totalMoves = 0, totalLosses = 0, totalWins = 0;
+    for (const [pk, bp] of data.bookPenalty) {
+        for (const uci in bp) {
+            totalMoves++;
+            if (bp[uci] > 0) totalLosses++;
+            else if (bp[uci] < 0) totalWins++;
+        }
+    }
+    const openingCount = (typeof ChessEngineHelpers !== 'undefined' && ChessEngineHelpers.OPENING_BOOK)
+        ? ChessEngineHelpers.OPENING_BOOK.length : 0;
+    document.getElementById('learningStatsBody').innerHTML = `
+        <div class="lrow"><span class="lbl">📖 عدد الافتتاحيات</span><span class="val">${openingCount}</span></div>
+        <div class="lrow"><span class="lbl">🎯 مواضع متعلَّمة</span><span class="val">${posCount}</span></div>
+        <div class="lrow"><span class="lbl">📝 حركات مسجّلة</span><span class="val">${totalMoves}</span></div>
+        <div class="lrow"><span class="lbl">❌ حركات معاقَبة</span><span class="val" style="color:#ff8aa3">${totalLosses}</span></div>
+        <div class="lrow"><span class="lbl">✅ حركات معزَّزة</span><span class="val" style="color:#7ee8c8">${totalWins}</span></div>
+        <div class="lsection">⚙️ الحالة</div>
+        <div class="lrow"><span class="lbl">الكتاب</span><span class="val">${bookEnabled ? '✅ مفعّل' : '❌ معطّل'}</span></div>
+        <div class="lrow"><span class="lbl">التعلّم</span><span class="val">${globalEngine.learning.enabled ? '✅ مفعّل' : '❌ معطّل'}</span></div>
+        <div class="lrow"><span class="lbl">عقوبة/خسارة</span><span class="val">${globalEngine.learning.penaltyPerLoss}</span></div>
+        <div class="lrow"><span class="lbl">أقصى عقوبة</span><span class="val">${globalEngine.learning.maxPenalty}</span></div>
+        <div class="lsection">💡 نصيحة</div>
+        <div style="font-size:0.72rem;color:#9a8ab8;line-height:1.5;padding:8px;background:rgba(180,140,255,0.06);border-radius:10px;">
+            المحرك يتعلم تلقائياً من كل مباراة ضد الكمبيوتر. عند فوزك عليه، يعاقب الحركات التي خسر منها. عند خسارتك، يعزز حركاته الفائزة.
+        </div>
+    `;
+    document.getElementById('learningModal').classList.add('open');
+}
+document.getElementById('showLearningBtn').addEventListener('click', () => {
+    closeMenu('sideMenu');
+    setTimeout(openLearningModal, 250);
+});
+document.getElementById('learningCloseBtn').addEventListener('click', () => {
+    document.getElementById('learningModal').classList.remove('open');
+});
+document.getElementById('learningResetBtn').addEventListener('click', () => {
+    if (!confirm('مسح كل سجل التعلّم؟ (الافتتاحيات ستُعاد عشوائياً)')) return;
+    if (globalEngine) {
+        globalEngine.clearLearning();
+        globalEngine.saveLearning();
+        showToast('✅ تم مسح سجل التعلّم');
+        openLearningModal();
+    }
+});
+document.getElementById('clearLearningBtn').addEventListener('click', () => {
+    closeMenu('sideMenu');
+    setTimeout(() => {
+        if (!confirm('مسح كل سجل التعلّم؟')) return;
+        if (globalEngine) {
+            globalEngine.clearLearning();
+            globalEngine.saveLearning();
+            showToast('✅ تم مسح سجل التعلّم');
+        }
+    }, 250);
+});
+function updateBookBtn() {
+    const btn = document.getElementById('toggleBookBtn');
+    if (btn) btn.textContent = bookEnabled ? '📖 الافتتاحيات: مفعّلة' : '📖 الافتتاحيات: معطّلة';
+}
+document.getElementById('toggleBookBtn').addEventListener('click', () => {
+    bookEnabled = !bookEnabled;
+    saveData(STORAGE_KEYS.BOOK_ENABLED, bookEnabled);
+    if (globalEngine) globalEngine.bookEnabled = bookEnabled;
+    updateBookBtn();
+    showToast(bookEnabled ? '📖 الافتتاحيات مفعّلة' : '📖 الافتتاحيات معطّلة');
+});
+
 /* ========== Chat ========== */
 function isPureEmoji(text){
     if(!text) return false;
@@ -1728,7 +1856,6 @@ function openReplayModal() {
 }
 
 document.getElementById('replayClose').addEventListener('click', () => { stopReplay(); document.getElementById('replayModal').classList.remove('open'); });
-
 document.getElementById('replayBackToList').addEventListener('click', () => {
     stopReplay();
     document.getElementById('replayListContainer').style.display = 'block';
@@ -1766,14 +1893,6 @@ function loadReplay(record) {
     replayState.moveIndex = 0;
     replayState.board = getInitialBoard();
     updateReplayUI();
-}
-
-function getInitialBoard() {
-    const b = Array(8).fill().map(() => Array(8).fill(null));
-    for (let i = 0; i < 8; i++) { b[1][i] = 'black_pawn'; b[6][i] = 'white_pawn'; }
-    const order = ['rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook'];
-    for (let i = 0; i < 8; i++) { b[0][i] = 'black_' + order[i]; b[7][i] = 'white_' + order[i]; }
-    return b;
 }
 
 function renderReplayBoard() {
@@ -1892,65 +2011,45 @@ document.getElementById('replaySpeed').addEventListener('change', (e) => {
     if (replayState.playing) { stopReplay(); playReplay(); }
 });
 
-/* ========== PGN Engine (Generator & Parser) ========== */
-
-// تحويل الحالة الحالية إلى PGN (تم إصلاحه بالكامل)
+/* ========== PGN Engine ========== */
 function generatePGN(record) {
     try {
         if (!record || record.moves.length === 0) return "";
-        
         let pgn = `[Event "${record.mode === 'computer' ? 'Vs. Computer' : 'Online Match'}"]\n`;
         pgn += `[Site "Chess Master App"]\n`;
         pgn += `[Date "${new Date().toISOString().split('T')[0]}"]\n`;
         pgn += `[White "${record.myColor === 'white' ? myName : (record.opponentName || 'Black')}"]\n`;
         pgn += `[Black "${record.myColor === 'black' ? myName : (record.opponentName || 'White')}"]\n`;
-        
         let resStr = '1/2-1/2';
         if (record.result === 'win') resStr = (record.myColor === 'white' ? '1-0' : '0-1');
         else if (record.result === 'loss') resStr = (record.myColor === 'white' ? '0-1' : '1-0');
         pgn += `[Result "${resStr}"]\n\n`;
-
         let moveNum = 1;
         let turnCount = 0;
-        
         for (let i = 0; i < record.moves.length; i++) {
             const m = record.moves[i];
-            if (turnCount === 0) {
-                pgn += `${moveNum}. `;
-            }
-            
+            if (turnCount === 0) pgn += `${moveNum}. `;
             const type = m.piece.split('_')[1];
-            const fromRow = m.from[0];
             const fromCol = m.from[1];
             const toRow = m.to[0];
             const toCol = m.to[1];
-            
-            // دالة مساعدة لتحويل الإحداثيات (0-7) إلى مربع (a1-h8)
             const getSq = (r, c) => "abcdefgh"[c] + (8 - r);
-            
             const toSq = getSq(toRow, toCol);
-            
             const typeMap = { pawn: '', knight: 'N', bishop: 'B', rook: 'R', queen: 'Q', king: 'K' };
             let notation = typeMap[type];
-            
             if (m.capture) {
-                if (type === 'pawn') notation += "abcdefgh"[fromCol]; // العمود الذي أكل منه البيدق
+                if (type === 'pawn') notation += "abcdefgh"[fromCol];
                 notation += 'x';
             }
-            
             notation += toSq;
-            
             if (m.promoteTo) {
                 const pChar = typeMap[m.promoteTo];
                 if (pChar) notation += '=' + pChar;
             }
-            
             pgn += notation + " ";
-            
             turnCount = (turnCount + 1) % 2;
             if (turnCount === 0) moveNum++;
         }
-        
         pgn += resStr;
         return pgn;
     } catch(e) {
@@ -1959,90 +2058,54 @@ function generatePGN(record) {
     }
 }
 
-// تحليل PGN إلى مصفوفة حركات (نسخة محسنة)
 function parsePGN(pgnText) {
-    // 1. إزالة الترويسة (الأسطر التي تبدأ بـ [ )
     let cleanText = pgnText.replace(/\[.*?\]/g, '').trim();
-    
-    // 2. إزالة النتائج النهائية
     cleanText = cleanText.replace(/1-0|0-1|1\/2-1\/2|\*/g, '');
-    
-    // 3. إزالة أرقام الحركات (مثل 1. 2. 3...)
     cleanText = cleanText.replace(/\d+\./g, ' ');
-    
-    // 4. إزالة التعليقات بين الأقواس المعقوفة { }
     cleanText = cleanText.replace(/\{[^}]*\}/g, ' ');
-    
-    // 5. إزالة رموز التقييم (+, #, !, ?)
     cleanText = cleanText.replace(/[+#?!]/g, '');
-    
-    // 6. استخراج الكلمات كحركات
     const tokens = cleanText.split(/\s+/).filter(t => t.length > 0);
-    
     let tempBoard = getInitialBoard();
     let whiteKingMoved = false, blackKingMoved = false;
     let whiteRookMoved = {left:false,right:false}, blackRookMoved = {left:false,right:false};
     let turn = 'white';
     let moves = [];
-    
     const files = "abcdefgh";
     const typeMap = { 'N': 'knight', 'B': 'bishop', 'R': 'rook', 'Q': 'queen', 'K': 'king' };
-    
     for (let i = 0; i < tokens.length; i++) {
         let token = tokens[i];
         if (token === '...' || token === '') continue;
-        
         let type = 'pawn';
         let targetFile = -1;
         let targetRank = -1;
         let isCapture = false;
         let promoteTo = null;
-        
-        // استخراج نوع القطعة (أول حرف إذا كان كبيراً)
-        if (/^[NBRQK]/.test(token)) {
-            type = typeMap[token[0]];
-            token = token.substring(1);
-        }
-        
-        // استخراج الترقية (مثل e8=Q)
+        if (/^[NBRQK]/.test(token)) { type = typeMap[token[0]]; token = token.substring(1); }
         if (token.includes('=')) {
             const parts = token.split('=');
             token = parts[0];
             const pChar = parts[1][0];
             promoteTo = typeMap[pChar] || 'queen';
         }
-        
-        // استخراج الوجهة (آخر حرفين)
         const destMatch = token.match(/([a-h][1-8])$/);
-        if (!destMatch) continue; // تخطي إذا لم يجد وجهة
+        if (!destMatch) continue;
         const dest = destMatch[1];
         targetFile = files.indexOf(dest[0]);
         targetRank = 8 - parseInt(dest[1]);
-        
-        // استخراج الأكل
         if (token.includes('x')) isCapture = true;
-        
-        // إزالة الوجهة من النص
         const prefix = token.replace(/([a-h][1-8])$/, '');
-        
-        // البحث عن القطعة المناسبة في اللوحة
         let bestMove = null;
-        
         for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
                 const p = tempBoard[r][c];
                 if (!p || !p.startsWith(turn)) continue;
                 if (p.split('_')[1] !== type) continue;
-                
-                // إذا كان هناك تلميح للموقع (مثل Nbd2)
                 if (prefix.length > 0) {
                     const fileHint = files.indexOf(prefix[0]);
                     const rankHint = prefix.length > 1 ? 8 - parseInt(prefix[1]) : -1;
                     if (fileHint !== -1 && c !== fileHint) continue;
                     if (rankHint !== -1 && r !== rankHint) continue;
                 }
-                
-                // التحقق من صحة الحركة
                 if (isValidMoveFull(p, r, c, targetRank, targetFile, tempBoard, turn)) {
                     bestMove = { from: [r, c], to: [targetRank, targetFile], piece: p };
                     break;
@@ -2050,37 +2113,16 @@ function parsePGN(pgnText) {
             }
             if (bestMove) break;
         }
-        
-        if (!bestMove) {
-            console.warn("Could not parse move:", token);
-            continue;
-        }
-        
-        // تسجيل الحركة
-        moves.push({
-            from: bestMove.from,
-            to: bestMove.to,
-            piece: bestMove.piece,
-            capture: isCapture,
-            promoteTo: promoteTo
-        });
-        
-        // تحديث اللوحة المؤقتة
+        if (!bestMove) { console.warn("Could not parse move:", token); continue; }
+        moves.push({ from: bestMove.from, to: bestMove.to, piece: bestMove.piece, capture: isCapture, promoteTo: promoteTo });
         const piece = tempBoard[bestMove.from[0]][bestMove.from[1]];
-        
-        // التبييت
         if (piece.includes('king') && Math.abs(bestMove.to[1] - bestMove.from[1]) === 2) {
             const rookCol = bestMove.to[1] > bestMove.from[1] ? 7 : 0;
             const newRookCol = bestMove.to[1] > bestMove.from[1] ? 5 : 3;
             tempBoard[bestMove.from[0]][newRookCol] = tempBoard[bestMove.from[0]][rookCol];
             tempBoard[bestMove.from[0]][rookCol] = null;
         }
-        
-        // تحديث حالة الملك والرخ
-        if (piece.includes('king')) {
-            if (piece.startsWith('white')) whiteKingMoved = true;
-            else blackKingMoved = true;
-        }
+        if (piece.includes('king')) { if (piece.startsWith('white')) whiteKingMoved = true; else blackKingMoved = true; }
         if (piece.includes('rook')) {
             if (piece.startsWith('white')) {
                 if (bestMove.from[1] === 0) whiteRookMoved.left = true;
@@ -2090,182 +2132,134 @@ function parsePGN(pgnText) {
                 if (bestMove.from[1] === 7) blackRookMoved.right = true;
             }
         }
-        
         tempBoard[bestMove.to[0]][bestMove.to[1]] = piece;
         tempBoard[bestMove.from[0]][bestMove.from[1]] = null;
-        
-        if (promoteTo) {
-            const color = piece.split('_')[0];
-            tempBoard[bestMove.to[0]][bestMove.to[1]] = `${color}_${promoteTo}`;
-        }
-        
+        if (promoteTo) { const color = piece.split('_')[0]; tempBoard[bestMove.to[0]][bestMove.to[1]] = `${color}_${promoteTo}`; }
         turn = turn === 'white' ? 'black' : 'white';
     }
-    
     return moves;
 }
 
-/* ========== Export / Import / Copy Buttons ========== */
+/* ========== Share Modal ========== */
+function openShareModal() { document.getElementById('shareModal').classList.add('open'); }
+document.getElementById('shareClose').addEventListener('click', () => document.getElementById('shareModal').classList.remove('open'));
+document.getElementById('shareCopyPgn').addEventListener('click', () => {
+    if (!currentGameRecord || !currentGameRecord.moves.length) { showToast('⚠️ لا حركات'); return; }
+    const pgn = generatePGN(currentGameRecord);
+    navigator.clipboard.writeText(pgn).then(() => showToast('✅ تم نسخ PGN')).catch(() => showToast('❌ فشل النسخ'));
+});
+document.getElementById('shareDownloadPgn').addEventListener('click', () => {
+    if (!currentGameRecord) { showToast('⚠️ لا مباراة'); return; }
+    const pgn = generatePGN(currentGameRecord);
+    const blob = new Blob([pgn], {type:'text/plain'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `chess_${Date.now()}.pgn`;
+    a.click();
+    showToast('✅ تم التنزيل');
+});
+document.getElementById('shareDownloadJson').addEventListener('click', () => {
+    if (!currentGameRecord) { showToast('⚠️ لا مباراة'); return; }
+    const data = {
+        mode: currentGameRecord.mode, stage: currentGameRecord.stage,
+        result: currentGameRecord.result, myColor: currentGameRecord.myColor,
+        opp: currentGameRecord.opponentName,
+        moves: currentGameRecord.moves.map(m => ({f:m.from, t:m.to, p:m.piece, pr:m.promoteTo}))
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `chess_${Date.now()}.json`;
+    a.click();
+    showToast('✅ تم التنزيل');
+});
+document.getElementById('shareCopyLink').addEventListener('click', () => {
+    const code = document.getElementById('roomInput').value.trim();
+    const base = location.origin + location.pathname;
+    const link = code ? `${base}?room=${code}` : base;
+    navigator.clipboard.writeText(link).then(() => showToast('✅ تم نسخ الرابط')).catch(() => showToast('❌ فشل النسخ'));
+});
 
-// تصدير JSON
+/* ========== Replay share buttons ========== */
 document.getElementById('replayShareJsonBtn').addEventListener('click', () => {
-    if (!replayState.record || replayState.record.moves.length === 0) {
-        showToast('⚠️ لا توجد حركات لتصديرها');
-        return;
-    }
-    try {
-        const dataToShare = {
-            mode: replayState.record.mode,
-            stage: replayState.record.stage,
-            result: replayState.record.result,
-            moves: replayState.record.moves.map(m => ({
-                f: m.from, t: m.to, p: m.piece, pr: m.promoteTo
-            })),
-            opp: replayState.record.opponentName
-        };
-        const jsonStr = JSON.stringify(dataToShare, null, 2);
-        const blob = new Blob([jsonStr], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `chess_match_${Date.now()}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        showToast('✅ تم تصدير JSON');
-    } catch (e) {
-        console.error(e);
-        showToast('❌ حدث خطأ');
-    }
+    if (!replayState.record || replayState.record.moves.length === 0) { showToast('⚠️ لا توجد حركات'); return; }
+    const data = {
+        mode: replayState.record.mode, stage: replayState.record.stage, result: replayState.record.result,
+        moves: replayState.record.moves.map(m => ({f: m.from, t: m.to, p: m.piece, pr: m.promoteTo})),
+        opp: replayState.record.opponentName
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `chess_match_${Date.now()}.json`;
+    a.click();
+    showToast('✅ تم تصدير JSON');
 });
-
-// تصدير PGN (تحميل ملف)
 document.getElementById('replaySharePgnBtn').addEventListener('click', () => {
-    if (!replayState.record || replayState.record.moves.length === 0) {
-        showToast('⚠️ لا توجد حركات لتصديرها');
-        return;
-    }
-    try {
-        const pgnStr = generatePGN(replayState.record);
-        if (!pgnStr) throw new Error("Empty PGN");
-        const blob = new Blob([pgnStr], { type: "text/plain" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `chess_match_${Date.now()}.pgn`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        showToast('✅ تم تصدير PGN');
-    } catch (e) {
-        console.error(e);
-        showToast('❌ حدث خطأ');
-    }
+    if (!replayState.record || replayState.record.moves.length === 0) { showToast('⚠️ لا توجد حركات'); return; }
+    const pgnStr = generatePGN(replayState.record);
+    if (!pgnStr) { showToast('❌ فشل التوليد'); return; }
+    const blob = new Blob([pgnStr], {type: "text/plain"});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `chess_match_${Date.now()}.pgn`;
+    a.click();
+    showToast('✅ تم تصدير PGN');
 });
-
-// نسخ PGN إلى الحافظة
 document.getElementById('replayCopyPgnBtn').addEventListener('click', () => {
-    if (!replayState.record || replayState.record.moves.length === 0) {
-        showToast('⚠️ لا توجد حركات لنسخها');
-        return;
-    }
-    try {
-        const pgnStr = generatePGN(replayState.record);
-        if (!pgnStr) throw new Error("Empty PGN");
-        
-        navigator.clipboard.writeText(pgnStr).then(() => {
-            showToast('✅ تم نسخ PGN إلى الحافظة!');
-        }).catch(err => {
-            console.error('Clipboard error:', err);
-            // خطة بديلة إذا فشل النسخ
-            const textarea = document.createElement('textarea');
-            textarea.value = pgnStr;
-            document.body.appendChild(textarea);
-            textarea.select();
-            try {
-                document.execCommand('copy');
-                showToast('✅ تم نسخ PGN إلى الحافظة!');
-            } catch (e) {
-                showToast('❌ فشل النسخ، يرجى النسخ يدوياً');
-            }
-            document.body.removeChild(textarea);
-        });
-    } catch (e) {
-        console.error(e);
-        showToast('❌ حدث خطأ');
-    }
+    if (!replayState.record || replayState.record.moves.length === 0) { showToast('⚠️ لا توجد حركات'); return; }
+    const pgnStr = generatePGN(replayState.record);
+    navigator.clipboard.writeText(pgnStr).then(() => showToast('✅ تم النسخ')).catch(() => showToast('❌ فشل النسخ'));
+});
+document.getElementById('replayRestoreBtn').addEventListener('click', () => {
+    if (!replayState.record) { showToast('⚠️ لا مباراة'); return; }
+    document.getElementById('replayModal').classList.remove('open');
+    resetGame();
+    showToast('↩️ تم تجهيز لوحة جديدة');
 });
 
-// استيراد PGN (لصق النص)
+/* ========== Import PGN ========== */
 document.getElementById('importPgnBtn').addEventListener('click', () => {
     closeMenu('sideMenu');
-    const pgnText = prompt("الصق نص PGN هنا (مثل الذي ينسخ من Chess.com):");
+    const pgnText = prompt("الصق نص PGN هنا:");
     if (!pgnText) return;
-    
     try {
         const moves = parsePGN(pgnText);
-        if (moves.length === 0) {
-            showToast('⚠️ لم يتم العثور على حركات صالحة');
-            return;
-        }
-        
-        const record = {
-            mode: 'imported',
-            stage: 1,
-            result: 'draw', // افتراضي
-            opponentName: 'Imported',
-            moves: moves
-        };
-        
+        if (moves.length === 0) { showToast('⚠️ لم يتم العثور على حركات صالحة'); return; }
+        const record = { mode: 'imported', stage: 1, result: 'draw', opponentName: 'Imported', moves: moves };
         document.getElementById('replayModal').classList.add('open');
         document.getElementById('replayListContainer').style.display = 'none';
         document.getElementById('replayViewerContainer').style.display = 'flex';
         loadReplay(record);
         showToast('🎬 تم تحميل المباراة من PGN!');
-    } catch (e) {
-        console.error("PGN parse error:", e);
-        showToast('❌ صيغة PGN غير صالحة');
-    }
+    } catch (e) { console.error(e); showToast('❌ صيغة PGN غير صالحة'); }
 });
 
-// استيراد JSON (رفع ملف)
+/* ========== Restore JSON ========== */
 document.getElementById('restoreGameBtn').addEventListener('click', () => {
     closeMenu('sideMenu');
     document.getElementById('restoreFileInput').click();
 });
-
 document.getElementById('restoreFileInput').addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
     const reader = new FileReader();
     reader.onload = (evt) => {
         try {
             const data = JSON.parse(evt.target.result);
             if (data.moves && data.moves.length > 0) {
                 const record = {
-                    mode: data.mode || 'computer',
-                    stage: data.stage || 1,
-                    result: data.result || 'draw',
-                    opponentName: data.opp || null,
-                    moves: data.moves.map(m => ({
-                        from: m.f, to: m.t, piece: m.p, promoteTo: m.pr || null
-                    }))
+                    mode: data.mode || 'computer', stage: data.stage || 1,
+                    result: data.result || 'draw', opponentName: data.opp || null,
+                    moves: data.moves.map(m => ({from: m.f, to: m.t, piece: m.p, promoteTo: m.pr || null}))
                 };
                 document.getElementById('replayModal').classList.add('open');
                 document.getElementById('replayListContainer').style.display = 'none';
                 document.getElementById('replayViewerContainer').style.display = 'flex';
                 loadReplay(record);
                 showToast('🎬 تم تحميل JSON بنجاح!');
-            } else {
-                showToast('⚠️ الملف لا يحتوي على حركات صالحة');
-            }
-        } catch (err) {
-            console.error(err);
-            showToast('❌ ملف JSON غير صالح');
-        }
+            } else { showToast('⚠️ الملف لا يحتوي على حركات صالحة'); }
+        } catch (err) { console.error(err); showToast('❌ ملف JSON غير صالح'); }
     };
     reader.readAsText(file);
     e.target.value = '';
@@ -2273,6 +2267,9 @@ document.getElementById('restoreFileInput').addEventListener('change', (e) => {
 
 /* ========== Reset & Init ========== */
 function resetGame(silent){
+    // تصفير تاريخ المحرك (حتى لا يؤثر تاريخ مباراة سابقة على الافتتاحية الجديدة)
+    if (globalEngine) globalEngine.uciHistory = [];
+
     if(computerTimeout) { clearTimeout(computerTimeout); computerTimeout = null; }
     if(autosaveTimer) { clearTimeout(autosaveTimer); autosaveTimer = null; }
     board=initBoard(); turn='white'; selectedRow=null; selectedCol=null;
@@ -2322,6 +2319,7 @@ function init(){
     unlockedStage = loadData(STORAGE_KEYS.UNLOCKED_STAGE, 1);
     isDayMode = loadData(STORAGE_KEYS.THEME, 'night') === 'day';
     soundEnabled = loadData(STORAGE_KEYS.SOUND_ENABLED, true);
+    bookEnabled = loadData(STORAGE_KEYS.BOOK_ENABLED, true);
     INITIAL_TIME = loadData(STORAGE_KEYS.INITIAL_TIME, 10 * 60);
     whiteTime = INITIAL_TIME; blackTime = INITIAL_TIME;
     let mins = INITIAL_TIME / 60;
@@ -2330,10 +2328,12 @@ function init(){
     document.body.classList.toggle('day-mode', isDayMode);
     document.getElementById('toggleThemeBtn').textContent = isDayMode ? '🌙 الوضع الليلي' : '☀️ الوضع النهاري';
     updateSoundBtn();
+    updateBookBtn();
     let colors = loadData(STORAGE_KEYS.BOARD_COLORS, {light:'#f0d9b5', dark:'#1e1e1e'});
     currentLight = colors.light; currentDark = colors.dark;
     updateEloDisplay(); renderStagesButtons(); updateClockDisplay();
     getDeviceFingerprint();
+    initGlobalEngine();
     if(!myName) askName();
     resetGame(); updateMenuStates(); hideOnlinePanel();
     document.getElementById('chatWrapper').style.display = 'none';
