@@ -6,7 +6,7 @@
 <title>♛ Chess Master - AI Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-<!-- ✅ المسار الصحيح: أعد تسمية ملف المحرك إلى engine.js -->
+<!-- ✅ المحرك v4 -->
 <script src="engine.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
@@ -539,7 +539,7 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
 
 <script>
 /* =========================================================
-   PIECE SVGs (مختصر — نفس النسخة الأصلية كاملة)
+   PIECE SVGs
    ========================================================= */
 const PIECE_SVG = {
     'white_king': `<svg viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg"><g fill="#fff" stroke="#000" stroke-width="1.5" stroke-linejoin="round"><path d="M22.5 11.63V6M20 8h5" stroke-linecap="round"/><path d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5"/><path d="M12.5 37c5.5 3.5 14.5 3.5 20 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-2.5-7.5-12-10.5-16-4-3 6 6 10.5 6 10.5v7"/><path d="M12.5 30c5.5-3 14.5-3 20 0M12.5 33.5c5.5-3 14.5-3 20 0M12.5 37c5.5-3 14.5-3 20 0"/></g></svg>`,
@@ -606,7 +606,7 @@ function initGlobalEngine() {
     try {
         globalEngine = new window.ChessEngine({ depth: 4, ttSizeMB: 64, bookEnabled: bookEnabled });
         globalEngine.loadLearning();
-        console.log('✅ المحرك جاهز (v6 متوافق)');
+        console.log('✅ المحرك جاهز (v4 متوافق)');
     } catch(e) { console.warn('initGlobalEngine:', e); }
 }
 
@@ -657,11 +657,15 @@ function finalizeGameRecord(result) {
 }
 
 /* =========================================================
-   AI: المحرك الخارجي v6
+   AI: المحرك الخارجي v4
    ========================================================= */
-// مستويات الصعوبة: 2-7 (كانت 1-6 سابقاً — رُفعت)
+// مستويات الصعوبة
 const STAGE_DEPTH = { 1:2, 2:3, 3:3, 4:4, 5:4, 6:5, 7:5, 8:6, 9:6, 10:7 };
 
+/**
+ * ✅ إصلاح 1: بناء FEN بشكل صحيح مع en passant
+ * نحتاج تتبع مربع en passant الفعلي — نستخدم lastMove إذا كانت حركة بيدق مزدوجة
+ */
 function boardToFEN(currentBoard, currentTurn, wkm, bkm, wrm, brm, epSquare) {
     let fen = "";
     for (let r = 0; r < 8; r++) {
@@ -696,8 +700,41 @@ function boardToFEN(currentBoard, currentTurn, wkm, bkm, wrm, brm, epSquare) {
     return fen;
 }
 
+/**
+ * ✅ إصلاح 2: حساب مربع en passant من lastMove
+ */
+function computeEpSquare() {
+    if (!lastMove) return null;
+    const { from, to } = lastMove;
+    // حركة بيدق مزدوجة: نفس العمود وفرق صفوف 2
+    if (from[1] === to[1] && Math.abs(to[0] - from[0]) === 2) {
+        const epRow = (from[0] + to[0]) / 2;
+        const file = 'abcdefgh'[to[1]];
+        const rank = 8 - epRow;
+        return file + rank;
+    }
+    return null;
+}
+
 function rcToSqName(rc) {
     return "abcdefgh"[rc[1]] + (8 - rc[0]);
+}
+
+/**
+ * ✅ إصلاح 3: بناء uciHistory الكامل من currentGameRecord.moves (كل الحركات)
+ */
+function buildUciHistory() {
+    if (!currentGameRecord || !currentGameRecord.moves) return [];
+    return currentGameRecord.moves.map(m => {
+        const from = rcToSqName(m.from);
+        const to = rcToSqName(m.to);
+        let promo = '';
+        if (m.promoteTo) {
+            const map = { queen: 'q', rook: 'r', bishop: 'b', knight: 'n' };
+            promo = map[m.promoteTo] || '';
+        }
+        return from + to + promo;
+    });
 }
 
 async function makeEngineMove() {
@@ -705,17 +742,10 @@ async function makeEngineMove() {
     initGlobalEngine();
     if (!globalEngine) { scheduleComputerMove(); return; }
 
-    // ابنِ تاريخ UCI من currentGameRecord لمطابقة الافتتاحيات
-    const uciHistory = (currentGameRecord?.moves || []).map(m => {
-        const from = rcToSqName(m.from);
-        const to = rcToSqName(m.to);
-        const promo = m.promoteTo ? m.promoteTo[0] : '';
-        return from + to + promo;
-    });
-
-    const fen = boardToFEN(board, 'black', whiteKingMoved, blackKingMoved, whiteRookMoved, blackRookMoved, null);
+    const uciHistory = buildUciHistory();
+    const epSquare = computeEpSquare();
+    const fen = boardToFEN(board, 'black', whiteKingMoved, blackKingMoved, whiteRookMoved, blackRookMoved, epSquare);
     const depth = STAGE_DEPTH[currentStage] || 3;
-    // المراحل السهلة: تنويع أعلى (لتجنب الرتابة)
     const rootVariety = currentStage <= 3 ? 40 : (currentStage <= 6 ? 25 : 15);
 
     try {
@@ -728,7 +758,6 @@ async function makeEngineMove() {
         });
         if (result && result.move) {
             const uci = result.move;
-            // ✅ استخدام helper آمن بدلاً من فك الترميز اليدوي
             const fromCol = uci.charCodeAt(0) - 97;
             const fromRow = 8 - parseInt(uci[1]);
             const toCol = uci.charCodeAt(2) - 97;
@@ -753,12 +782,14 @@ function scheduleComputerMove() {
     }, 150);
 }
 
-/* ========== 🎓 التعلّم التلقائي: نسخة محسّنة تستخدم المحرك نفسه ========== */
+/**
+ * ✅ إصلاح 4: recordLearning بشكل صحيح — نستخدم uciHistory الكامل + helpers
+ * المحرك يلعب الأسود دائماً في وضع الكمبيوتر
+ */
 function recordLearning(result) {
     if (gameMode !== 'computer' || !currentGameRecord || !currentGameRecord.moves.length) return;
     initGlobalEngine();
     if (!globalEngine) return;
-    // ✅ نستخدم applyMove من المحرك لتطبيق الحركات بدقة (يدعم EP، castling، promo)
     if (typeof window.ChessEngineHelpers === 'undefined' || !window.ChessEngineHelpers.applyMove) {
         console.warn('ChessEngineHelpers غير متاح — تخطي التعلّم');
         return;
@@ -766,23 +797,23 @@ function recordLearning(result) {
     const helpers = window.ChessEngineHelpers;
     try {
         // ابدأ من FEN الابتدائي
-        const initialState = helpers.parseFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        const state = helpers.parseFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
         const history = [];
-        // نطبّق الحركات على initialState بدقة
+        // نطبّق الحركات على state بدقة
         for (let i = 0; i < currentGameRecord.moves.length; i++) {
             const m = currentGameRecord.moves[i];
             const pieceColor = m.piece.split('_')[0];
-            // سجّل فقط حركات المحرك (الأسود)
+            // سجّل فقط حركات المحرك (الأسود) — مع FEN قبل الحركة
             if (pieceColor === 'black') {
-                const fen = helpers.toFEN(initialState);
-                const uci = rcToSqName(m.from) + rcToSqName(m.to) + (m.promoteTo ? m.promoteTo[0] : '');
+                const fen = helpers.toFEN(state);
+                const uci = rcToSqName(m.from) + rcToSqName(m.to) + (m.promoteTo ? { queen: 'q', rook: 'r', bishop: 'b', knight: 'n' }[m.promoteTo] : '');
                 history.push({ fen, uci });
             }
             // طبّق الحركة بدقة عبر المحرك
-            const promoType = m.promoteTo ? { queen: 5, rook: 4, bishop: 3, knight: 2 }[m.promoteTo] : 0;
+            const promoType = m.promoteTo ? ({ queen: 5, rook: 4, bishop: 3, knight: 2 }[m.promoteTo] || 0) : 0;
             const from = m.from[0] * 16 + m.from[1];
             const to = m.to[0] * 16 + m.to[1];
-            helpers.applyMove(initialState, from, to, promoType);
+            helpers.applyMove(state, from, to, promoType);
         }
 
         // تعلّم: فوز اللاعب = خسارة المحرك → عقوبة. خسارة اللاعب = فوز المحرك → مكافأة.
@@ -1660,6 +1691,51 @@ function saveAIGame(){
     }catch(e){}
 }
 
+/**
+ * ✅ إصلاح 5: استعادة اللعبة المحفوظة عند البدء
+ */
+function tryRestoreSavedAIGame(){
+    try {
+        const raw = localStorage.getItem(STORAGE_KEYS.SAVED_AI_GAME);
+        if (!raw) return false;
+        const save = JSON.parse(raw);
+        if (!save || !save.board) return false;
+        // استعادة الحالة
+        board = save.board;
+        turn = save.turn || 'white';
+        whiteKingMoved = !!save.whiteKingMoved;
+        blackKingMoved = !!save.blackKingMoved;
+        whiteRookMoved = save.whiteRookMoved || {left:false, right:false};
+        blackRookMoved = save.blackRookMoved || {left:false, right:false};
+        capturedWhite = save.capturedWhite || [];
+        capturedBlack = save.capturedBlack || [];
+        lastMove = save.lastMove || null;
+        whiteTime = typeof save.whiteTime === 'number' ? save.whiteTime : INITIAL_TIME;
+        blackTime = typeof save.blackTime === 'number' ? save.blackTime : INITIAL_TIME;
+        whiteMovesCount = save.whiteMovesCount || 0;
+        blackMovesCount = save.blackMovesCount || 0;
+        currentStage = save.currentStage || 1;
+        gameMode = 'computer';
+        gameOver = false; winner = null; selectedRow = null; selectedCol = null;
+        pendingPromotion = null; isAnimating = false;
+        // استعادة moveHistory للتراجع
+        moveHistory = Array.isArray(save.moveHistory) ? save.moveHistory : [];
+        // بدء سجل مباراة جديد
+        startGameRecord('computer', currentStage, 'white', null);
+        renderBoard();
+        updateClockDisplay();
+        showToast('💾 تم استعادة آخر مباراة', 3000);
+        // إذا كان دور الأسود، شغّل المحرك
+        if (turn === 'black' && !gameOver) {
+            setTimeout(scheduleComputerMove, 500);
+        }
+        return true;
+    } catch(e) {
+        console.warn('tryRestoreSavedAIGame:', e);
+        return false;
+    }
+}
+
 /* ========== 🧠 Learning UI ========== */
 function openLearningModal() {
     if (!globalEngine) { showToast('⚠️ المحرك غير جاهز'); return; }
@@ -1675,6 +1751,9 @@ function openLearningModal() {
     }
     const openingCount = (typeof window.ChessEngineHelpers !== 'undefined' && window.ChessEngineHelpers.OPENING_BOOK)
         ? window.ChessEngineHelpers.OPENING_BOOK.length : 0;
+    const learningEnabled = globalEngine.learning && globalEngine.learning.enabled;
+    const penaltyPerLoss = globalEngine.learning ? globalEngine.learning.penaltyPerLoss : '—';
+    const maxPenalty = globalEngine.learning ? globalEngine.learning.maxPenalty : '—';
     document.getElementById('learningStatsBody').innerHTML = `
         <div class="lrow"><span class="lbl">📖 عدد الافتتاحيات</span><span class="val">${openingCount}</span></div>
         <div class="lrow"><span class="lbl">🎯 مواضع متعلَّمة</span><span class="val">${posCount}</span></div>
@@ -1683,9 +1762,9 @@ function openLearningModal() {
         <div class="lrow"><span class="lbl">✅ حركات معزَّزة</span><span class="val" style="color:#7ee8c8">${totalWins}</span></div>
         <div class="lsection">⚙️ الحالة</div>
         <div class="lrow"><span class="lbl">الكتاب</span><span class="val">${bookEnabled ? '✅ مفعّل' : '❌ معطّل'}</span></div>
-        <div class="lrow"><span class="lbl">التعلّم</span><span class="val">${globalEngine.learning.enabled ? '✅ مفعّل' : '❌ معطّل'}</span></div>
-        <div class="lrow"><span class="lbl">عقوبة/خسارة</span><span class="val">${globalEngine.learning.penaltyPerLoss}</span></div>
-        <div class="lrow"><span class="lbl">أقصى عقوبة</span><span class="val">${globalEngine.learning.maxPenalty}</span></div>
+        <div class="lrow"><span class="lbl">التعلّم</span><span class="val">${learningEnabled ? '✅ مفعّل' : '❌ معطّل'}</span></div>
+        <div class="lrow"><span class="lbl">عقوبة/خسارة</span><span class="val">${penaltyPerLoss}</span></div>
+        <div class="lrow"><span class="lbl">أقصى عقوبة</span><span class="val">${maxPenalty}</span></div>
         <div class="lsection">💡 نصيحة</div>
         <div style="font-size:0.72rem;color:#9a8ab8;line-height:1.5;padding:8px;background:rgba(180,140,255,0.06);border-radius:10px;">
             المحرك يتعلم تلقائياً من كل مباراة ضد الكمبيوتر. عند فوزك عليه، يعاقب الحركات التي خسر منها. عند خسارتك، يعزز حركاته الفائزة.
@@ -1724,7 +1803,6 @@ function updateBookBtn() {
     const btn = document.getElementById('toggleBookBtn');
     if (btn) btn.textContent = bookEnabled ? '📖 الافتتاحيات: مفعّلة' : '📖 الافتتاحيات: معطّلة';
 }
-// ✅ إصلاح: تعديل searcher.useBook أيضاً
 document.getElementById('toggleBookBtn').addEventListener('click', () => {
     bookEnabled = !bookEnabled;
     saveData(STORAGE_KEYS.BOOK_ENABLED, bookEnabled);
@@ -2258,7 +2336,6 @@ document.getElementById('restoreFileInput').addEventListener('change', (e) => {
 
 /* ========== Reset & Init ========== */
 function resetGame(silent){
-    // ✅ لا حاجة لتصفير uciHistory هنا — المحرك يبنيها من currentGameRecord في كل استدعاء
     if(computerTimeout) { clearTimeout(computerTimeout); computerTimeout = null; }
     if(autosaveTimer) { clearTimeout(autosaveTimer); autosaveTimer = null; }
     board=initBoard(); turn='white'; selectedRow=null; selectedCol=null;
@@ -2323,14 +2400,18 @@ function init(){
     updateEloDisplay(); renderStagesButtons(); updateClockDisplay();
     getDeviceFingerprint();
     initGlobalEngine();
-    // ✅ تحقق صريح من تحميل المحرك
     if (!globalEngine) {
         setTimeout(() => {
             showToast('⚠️ المحرك لم يُحمّل — تأكد أن engine.js موجود بجانب index.html', 5000);
         }, 1500);
     }
     if(!myName) askName();
-    resetGame(); updateMenuStates(); hideOnlinePanel();
+    // ✅ محاولة استعادة اللعبة المحفوظة أولاً
+    const restored = tryRestoreSavedAIGame();
+    if (!restored) {
+        resetGame();
+    }
+    updateMenuStates(); hideOnlinePanel();
     document.getElementById('chatWrapper').style.display = 'none';
 }
 init();
