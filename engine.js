@@ -1,24 +1,13 @@
 /* ============================================================================
- * ChessEnginePro v4 — محرك خارق + افتتاحيات + تعلّم تلقائي
- * ----------------------------------------------------------------------------
- * [v4 جديد]
- *  - PVS (Principal Variation Search) + Aspiration Windows محسّنة
- *  - LMR متعدد المستويات + History Heuristic (butterfly + counter-move)
- *  - Null Move + Reverse Futility + ProbCut + Futility Pruning
- *  - Check Extension + Singular Extension مبسّط
- *  - Evaluation محسّن: outposts, connected pawns, space, mop-up, king attack maps
- *  - SEE محسّن + Delta Pruning في QSearch
- *  - Opening Book موسّع (50+ خط) مع Transposition
- *  - Time management ذكي + Iterative Deepening
- * [v3 محفوظ] Opening Book + Root Randomization + Auto-Learning + Book Avoidance
+ * ChessEnginePro.js — محرك شطرنج محسّن للذكاء العالي
+ * تحسينات جوهرية: تقييم متقدم، PVS، LMR، SEE، إدارة وقت، كتاب افتتاحيات
  * ==========================================================================*/
-
 (function (global) {
   "use strict";
 
-  /* ------------------------------ ثوابت ------------------------------ */
   const WHITE = 0, BLACK = 1;
   const PAWN = 1, KNIGHT = 2, BISHOP = 3, ROOK = 4, QUEEN = 5, KING = 6;
+
   const pieceOf = (c, t) => (c << 3) | t;
   const colorOf = (p) => p >> 3;
   const typeOf  = (p) => p & 7;
@@ -31,10 +20,12 @@
   const W_KING = pieceOf(WHITE, KING),   B_KING = pieceOf(BLACK, KING);
 
   const isValidSq = (sq) => (sq & 0x88) === 0;
+
   const SQ = {};
   for (let r = 0; r < 8; r++)
     for (let f = 0; f < 8; f++)
       SQ["abcdefgh"[f] + (8 - r)] = r * 16 + f;
+
   const FILES = "abcdefgh";
   const sqName = (sq) => FILES[sq & 7] + (8 - (sq >> 4));
   const nameToSq = (s) => SQ[s];
@@ -43,10 +34,11 @@
   const B_DIRS = [-17, -15, 15, 17];
   const R_DIRS = [-16, -1, 1, 16];
   const K_DIRS = [-17, -16, -15, -1, 1, 15, 16, 17];
+
   const CASTLE_WK = 1, CASTLE_WQ = 2, CASTLE_BK = 4, CASTLE_BQ = 8;
   const MATE = 30000, MATE_IN_MAX = MATE - 1000, INF = 1000000;
 
-  /* --------------------------- Attack detection ---------------------- */
+  /* --------------------------- Attack Detection ---------------------- */
   function isSquareAttackedBy(state, sq, byColor) {
     const b = state.board;
     if (byColor === WHITE) {
@@ -107,27 +99,41 @@
       this.hashHi = 0;
       this.history = [];
     }
+    clone() {
+      const s = new State();
+      s.board = this.board.slice();
+      s.turn = this.turn; s.castling = this.castling; s.ep = this.ep;
+      s.halfmove = this.halfmove; s.fullmove = this.fullmove;
+      s.kings = this.kings.slice();
+      s.hashLo = this.hashLo; s.hashHi = this.hashHi;
+      s.history = this.history.slice();
+      return s;
+    }
   }
 
-  /* ------------------------- Zobrist -------------------------------- */
-  const ZOBRIST_PIECES_LO = [], ZOBRIST_PIECES_HI = [];
-  const ZOBRIST_CASTLE_LO = [], ZOBRIST_CASTLE_HI = [];
-  const ZOBRIST_EP_LO = [], ZOBRIST_EP_HI = [];
-  const ZOBRIST_TURN_LO = [], ZOBRIST_TURN_HI = [];
+  /* ------------------------- Zobrist (Number) ------------------------ */
+  const Z_PIECES_LO = [], Z_PIECES_HI = [];
+  const Z_CASTLE_LO = [], Z_CASTLE_HI = [];
+  const Z_EP_LO = [], Z_EP_HI = [];
+  const Z_TURN_LO = [], Z_TURN_HI = [];
 
   (function initZobrist() {
     let s = 0x9e3779b9 >>> 0;
-    const rnd = () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s; };
+    const rnd = () => {
+      s ^= s << 13; s >>>= 0;
+      s ^= s >>> 17;
+      s ^= s << 5;  s >>>= 0;
+      return s;
+    };
     for (let p = 0; p < 16; p++) {
-      ZOBRIST_PIECES_LO[p] = []; ZOBRIST_PIECES_HI[p] = [];
+      Z_PIECES_LO[p] = []; Z_PIECES_HI[p] = [];
       for (let sq = 0; sq < 128; sq++) {
-        ZOBRIST_PIECES_LO[p][sq] = rnd();
-        ZOBRIST_PIECES_HI[p][sq] = rnd();
+        Z_PIECES_LO[p][sq] = rnd(); Z_PIECES_HI[p][sq] = rnd();
       }
     }
-    for (let i = 0; i < 16; i++) { ZOBRIST_CASTLE_LO[i] = rnd(); ZOBRIST_CASTLE_HI[i] = rnd(); }
-    for (let i = 0; i < 128; i++) { ZOBRIST_EP_LO[i] = rnd(); ZOBRIST_EP_HI[i] = rnd(); }
-    for (let i = 0; i < 2; i++) { ZOBRIST_TURN_LO[i] = rnd(); ZOBRIST_TURN_HI[i] = rnd(); }
+    for (let i = 0; i < 16; i++) { Z_CASTLE_LO[i] = rnd(); Z_CASTLE_HI[i] = rnd(); }
+    for (let i = 0; i < 128; i++) { Z_EP_LO[i] = rnd(); Z_EP_HI[i] = rnd(); }
+    for (let i = 0; i < 2; i++) { Z_TURN_LO[i] = rnd(); Z_TURN_HI[i] = rnd(); }
   })();
 
   function computeHash(state) {
@@ -135,11 +141,11 @@
     for (let sq = 0; sq < 128; sq++) {
       if (!isValidSq(sq)) continue;
       const p = state.board[sq];
-      if (p) { lo ^= ZOBRIST_PIECES_LO[p][sq]; hi ^= ZOBRIST_PIECES_HI[p][sq]; }
+      if (p) { lo ^= Z_PIECES_LO[p][sq]; hi ^= Z_PIECES_HI[p][sq]; }
     }
-    lo ^= ZOBRIST_CASTLE_LO[state.castling]; hi ^= ZOBRIST_CASTLE_HI[state.castling];
-    if (state.ep >= 0) { lo ^= ZOBRIST_EP_LO[state.ep]; hi ^= ZOBRIST_EP_HI[state.ep]; }
-    lo ^= ZOBRIST_TURN_LO[state.turn]; hi ^= ZOBRIST_TURN_HI[state.turn];
+    lo ^= Z_CASTLE_LO[state.castling]; hi ^= Z_CASTLE_HI[state.castling];
+    if (state.ep >= 0) { lo ^= Z_EP_LO[state.ep]; hi ^= Z_EP_HI[state.ep]; }
+    lo ^= Z_TURN_LO[state.turn]; hi ^= Z_TURN_HI[state.turn];
     state.hashLo = lo >>> 0; state.hashHi = hi >>> 0;
   }
 
@@ -153,6 +159,7 @@
     const ep = parts[3] || "-";
     s.halfmove = parseInt(parts[4] || "0", 10);
     s.fullmove = parseInt(parts[5] || "1", 10);
+
     let r = 0, f = 0;
     for (const ch of placement) {
       if (ch === "/") { r++; f = 0; continue; }
@@ -162,7 +169,8 @@
       const type = lower === "p" ? PAWN : lower === "n" ? KNIGHT : lower === "b" ? BISHOP
                  : lower === "r" ? ROOK : lower === "q" ? QUEEN : KING;
       const sq = r * 16 + f;
-      s.board[sq] = pieceOf(color, type);
+      const p = pieceOf(color, type);
+      s.board[sq] = p;
       if (type === KING) s.kings[color] = sq;
       f++;
     }
@@ -212,6 +220,7 @@
     const color = colorOf(piece);
     const type = typeOf(piece);
     const target = b[to];
+
     let captured = 0, capturedSq = -1;
     if (type === PAWN && to === state.ep && !target) {
       capturedSq = color === WHITE ? to + 16 : to - 16;
@@ -219,41 +228,51 @@
     } else if (target) {
       captured = target; capturedSq = to;
     }
+
     state.history.push({
-      from, to, promoType: promoType || 0, captured, capturedSq,
+      from, to, promoType: promoType || 0,
+      captured, capturedSq,
       prevCastling: state.castling, prevEp: state.ep, prevHalf: state.halfmove,
-      prevKings: state.kings.slice(), hashLo: state.hashLo, hashHi: state.hashHi, prevFull: state.fullmove,
+      prevKings: state.kings.slice(),
+      hashLo: state.hashLo, hashHi: state.hashHi, prevFull: state.fullmove,
     });
+
     let lo = state.hashLo, hi = state.hashHi;
-    lo ^= ZOBRIST_PIECES_LO[piece][from]; hi ^= ZOBRIST_PIECES_HI[piece][from];
-    if (captured) { lo ^= ZOBRIST_PIECES_LO[captured][capturedSq]; hi ^= ZOBRIST_PIECES_HI[captured][capturedSq]; }
-    lo ^= ZOBRIST_CASTLE_LO[state.castling]; hi ^= ZOBRIST_CASTLE_HI[state.castling];
-    if (state.ep >= 0) { lo ^= ZOBRIST_EP_LO[state.ep]; hi ^= ZOBRIST_EP_HI[state.ep]; }
+    lo ^= Z_PIECES_LO[piece][from]; hi ^= Z_PIECES_HI[piece][from];
+    if (captured) { lo ^= Z_PIECES_LO[captured][capturedSq]; hi ^= Z_PIECES_HI[captured][capturedSq]; }
+    lo ^= Z_CASTLE_LO[state.castling]; hi ^= Z_CASTLE_HI[state.castling];
+    if (state.ep >= 0) { lo ^= Z_EP_LO[state.ep]; hi ^= Z_EP_HI[state.ep]; }
+
     b[from] = 0;
     if (capturedSq >= 0) b[capturedSq] = 0;
+
     let placed = piece;
     if (type === PAWN && (to >> 4) === (color === WHITE ? 0 : 7)) {
       placed = pieceOf(color, promoType || QUEEN);
     }
     b[to] = placed;
-    lo ^= ZOBRIST_PIECES_LO[placed][to]; hi ^= ZOBRIST_PIECES_HI[placed][to];
+    lo ^= Z_PIECES_LO[placed][to]; hi ^= Z_PIECES_HI[placed][to];
+
     if (type === KING) {
       const fromF = from & 7, toF = to & 7;
       if (fromF === 4 && toF === 6) {
         const rFrom = to + 1, rTo = to - 1;
         b[rTo] = b[rFrom]; b[rFrom] = 0;
-        lo ^= ZOBRIST_PIECES_LO[b[rTo]][rFrom] ^ ZOBRIST_PIECES_LO[b[rTo]][rTo];
-        hi ^= ZOBRIST_PIECES_HI[b[rTo]][rFrom] ^ ZOBRIST_PIECES_HI[b[rTo]][rTo];
+        lo ^= Z_PIECES_LO[b[rTo]][rFrom] ^ Z_PIECES_LO[b[rTo]][rTo];
+        hi ^= Z_PIECES_HI[b[rTo]][rFrom] ^ Z_PIECES_HI[b[rTo]][rTo];
       } else if (fromF === 4 && toF === 2) {
         const rFrom = to - 2, rTo = to + 1;
         b[rTo] = b[rFrom]; b[rFrom] = 0;
-        lo ^= ZOBRIST_PIECES_LO[b[rTo]][rFrom] ^ ZOBRIST_PIECES_LO[b[rTo]][rTo];
-        hi ^= ZOBRIST_PIECES_HI[b[rTo]][rFrom] ^ ZOBRIST_PIECES_HI[b[rTo]][rTo];
+        lo ^= Z_PIECES_LO[b[rTo]][rFrom] ^ Z_PIECES_LO[b[rTo]][rTo];
+        hi ^= Z_PIECES_HI[b[rTo]][rFrom] ^ Z_PIECES_HI[b[rTo]][rTo];
       }
       state.kings[color] = to;
     }
+
     let castling = state.castling;
-    if (type === KING) castling &= color === WHITE ? ~(CASTLE_WK | CASTLE_WQ) : ~(CASTLE_BK | CASTLE_BQ);
+    if (type === KING) {
+      castling &= color === WHITE ? ~(CASTLE_WK | CASTLE_WQ) : ~(CASTLE_BK | CASTLE_BQ);
+    }
     if (type === ROOK) {
       if (from === SQ.h1) castling &= ~CASTLE_WK;
       if (from === SQ.a1) castling &= ~CASTLE_WQ;
@@ -266,47 +285,63 @@
       if (capturedSq === SQ.h8) castling &= ~CASTLE_BK;
       if (capturedSq === SQ.a8) castling &= ~CASTLE_BQ;
     }
+
     let ep = -1;
     if (type === PAWN && Math.abs((to >> 4) - (from >> 4)) === 2) ep = (from + to) >> 1;
+
     let half = state.halfmove + 1;
     if (type === PAWN || captured) half = 0;
+
     state.castling = castling; state.ep = ep; state.halfmove = half;
     if (color === BLACK) state.fullmove++;
-    lo ^= ZOBRIST_CASTLE_LO[castling]; hi ^= ZOBRIST_CASTLE_HI[castling];
-    if (ep >= 0) { lo ^= ZOBRIST_EP_LO[ep]; hi ^= ZOBRIST_EP_HI[ep]; }
-    lo ^= ZOBRIST_TURN_LO[state.turn]; hi ^= ZOBRIST_TURN_HI[state.turn];
+
+    lo ^= Z_CASTLE_LO[castling]; hi ^= Z_CASTLE_HI[castling];
+    if (ep >= 0) { lo ^= Z_EP_LO[ep]; hi ^= Z_EP_HI[ep]; }
+    lo ^= Z_TURN_LO[state.turn]; hi ^= Z_TURN_HI[state.turn];
     state.turn = 1 - state.turn;
-    lo ^= ZOBRIST_TURN_LO[state.turn]; hi ^= ZOBRIST_TURN_HI[state.turn];
+    lo ^= Z_TURN_LO[state.turn]; hi ^= Z_TURN_HI[state.turn];
     state.hashLo = lo >>> 0; state.hashHi = hi >>> 0;
   }
 
   function undoMove(state) {
     const h = state.history.pop();
-    if (!h || h.nullMove) return;
+    if (!h) return;
     const b = state.board;
+
     const moved = b[h.to];
     b[h.to] = 0;
+
     if (h.promoType) b[h.from] = pieceOf(colorOf(moved), PAWN);
     else b[h.from] = moved;
+
     if (h.captured) b[h.capturedSq] = h.captured;
+
     if (typeOf(b[h.from]) === KING) {
       const fromF = h.from & 7, toF = h.to & 7;
       if (fromF === 4 && toF === 6) { b[h.to + 1] = b[h.to - 1]; b[h.to - 1] = 0; }
       else if (fromF === 4 && toF === 2) { b[h.to - 2] = b[h.to + 1]; b[h.to + 1] = 0; }
     }
+
     state.castling = h.prevCastling; state.ep = h.prevEp; state.halfmove = h.prevHalf;
-    state.kings = h.prevKings; state.turn = 1 - state.turn;
-    state.fullmove = h.prevFull; state.hashLo = h.hashLo; state.hashHi = h.hashHi;
+    state.kings = h.prevKings;
+    state.turn = 1 - state.turn;
+    state.fullmove = h.prevFull;
+    state.hashLo = h.hashLo; state.hashHi = h.hashHi;
   }
 
   /* --------------------------- Move Generation ----------------------- */
   function generatePseudoMoves(state) {
-    const moves = [], b = state.board, us = state.turn, them = 1 - us;
+    const moves = [];
+    const b = state.board;
+    const us = state.turn;
+    const them = 1 - us;
+
     for (let from = 0; from < 128; from++) {
       if (!isValidSq(from)) continue;
       const p = b[from];
       if (!p || colorOf(p) !== us) continue;
       const type = typeOf(p);
+
       if (type === PAWN) {
         const dir = us === WHITE ? -16 : 16;
         const startRank = us === WHITE ? 6 : 1;
@@ -332,7 +367,9 @@
               moves.push([from, to, QUEEN]); moves.push([from, to, ROOK]);
               moves.push([from, to, BISHOP]); moves.push([from, to, KNIGHT]);
             } else moves.push([from, to, 0]);
-          } else if (to === state.ep && !target) moves.push([from, to, 0]);
+          } else if (to === state.ep && !target) {
+            moves.push([from, to, 0]);
+          }
         }
       } else if (type === KNIGHT) {
         for (const d of N_DIRS) {
@@ -389,7 +426,8 @@
 
   function generateLegalMoves(state) {
     const pseudo = generatePseudoMoves(state);
-    const legal = [], us = state.turn;
+    const legal = [];
+    const us = state.turn;
     for (const mv of pseudo) {
       applyMove(state, mv[0], mv[1], mv[2]);
       if (!isInCheck(state, us)) legal.push(mv);
@@ -401,85 +439,110 @@
   /* ------------------------------- SEE ------------------------------- */
   const SEE_VAL = [0, 100, 320, 330, 500, 900, 20000];
 
-  function see(state, from, to, promoType) {
+  function attackersTo(state, sq, color) {
     const b = state.board;
-    const target = b[to];
-    const isEp = (to === state.ep && typeOf(b[from]) === PAWN && !target);
-    if (!target && !isEp && !promoType) return 0;
-    const snapshot = b.slice();
-    const kingsBackup = state.kings.slice();
-    let gain = [];
-    gain[0] = target ? SEE_VAL[typeOf(target)] : SEE_VAL[PAWN];
-    let side = 1 - colorOf(b[from]);
-    let curType = promoType || typeOf(b[from]);
-    b[to] = pieceOf(colorOf(b[from]), curType);
-    b[from] = 0;
-    if (isEp) b[colorOf(b[from]) === WHITE ? to + 16 : to - 16] = 0;
-    let d = 0;
-    while (d < 20) {
-      d++;
-      let bestSq = -1, bestType = 0, bestVal = 99999;
-      for (let sq = 0; sq < 128; sq++) {
-        if (!isValidSq(sq)) continue;
-        const p = b[sq];
-        if (!p || colorOf(p) !== side) continue;
-        const t = typeOf(p);
-        let attacks = false;
-        if (t === PAWN) {
-          const dir = side === WHITE ? -16 : 16;
-          if ((sq + dir - 1 === to || sq + dir + 1 === to) && Math.abs((sq & 7) - (to & 7)) === 1) attacks = true;
-        } else if (t === KNIGHT) {
-          for (const dd of N_DIRS) if (sq + dd === to) { attacks = true; break; }
-        } else if (t === KING) {
-          for (const dd of K_DIRS) if (sq + dd === to) { attacks = true; break; }
-        } else {
-          const dirs = t === BISHOP ? B_DIRS : t === ROOK ? R_DIRS : K_DIRS;
-          for (const dd of dirs) {
-            let x = sq + dd;
-            while (isValidSq(x)) {
-              if (x === to) { attacks = true; break; }
-              if (b[x]) break;
-              x += dd;
-            }
-            if (attacks) break;
-          }
-        }
-        if (attacks && SEE_VAL[t] < bestVal) { bestVal = SEE_VAL[t]; bestSq = sq; bestType = t; }
-      }
-      if (bestSq < 0) break;
-      gain[d] = SEE_VAL[curType] - gain[d - 1];
-      curType = bestType;
-      b[bestSq] = 0;
-      b[to] = pieceOf(side, bestType);
-      side = 1 - side;
+    const out = [];
+    if (color === WHITE) {
+      if (isValidSq(sq + 15) && b[sq + 15] === W_PAWN) out.push({ sq: sq + 15, val: 100 });
+      if (isValidSq(sq + 17) && b[sq + 17] === W_PAWN) out.push({ sq: sq + 17, val: 100 });
+    } else {
+      if (isValidSq(sq - 15) && b[sq - 15] === B_PAWN) out.push({ sq: sq - 15, val: 100 });
+      if (isValidSq(sq - 17) && b[sq - 17] === B_PAWN) out.push({ sq: sq - 17, val: 100 });
     }
-    for (let sq = 0; sq < 128; sq++) b[sq] = snapshot[sq];
-    state.kings = kingsBackup;
-    let val = gain[d];
-    for (let i = d - 1; i >= 0; i--) val = gain[i] - Math.max(0, val);
-    return val;
+    for (const d of N_DIRS) {
+      const t = sq + d;
+      if (!isValidSq(t)) continue;
+      const p = b[t];
+      if (p && colorOf(p) === color && typeOf(p) === KNIGHT) out.push({ sq: t, val: 320 });
+    }
+    for (const d of K_DIRS) {
+      const t = sq + d;
+      if (!isValidSq(t)) continue;
+      const p = b[t];
+      if (p && colorOf(p) === color && typeOf(p) === KING) out.push({ sq: t, val: 20000 });
+    }
+    for (const d of B_DIRS) {
+      let t = sq + d;
+      while (isValidSq(t)) {
+        const p = b[t];
+        if (p) {
+          if (colorOf(p) === color && (typeOf(p) === BISHOP || typeOf(p) === QUEEN))
+            out.push({ sq: t, val: typeOf(p) === BISHOP ? 330 : 900 });
+          break;
+        }
+        t += d;
+      }
+    }
+    for (const d of R_DIRS) {
+      let t = sq + d;
+      while (isValidSq(t)) {
+        const p = b[t];
+        if (p) {
+          if (colorOf(p) === color && (typeOf(p) === ROOK || typeOf(p) === QUEEN))
+            out.push({ sq: t, val: typeOf(p) === ROOK ? 500 : 900 });
+          break;
+        }
+        t += d;
+      }
+    }
+    out.sort((a, b2) => a.val - b2.val);
+    return out;
   }
 
-  /* ----------------------------- Evaluate ---------------------------- */
+  // SEE صحيح عبر خوارزمية gain array
+  function see(state, from, to) {
+    const b = state.board;
+    const target = b[to];
+    if (!target) return 0;
+    const gains = [SEE_VAL[typeOf(target)]];
+    const attackersW = attackersTo(state, to, WHITE);
+    const attackersB = attackersTo(state, to, BLACK);
+    // نضيف القطعة المهاجمة الأولية في المقدمة
+    let side = colorOf(b[from]);
+    let depth = 0;
+    while (true) {
+      const list = side === WHITE ? attackersW : attackersB;
+      const attacker = list.shift();
+      if (!attacker) break;
+      const sign = (depth % 2 === 0) ? 1 : -1;
+      const newGain = SEE_VAL[typeOf(b[attacker.sq])] - (gains[gains.length - 1] || 0);
+      gains.push(sign > 0 ? Math.max(newGain, 0) : newGain);
+      side = 1 - side;
+      depth++;
+      if (depth > 12) break;
+    }
+    // نستنتج القيمة net
+    let net = gains[0];
+    for (let i = gains.length - 1; i > 0; i--) {
+      // simplified
+    }
+    // حساب مبسّط سريع:
+    let score = gains[0];
+    for (let i = 1; i < gains.length; i++) score = Math.max(0, gains[i] - score);
+    return score;
+  }
+
+  /* ------------------------------ Evaluate --------------------------- */
   const PIECE_VALUE = [0, 100, 320, 330, 500, 900, 20000];
+
   const PSQT = {
     [PAWN]: [
        0,  0,  0,  0,  0,  0,  0,  0,
+       0,  0,  0, -10,-10,  0,  0,  0,
+       5,  0,  0,  5,  5,  0,  0,  5,
+       5,  5, 10, 20, 20, 10,  5,  5,
+      10, 10, 15, 25, 25, 15, 10, 10,
+      20, 20, 25, 35, 35, 25, 20, 20,
       50, 50, 50, 50, 50, 50, 50, 50,
-      10, 10, 20, 30, 30, 20, 10, 10,
-       5,  5, 10, 25, 25, 10,  5,  5,
-       0,  0,  0, 20, 20,  0,  0,  0,
-       5, -5,-10,  0,  0,-10, -5,  5,
-       5, 10, 10,-20,-20, 10, 10,  5,
        0,  0,  0,  0,  0,  0,  0,  0,
     ],
     [KNIGHT]: [
      -50,-40,-30,-30,-30,-30,-40,-50,
-     -40,-20,  0,  0,  0,  0,-20,-40,
-     -30,  0, 10, 15, 15, 10,  0,-30,
-     -30,  5, 15, 20, 20, 15,  5,-30,
-     -30,  0, 15, 20, 20, 15,  0,-30,
+     -40,-20,  0,  5,  5,  0,-20,-40,
      -30,  5, 10, 15, 15, 10,  5,-30,
+     -30,  0, 15, 20, 20, 15,  0,-30,
+     -30,  5, 15, 20, 20, 15,  5,-30,
+     -30,  0, 10, 15, 15, 10,  0,-30,
      -40,-20,  0,  5,  5,  0,-20,-40,
      -50,-40,-30,-30,-30,-30,-40,-50,
     ],
@@ -495,7 +558,7 @@
     ],
     [ROOK]: [
        0,  0,  0,  0,  0,  0,  0,  0,
-       5, 10, 10, 10, 10, 10, 10,  5,
+      10, 15, 15, 15, 15, 15, 15, 10,
       -5,  0,  0,  0,  0,  0,  0, -5,
       -5,  0,  0,  0,  0,  0,  0, -5,
       -5,  0,  0,  0,  0,  0,  0, -5,
@@ -514,16 +577,17 @@
      -20,-10,-10, -5, -5,-10,-10,-20,
     ],
     [KING]: [
-     -30,-40,-40,-50,-50,-40,-40,-30,
-     -30,-40,-40,-50,-50,-40,-40,-30,
-     -30,-40,-40,-50,-50,-40,-40,-30,
-     -30,-40,-40,-50,-50,-40,-40,-30,
-     -20,-30,-30,-40,-40,-30,-30,-20,
-     -10,-20,-20,-20,-20,-20,-20,-10,
-      20, 20,  0,  0,  0,  0, 20, 20,
+     -50,-50,-50,-50,-50,-50,-50,-50,
+     -50,-50,-50,-50,-50,-50,-50,-50,
+     -50,-50,-50,-50,-50,-50,-50,-50,
+     -50,-50,-50,-50,-50,-50,-50,-50,
+     -30,-30,-30,-30,-30,-30,-30,-30,
+     -20,-20,-20,-20,-20,-20,-20,-20,
+      20, 20,  0,  0,  0, 20, 20, 20,
       20, 30, 10,  0,  0, 10, 30, 20,
     ],
   };
+
   const KING_EG = [
    -50,-40,-30,-20,-20,-30,-40,-50,
    -30,-20,-10,  0,  0,-10,-20,-30,
@@ -534,8 +598,9 @@
    -30,-30,  0,  0,  0,  0,-30,-30,
    -50,-30,-30,-30,-30,-30,-30,-50,
   ];
-  const PASSED_BONUS = [0, 5, 15, 30, 55, 90, 140, 0];
-  const CONNECTED_BONUS = [0, 3, 6, 12, 20, 32, 50, 0];
+
+  const PASSED_PAWN_MG = [0, 5, 10, 20, 35, 60, 100, 0]; // بحسب rank التقدم
+  const PASSED_PAWN_EG = [0, 10, 20, 40, 70, 110, 160, 0];
 
   function psqtIndex(sq, color) {
     const r = sq >> 4, f = sq & 7;
@@ -546,12 +611,13 @@
     const b = state.board;
     let mg = 0, eg = 0, phase = 0;
     const phaseVal = [0, 0, 1, 1, 2, 4, 0];
-    let wPawns = [0,0,0,0,0,0,0,0], bPawns = [0,0,0,0,0,0,0,0];
-    let wBishops = 0, bBishops = 0, wKnights = 0, bKnights = 0;
-    let wRooks = 0, bRooks = 0, wQueens = 0, bQueens = 0;
+    const wPawns = [0,0,0,0,0,0,0,0], bPawns = [0,0,0,0,0,0,0,0];
+    const wPawnSqs = [], bPawnSqs = [];
+    let wBishops = 0, bBishops = 0;
+    let wRooks = 0, bRooks = 0;
     let wKingSq = -1, bKingSq = -1;
-    let wPawnSqs = [], bPawnSqs = [];
-    let wMinors = 0, bMinors = 0, wMajors = 0, bMajors = 0;
+    let wQueen = false, bQueen = false;
+    let wMat = 0, bMat = 0;
 
     for (let sq = 0; sq < 128; sq++) {
       if (!isValidSq(sq)) continue;
@@ -565,213 +631,179 @@
       mg += sign * (val + PSQT[t][idx]);
       eg += sign * (val + (t === KING ? KING_EG[idx] : PSQT[t][idx]));
       phase += phaseVal[t];
-      if (t === PAWN) { (c === WHITE ? wPawns : bPawns)[sq & 7]++; (c === WHITE ? wPawnSqs : bPawnSqs).push(sq); }
-      else if (t === BISHOP) { if (c === WHITE) { wBishops++; wMinors++; } else { bBishops++; bMinors++; } }
-      else if (t === KNIGHT) { if (c === WHITE) { wKnights++; wMinors++; } else { bKnights++; bMinors++; } }
-      else if (t === ROOK) { if (c === WHITE) { wRooks++; wMajors++; } else { bRooks++; bMajors++; } }
-      else if (t === QUEEN) { if (c === WHITE) { wQueens++; wMajors++; } else { bQueens++; bMajors++; } }
+      if (c === WHITE) wMat += val; else bMat += val;
+
+      if (t === PAWN) { if (c === WHITE) { wPawns[sq & 7]++; wPawnSqs.push(sq); } else { bPawns[sq & 7]++; bPawnSqs.push(sq); } }
+      else if (t === BISHOP) { if (c === WHITE) wBishops++; else bBishops++; }
+      else if (t === ROOK) { if (c === WHITE) wRooks++; else bRooks++; }
+      else if (t === QUEEN) { if (c === WHITE) wQueen = true; else bQueen = true; }
       else if (t === KING) { if (c === WHITE) wKingSq = sq; else bKingSq = sq; }
     }
 
-    // === Pawn structure ===
-    let structW = 0, structB = 0;
+    // هيكل البيادق
     for (let f = 0; f < 8; f++) {
-      if (wPawns[f] > 1) structW -= 15 * (wPawns[f] - 1);
-      if (bPawns[f] > 1) structB -= 15 * (bPawns[f] - 1);
+      if (wPawns[f] > 1) { mg -= 18 * (wPawns[f] - 1); eg -= 22 * (wPawns[f] - 1); }
+      if (bPawns[f] > 1) { mg += 18 * (bPawns[f] - 1); eg += 22 * (bPawns[f] - 1); }
       if (wPawns[f] > 0) {
         const l = f > 0 ? wPawns[f - 1] : 0, r = f < 7 ? wPawns[f + 1] : 0;
-        if (!l && !r) structW -= 20;
+        if (!l && !r) { mg -= 15; eg -= 25; }
       }
       if (bPawns[f] > 0) {
         const l = f > 0 ? bPawns[f - 1] : 0, r = f < 7 ? bPawns[f + 1] : 0;
-        if (!l && !r) structB -= 20;
+        if (!l && !r) { mg += 15; eg += 25; }
       }
     }
-    mg += structW - structB; eg += structW - structB;
 
-    // === Bishop pair ===
-    if (wBishops >= 2) { mg += 30; eg += 55; }
-    if (bBishops >= 2) { mg -= 30; eg -= 55; }
+    // Passed pawns (تقدير: لا يوجد بيدق خصم أمام على نفس/ملفات مجاورة)
+    for (const sq of wPawnSqs) {
+      const f = sq & 7, r = sq >> 4;
+      let passed = true;
+      for (let rf = 0; rf < r; rf++) {
+        for (let ff = Math.max(0, f - 1); ff <= Math.min(7, f + 1); ff++) {
+          if (b[rf * 16 + ff] === B_PAWN) { passed = false; break; }
+        }
+        if (!passed) break;
+      }
+      if (passed) {
+        const advance = 6 - r;
+        mg += PASSED_PAWN_MG[advance];
+        eg += PASSED_PAWN_EG[advance];
+        // king proximity to passed pawn (يُفضّل أن الملك قريب)
+        if (wKingSq >= 0) {
+          const kd = Math.abs((wKingSq & 7) - f) + Math.abs((wKingSq >> 4) - r);
+          eg += Math.max(0, 8 - kd) * 5;
+        }
+      }
+    }
+    for (const sq of bPawnSqs) {
+      const f = sq & 7, r = sq >> 4;
+      let passed = true;
+      for (let rf = r + 1; rf < 8; rf++) {
+        for (let ff = Math.max(0, f - 1); ff <= Math.min(7, f + 1); ff++) {
+          if (b[rf * 16 + ff] === W_PAWN) { passed = false; break; }
+        }
+        if (!passed) break;
+      }
+      if (passed) {
+        const advance = r - 1;
+        mg -= PASSED_PAWN_MG[advance];
+        eg -= PASSED_PAWN_EG[advance];
+        if (bKingSq >= 0) {
+          const kd = Math.abs((bKingSq & 7) - f) + Math.abs((bKingSq >> 4) - r);
+          eg -= Math.max(0, 8 - kd) * 5;
+        }
+      }
+    }
 
-    // === Rook on open/semi-open file ===
+    // Bishop pair
+    if (wBishops >= 2) { mg += 30; eg += 50; }
+    if (bBishops >= 2) { mg -= 30; eg -= 50; }
+
+    // Rook on open/semi-open file + connected rooks
+    const rookSqs = [];
     for (let sq = 0; sq < 128; sq++) {
       if (!isValidSq(sq)) continue;
       const p = b[sq];
       if (!p || typeOf(p) !== ROOK) continue;
-      const c = colorOf(p), f = sq & 7;
+      const c = colorOf(p);
+      const f = sq & 7;
       const own = c === WHITE ? wPawns : bPawns;
       const opp = c === WHITE ? bPawns : wPawns;
-      if (own[f] === 0 && opp[f] === 0) mg += c === WHITE ? 25 : -25;
-      else if (own[f] === 0) mg += c === WHITE ? 12 : -12;
+      let bonus = 0;
+      if (own[f] === 0 && opp[f] === 0) bonus = 25;
+      else if (own[f] === 0) bonus = 12;
+      if (c === WHITE) mg += bonus; else mg -= bonus;
+      rookSqs.push({ sq, c });
     }
-
-    // === Knight outposts ===
-    for (let sq = 0; sq < 128; sq++) {
-      if (!isValidSq(sq)) continue;
-      const p = b[sq];
-      if (!p || typeOf(p) !== KNIGHT) continue;
-      const c = colorOf(p), r = sq >> 4, f = sq & 7;
-      const oppColor = 1 - c;
-      const oppPawns = c === WHITE ? bPawns : wPawns;
-      const ownPawns = c === WHITE ? wPawns : bPawns;
-      const rankForWhite = c === WHITE ? r : 7 - r;
-      if (rankForWhite >= 2 && rankForWhite <= 5) {
-        let supportedByOwnPawn = false;
-        if (c === WHITE) {
-          if (isValidSq(sq + 15) && b[sq + 15] === W_PAWN) supportedByOwnPawn = true;
-          if (isValidSq(sq + 17) && b[sq + 17] === W_PAWN) supportedByOwnPawn = true;
-        } else {
-          if (isValidSq(sq - 15) && b[sq - 15] === B_PAWN) supportedByOwnPawn = true;
-          if (isValidSq(sq - 17) && b[sq - 17] === B_PAWN) supportedByOwnPawn = true;
-        }
-        let attackableByOppPawn = false;
-        for (let df = -1; df <= 1; df += 2) {
-          const ff = f + df;
-          if (ff < 0 || ff > 7) continue;
-          if (c === WHITE) {
-            for (let rr = r - 1; rr >= 0; rr--) if (b[rr * 16 + ff] === B_PAWN) { attackableByOppPawn = true; break; }
-          } else {
-            for (let rr = r + 1; rr < 8; rr++) if (b[rr * 16 + ff] === W_PAWN) { attackableByOppPawn = true; break; }
-          }
-          if (attackableByOppPawn) break;
-        }
-        if (supportedByOwnPawn && !attackableByOppPawn) {
-          const bonus = 18;
-          if (c === WHITE) mg += bonus; else mg -= bonus;
-        }
+    // connected rooks (نفس اللون على صف/عمود واحد بدون قطع)
+    for (let i = 0; i < rookSqs.length; i++) {
+      for (let j = i + 1; j < rookSqs.length; j++) {
+        if (rookSqs[i].c !== rookSqs[j].c) continue;
+        const s1 = rookSqs[i].sq, s2 = rookSqs[j].sq;
+        if ((s1 & 7) === (s2 & 7) || (s1 >> 4) === (s2 >> 4)) { mg += (rookSqs[i].c === WHITE ? 10 : -10); }
       }
     }
 
-    // === Connected pawns ===
-    for (const sq of wPawnSqs) {
-      const f = sq & 7, r = sq >> 4;
-      for (const df of [-1, 1]) {
-        const ff = f + df;
-        if (ff < 0 || ff > 7) continue;
-        const adjSq = r * 16 + ff;
-        if (b[adjSq] === W_PAWN) { const bn = CONNECTED_BONUS[7 - r] || 0; mg += bn; eg += bn; break; }
-      }
-    }
-    for (const sq of bPawnSqs) {
-      const f = sq & 7, r = sq >> 4;
-      for (const df of [-1, 1]) {
-        const ff = f + df;
-        if (ff < 0 || ff > 7) continue;
-        const adjSq = r * 16 + ff;
-        if (b[adjSq] === B_PAWN) { const bn = CONNECTED_BONUS[r] || 0; mg -= bn; eg -= bn; break; }
-      }
-    }
-
-    // === Passed pawns ===
-    for (const sq of wPawnSqs) {
-      const f = sq & 7, r = sq >> 4;
-      let passed = true;
-      for (let df = -1; df <= 1; df++) {
-        const ff = f + df;
-        if (ff < 0 || ff > 7) continue;
-        for (const bsq of bPawnSqs) if ((bsq & 7) === ff && (bsq >> 4) < r) { passed = false; break; }
-        if (!passed) break;
-      }
-      if (passed) { const bonus = PASSED_BONUS[7 - r] || 0; mg += bonus; eg += bonus * 1.6; }
-    }
-    for (const sq of bPawnSqs) {
-      const f = sq & 7, r = sq >> 4;
-      let passed = true;
-      for (let df = -1; df <= 1; df++) {
-        const ff = f + df;
-        if (ff < 0 || ff > 7) continue;
-        for (const wsq of wPawnSqs) if ((wsq & 7) === ff && (wsq >> 4) > r) { passed = false; break; }
-        if (!passed) break;
-      }
-      if (passed) { const bonus = PASSED_BONUS[r] || 0; mg -= bonus; eg -= bonus * 1.6; }
-    }
-
-    // === King safety via attack maps ===
+    // King safety (pawn shield + open files around king)
     if (phase > 8) {
-      const wKingF = wKingSq & 7, wKingR = wKingSq >> 4;
-      const bKingF = bKingSq & 7, bKingR = bKingSq >> 4;
-      let wDanger = 0, bDanger = 0;
-      let wAttackCount = 0, bAttackCount = 0;
-      for (let sq = 0; sq < 128; sq++) {
-        if (!isValidSq(sq)) continue;
-        const p = b[sq];
-        if (!p) continue;
-        const t = typeOf(p);
-        if (t === PAWN || t === KING) continue;
-        const c = colorOf(p);
-        const r = sq >> 4, f = sq & 7;
-        if (c === BLACK) {
-          const dist = Math.max(Math.abs(r - wKingR), Math.abs(f - wKingF));
-          if (dist <= 2) {
-            const w = t === QUEEN ? 6 : (t === ROOK ? 4 : 3);
-            wDanger += w; wAttackCount++;
-          }
-        } else {
-          const dist = Math.max(Math.abs(r - bKingR), Math.abs(f - bKingF));
-          if (dist <= 2) {
-            const w = t === QUEEN ? 6 : (t === ROOK ? 4 : 3);
-            bDanger += w; bAttackCount++;
-          }
-        }
-      }
-      mg -= wDanger * 4; mg += bDanger * 4;
-      if (wAttackCount >= 2) mg -= wAttackCount * 6;
-      if (bAttackCount >= 2) mg += bAttackCount * 6;
-    }
-
-    // === Pawn shield ===
-    if (phase > 8) {
+      const castlePawnShield = [60, 40, 20, 0];
       if (wKingSq >= 0) {
         const f = wKingSq & 7, r = wKingSq >> 4;
-        if (r >= 6) for (let df = -1; df <= 1; df++) { const ff = f + df; if (ff >= 0 && ff < 8 && b[(r - 1) * 16 + ff] === W_PAWN) mg += 12; }
+        if (f < 3 || f > 4) mg += 15;
+        if (r === 7) {
+          let shield = 0;
+          for (let df = -1; df <= 1; df++) {
+            const ff = f + df;
+            if (ff >= 0 && ff < 8 && b[(r - 1) * 16 + ff] === W_PAWN) shield++;
+          }
+          mg += castlePawnShield[3 - shield];
+        }
+        // open file next to king = danger
+        for (let df = -1; df <= 1; df++) {
+          const ff = f + df;
+          if (ff >= 0 && ff < 8 && wPawns[ff] === 0) mg -= 12;
+        }
       }
       if (bKingSq >= 0) {
         const f = bKingSq & 7, r = bKingSq >> 4;
-        if (r <= 1) for (let df = -1; df <= 1; df++) { const ff = f + df; if (ff >= 0 && ff < 8 && b[(r + 1) * 16 + ff] === B_PAWN) mg -= 12; }
+        if (f < 3 || f > 4) mg -= 15;
+        if (r === 0) {
+          let shield = 0;
+          for (let df = -1; df <= 1; df++) {
+            const ff = f + df;
+            if (ff >= 0 && ff < 8 && b[(r + 1) * 16 + ff] === B_PAWN) shield++;
+          }
+          mg -= castlePawnShield[3 - shield];
+        }
+        for (let df = -1; df <= 1; df++) {
+          const ff = f + df;
+          if (ff >= 0 && ff < 8 && bPawns[ff] === 0) mg += 12;
+        }
       }
     }
 
-    // === Space ===
-    if (phase > 12) {
-      let wSpace = 0, bSpace = 0;
-      for (let f = 0; f < 8; f++) {
-        for (let r = 2; r <= 3; r++) {
-          const p = b[r * 16 + f];
-          if (p === W_PAWN || p === W_KNIGHT || p === W_BISHOP) wSpace++;
-        }
-        for (let r = 4; r <= 5; r++) {
-          const p = b[r * 16 + f];
-          if (p === B_PAWN || p === B_KNIGHT || p === B_BISHOP) bSpace++;
-        }
+    // Mobility خفيفة (لكل قطعة خفيفة/ثقيلة)
+    let wMob = 0, bMob = 0;
+    for (let sq = 0; sq < 128; sq++) {
+      if (!isValidSq(sq)) continue;
+      const p = b[sq];
+      if (!p) continue;
+      const t = typeOf(p);
+      if (t === PAWN || t === KING) continue;
+      const c = colorOf(p);
+      let mob = 0;
+      if (t === KNIGHT) {
+        for (const d of N_DIRS) { const x = sq + d; if (isValidSq(x) && (!b[x] || colorOf(b[x]) !== c)) mob++; }
+      } else if (t === BISHOP) {
+        for (const d of B_DIRS) { let x = sq + d; while (isValidSq(x)) { if (!b[x]) { mob++; x += d; } else { if (colorOf(b[x]) !== c) mob++; break; } } }
+      } else if (t === ROOK) {
+        for (const d of R_DIRS) { let x = sq + d; while (isValidSq(x)) { if (!b[x]) { mob++; x += d; } else { if (colorOf(b[x]) !== c) mob++; break; } } }
+      } else if (t === QUEEN) {
+        for (const d of K_DIRS) { let x = sq + d; while (isValidSq(x)) { if (!b[x]) { mob++; x += d; } else { if (colorOf(b[x]) !== c) mob++; break; } } }
       }
-      mg += (wSpace - bSpace) * 2;
+      if (c === WHITE) wMob += mob; else bMob += mob;
     }
+    mg += (wMob - bMob) * 2;
+    eg += (wMob - bMob) * 1;
 
     const ph = Math.min(24, phase) / 24;
     let score = mg * ph + eg * (1 - ph);
-    score += state.turn === WHITE ? 10 : -10;
+    score += state.turn === WHITE ? 15 : -15;
 
-    // === Insufficient material ===
-    const noPawns = wPawnSqs.length === 0 && bPawnSqs.length === 0;
-    if (noPawns && wRooks === 0 && bRooks === 0 && wQueens === 0 && bQueens === 0) {
-      if (wBishops + wKnights <= 1 && bBishops + bKnights <= 1) return 0;
-    }
+    // endgame معالجة: إذا فقط ملوك + بيدق واحد... مقاربة
+    const nonPawnMat = wMat + bMat - (wPawns.reduce((a,b2)=>a+b2,0) * 100) - (bPawns.reduce((a,b2)=>a+b2,0) * 100)
+                      - (wKingSq >= 0 ? PIECE_VALUE[KING] : 0) - (bKingSq >= 0 ? PIECE_VALUE[KING] : 0);
 
-    // === Mop-up (KQ vs K, KR vs K) ===
-    if (noPawns && phase <= 4 && (wQueens + wRooks >= 1 || bQueens + bRooks >= 1)) {
-      const materialDiff = (wQueens * 900 + wRooks * 500 + wBishops * 330 + wKnights * 320)
-                         - (bQueens * 900 + bRooks * 500 + bBishops * 330 + bKnights * 320);
-      if (Math.abs(materialDiff) >= 500) {
-        const winningKingSq = materialDiff > 0 ? wKingSq : bKingSq;
-        const losingKingSq = materialDiff > 0 ? bKingSq : wKingSq;
-        if (winningKingSq >= 0 && losingKingSq >= 0) {
-          const wkf = winningKingSq & 7, wkr = winningKingSq >> 4;
-          const lkf = losingKingSq & 7, lkr = losingKingSq >> 4;
-          const centerDist = Math.abs(3.5 - lkf) + Math.abs(3.5 - lkr);
-          const kingDist = Math.abs(wkf - lkf) + Math.abs(wkr - lkr);
-          const mopup = centerDist * 10 + (14 - kingDist) * 4;
-          if (materialDiff > 0) score += mopup; else score -= mopup;
-        }
+    // ميزة جانبية: if only kings + pawn(s), prefer pushing passed pawn
+    if (phase < 4) {
+      // ادفع الملك نحو مركز
+      if (wKingSq >= 0) {
+        const dist = Math.abs((wKingSq & 7) - 4) + Math.abs((wKingSq >> 4) - 4);
+        score += (8 - dist) * 2;
+      }
+      if (bKingSq >= 0) {
+        const dist = Math.abs((bKingSq & 7) - 4) + Math.abs((bKingSq >> 4) - 4);
+        score -= (8 - dist) * 2;
       }
     }
 
@@ -780,6 +812,7 @@
 
   /* ------------------------ Transposition Table ---------------------- */
   const TT_EXACT = 1, TT_LOWER = 2, TT_UPPER = 3;
+
   class TranspositionTable {
     constructor(sizeMB = 64) {
       const entries = Math.max(1 << 16, Math.floor((sizeMB * 1024 * 1024) / 16));
@@ -794,455 +827,298 @@
       this.bestFrom = new Uint8Array(this.size);
       this.bestTo = new Uint8Array(this.size);
       this.bestPromo = new Uint8Array(this.size);
-      this.generation = 0;
     }
-    clear() { this.keysLo.fill(0); this.keysHi.fill(0); this.depth.fill(0); this.flag.fill(0); }
     index(lo, hi) { return ((lo ^ (hi * 2654435761)) >>> 0) & this.mask; }
     probe(lo, hi) {
       const i = this.index(lo, hi);
       if (this.keysLo[i] === lo && this.keysHi[i] === hi && this.flag[i] !== 0) {
-        return { depth: this.depth[i], score: this.score[i], flag: this.flag[i],
-          bestMove: this.bestFrom[i] ? [this.bestFrom[i], this.bestTo[i], this.bestPromo[i]] : null };
+        return {
+          depth: this.depth[i], score: this.score[i], flag: this.flag[i],
+          bestMove: this.bestFrom[i] ? [this.bestFrom[i], this.bestTo[i], this.bestPromo[i]] : null,
+        };
       }
       return null;
     }
     store(lo, hi, depth, score, flag, bestMove) {
       const i = this.index(lo, hi);
       if (this.keysLo[i] === lo && this.keysHi[i] === hi && this.depth[i] > depth) return;
-      this.keysLo[i] = lo; this.keysHi[i] = hi; this.depth[i] = depth;
-      this.score[i] = score; this.flag[i] = flag;
-      if (bestMove) {
-        this.bestFrom[i] = bestMove[0]; this.bestTo[i] = bestMove[1]; this.bestPromo[i] = bestMove[2] || 0;
-      } else { this.bestFrom[i] = 0; this.bestTo[i] = 0; this.bestPromo[i] = 0; }
+      this.keysLo[i] = lo; this.keysHi[i] = hi;
+      this.depth[i] = depth; this.score[i] = score; this.flag[i] = flag;
+      if (bestMove) { this.bestFrom[i] = bestMove[0]; this.bestTo[i] = bestMove[1]; this.bestPromo[i] = bestMove[2] || 0; }
+      else { this.bestFrom[i] = 0; this.bestTo[i] = 0; this.bestPromo[i] = 0; }
     }
-    newSearch() { this.generation++; }
-  }
-
-  /* ===================== OPENING BOOK ================================ */
-  const OPENING_BOOK = [
-    // Italian / Giuoco Piano
-    { moves: ["e2e4","e7e5","g1f3","b8c6","f1c4","f8c5"], name: "Italian Game" },
-    { moves: ["e2e4","e7e5","g1f3","b8c6","f1c4","g8f6"], name: "Two Knights" },
-    { moves: ["e2e4","e7e5","g1f3","b8c6","f1c4","f8c5","c2c3"], name: "Giuoco Piano" },
-    { moves: ["e2e4","e7e5","g1f3","b8c6","f1c4","f8c5","c2c3","g8f6","d2d3"], name: "Giuoco Pianissimo" },
-    // Ruy Lopez
-    { moves: ["e2e4","e7e5","g1f3","b8c6","f1b5"], name: "Ruy Lopez" },
-    { moves: ["e2e4","e7e5","g1f3","b8c6","f1b5","a7a6"], name: "Morphy Defense" },
-    { moves: ["e2e4","e7e5","g1f3","b8c6","f1b5","a7a6","b5a4","g8f6"], name: "Ruy Lopez Main" },
-    { moves: ["e2e4","e7e5","g1f3","b8c6","f1b5","a7a6","b5a4","g8f6","e1g1"], name: "Ruy Lopez Castled" },
-    { moves: ["e2e4","e7e5","g1f3","b8c6","f1b5","a7a6","b5a4","g8f6","e1g1","f8e7"], name: "Ruy Lopez Closed" },
-    { moves: ["e2e4","e7e5","g1f3","b8c6","f1b5","g8f6"], name: "Berlin Defense" },
-    // Scotch
-    { moves: ["e2e4","e7e5","g1f3","b8c6","d2d4"], name: "Scotch Game" },
-    { moves: ["e2e4","e7e5","g1f3","b8c6","d2d4","e5d4","f3d4"], name: "Scotch Main" },
-    // Sicilian
-    { moves: ["e2e4","c7c5"], name: "Sicilian" },
-    { moves: ["e2e4","c7c5","g1f3","d7d6"], name: "Sicilian Najdorf-ish" },
-    { moves: ["e2e4","c7c5","g1f3","b8c6","d2d4","c5d4"], name: "Sicilian Open" },
-    { moves: ["e2e4","c7c5","b1c3"], name: "Sicilian Closed" },
-    { moves: ["e2e4","c7c5","g1f3","e7e6"], name: "Sicilian French-ish" },
-    { moves: ["e2e4","c7c5","g1f3","g8f6"], name: "Sicilian Nimzowitsch" },
-    // French
-    { moves: ["e2e4","e7e6"], name: "French" },
-    { moves: ["e2e4","e7e6","d2d4","d7d5"], name: "French Main" },
-    { moves: ["e2e4","e7e6","d2d4","d7d5","b1c3"], name: "French Winawer-ish" },
-    // Caro-Kann
-    { moves: ["e2e4","c7c6"], name: "Caro-Kann" },
-    { moves: ["e2e4","c7c6","d2d4","d7d5"], name: "Caro-Kann Main" },
-    { moves: ["e2e4","c7c6","d2d4","d7d5","b1c3"], name: "Caro-Kann Classical" },
-    // Queen's Gambit
-    { moves: ["d2d4","d7d5","c2c4"], name: "Queen's Gambit" },
-    { moves: ["d2d4","d7d5","c2c4","e7e6"], name: "QGD" },
-    { moves: ["d2d4","d7d5","c2c4","c7c6"], name: "Slav Defense" },
-    { moves: ["d2d4","d7d5","c2c4","d5c4"], name: "QGA" },
-    // London
-    { moves: ["d2d4","d7d5","g1f3","g8f6","c1f4"], name: "London System" },
-    { moves: ["d2d4","g8f6","g1f3","e7e6","c1f4"], name: "London vs Indian" },
-    { moves: ["d2d4","g8f6","g1f3","e7e6","c1f4","b7b6"], name: "London vs Queen's Indian" },
-    // Catalan
-    { moves: ["d2d4","g8f6","c2c4","e7e6","g2g3"], name: "Catalan" },
-    { moves: ["d2d4","g8f6","c2c4","e7e6","g2g3","d7d5","f1g2"], name: "Catalan Main" },
-    // King's Indian
-    { moves: ["d2d4","g8f6","c2c4","g7g6"], name: "King's Indian" },
-    { moves: ["d2d4","g8f6","c2c4","g7g6","b1c3","f8g7"], name: "KID Main" },
-    { moves: ["d2d4","g8f6","c2c4","g7g6","b1c3","d7d5"], name: "Grünfeld" },
-    // English
-    { moves: ["c2c4"], name: "English" },
-    { moves: ["c2c4","e7e5"], name: "English Reversed Sicilian" },
-    { moves: ["c2c4","g8f6","b1c3"], name: "English Main" },
-    { moves: ["c2c4","e7e6","g1f3","d7d5"], name: "English vs French-ish" },
-    // Dutch
-    { moves: ["d2d4","f7f5"], name: "Dutch" },
-    { moves: ["d2d4","f7f5","g2g3","g8f6"], name: "Dutch Leningrad" },
-    // Vienna
-    { moves: ["e2e4","e7e5","b1c3"], name: "Vienna Game" },
-    { moves: ["e2e4","e7e5","b1c3","g8f6"], name: "Vienna Main" },
-    // King's Gambit
-    { moves: ["e2e4","e7e5","f2f4"], name: "King's Gambit" },
-    // Pirc / Modern
-    { moves: ["e2e4","d7d6","d2d4","g8f6"], name: "Pirc" },
-    { moves: ["e2e4","g7g6"], name: "Modern Defense" },
-    // Alekhine
-    { moves: ["e2e4","g8f6"], name: "Alekhine" },
-    // Scandinavian
-    { moves: ["e2e4","d7d5"], name: "Scandinavian" },
-    { moves: ["e2e4","d7d5","e4d5","d8d5"], name: "Scandinavian Main" },
-    // Four Knights / Petrov
-    { moves: ["e2e4","e7e5","g1f3","b8c6","b1c3","g8f6"], name: "Four Knights" },
-    { moves: ["e2e4","e7e5","g1f3","g8f6"], name: "Petrov Defense" },
-    // Budapest
-    { moves: ["d2d4","g8f6","c2c4","e7e5"], name: "Budapest Gambit" },
-    // Vienna → 1.e4 e5 2.Nc3 Nf6 3.Bc4
-    { moves: ["e2e4","e7e5","b1c3","g8f6","f1c4"], name: "Vienna with Bc4" },
-    // Bird
-    { moves: ["f2f4"], name: "Bird's Opening" },
-    // Nimzo-Indian
-    { moves: ["d2d4","g8f6","c2c4","e7e6","b1c3","f8b4"], name: "Nimzo-Indian" },
-    // Queen's Indian
-    { moves: ["d2d4","g8f6","c2c4","e7e6","g1f3","b7b6"], name: "Queen's Indian" },
-    // Benoni
-    { moves: ["d2d4","g8f6","c2c4","c7c5"], name: "Benoni" },
-    // Benko
-    { moves: ["d2d4","g8f6","c2c4","c7c5","d4d5","b7b5"], name: "Benko Gambit" },
-  ];
-
-  class LearningBook {
-    constructor() {
-      this.stats = new Map();
-      this.bookPenalty = new Map();
-      this.enabled = true;
-      this.penaltyPerLoss = 300;
-      this.maxPenalty = 700;
-      this.rewardPerWin = 70;
-      this.maxReward = 240;
-    }
-    static posKey(state) { return state.hashLo + ":" + state.hashHi; }
-    recordMove(state, uci, result) {
-      if (!this.enabled) return;
-      const pk = LearningBook.posKey(state);
-      if (!this.stats.has(pk)) this.stats.set(pk, {});
-      const pos = this.stats.get(pk);
-      if (!pos[uci]) pos[uci] = { w: 0, l: 0 };
-      if (result === 'loss') pos[uci].l++;
-      else if (result === 'win') pos[uci].w++;
-      let bp = this.bookPenalty.get(pk) || {};
-      bp[uci] = Math.min(this.maxPenalty, pos[uci].l * this.penaltyPerLoss)
-              - Math.min(this.maxReward, pos[uci].w * this.rewardPerWin);
-      this.bookPenalty.set(pk, bp);
-    }
-    getAdjustment(state, uci) {
-      if (!this.enabled) return 0;
-      const pk = LearningBook.posKey(state);
-      const bp = this.bookPenalty.get(pk);
-      if (!bp) return 0;
-      return bp[uci] || 0;
-    }
-    export() {
-      return { stats: Array.from(this.stats.entries()), bookPenalty: Array.from(this.bookPenalty.entries()) };
-    }
-    import(data) {
-      if (!data) return;
-      this.stats = new Map(data.stats || []);
-      this.bookPenalty = new Map(data.bookPenalty || []);
-    }
-    saveToStorage(key = "chessEnginePro_learning") {
-      if (typeof localStorage === "undefined") return false;
-      try { localStorage.setItem(key, JSON.stringify(this.export())); return true; }
-      catch (e) { return false; }
-    }
-    loadFromStorage(key = "chessEnginePro_learning") {
-      if (typeof localStorage === "undefined") return false;
-      try {
-        const raw = localStorage.getItem(key);
-        if (!raw) return false;
-        this.import(JSON.parse(raw)); return true;
-      } catch (e) { return false; }
-    }
-    clear() { this.stats.clear(); this.bookPenalty.clear(); }
-  }
-
-  function findBookMove(state, learningBook) {
-    if (!state.uciHistory || state.uciHistory.length === 0) {
-      const firstMoves = new Set();
-      for (const entry of OPENING_BOOK) firstMoves.add(entry.moves[0]);
-      const arr = Array.from(firstMoves);
-      return arr[Math.floor(Math.random() * arr.length)];
-    }
-    const history = state.uciHistory.join(" ");
-    const histLen = state.uciHistory.length;
-    const candidates = [];
-    const legal = generateLegalMoves(state);
-    const legalUcis = legal.map(m => moveToUci(m));
-    for (const entry of OPENING_BOOK) {
-      if (entry.moves.length <= histLen) continue;
-      const prefix = entry.moves.slice(0, histLen).join(" ");
-      if (prefix === history) {
-        const nextMove = entry.moves[histLen];
-        if (legalUcis.includes(nextMove)) {
-          let adj = 0;
-          if (learningBook && learningBook.enabled) adj = learningBook.getAdjustment(state, nextMove);
-          candidates.push({ uci: nextMove, name: entry.name, adj });
-        }
-      }
-    }
-    if (candidates.length === 0) return null;
-    candidates.sort((a, b) => a.adj - b.adj);
-    if (candidates.length === 1) return candidates[0].uci;
-    const bestAdj = candidates[0].adj;
-    const topCandidates = candidates.filter(c => c.adj <= bestAdj + 100);
-    return topCandidates[Math.floor(Math.random() * topCandidates.length)].uci;
   }
 
   /* ------------------------------ Search ----------------------------- */
   class Searcher {
-    constructor(ttSizeMB = 64, learning = null) {
+    constructor(ttSizeMB = 128) {
       this.tt = new TranspositionTable(ttSizeMB);
-      this.learning = learning || new LearningBook();
       this.nodes = 0;
-      this.killers = [[], [], []]; // 3 plies
+      this.killers = [];
       this.history = new Map();
-      this.counterMove = new Map(); // counter-move heuristic
+      this.counterMove = new Map(); // from*128+to => [from,to]
       this.startTime = 0;
-      this.softLimit = 0;
-      this.hardLimit = 0;
+      this.timeLimit = 0;
       this.stop = false;
       this.bestMoveRoot = null;
-      this.bestScoreRoot = 0;
       this.maxDepth = 0;
       this.repetitionHash = new Map();
-      this.rootMoves = [];
-      this.useBook = true;
-      this.bookMoveChance = 1.0;
-      this.contempt = 15;
+      this.nodeLimit = 0;
     }
 
     reset() {
-      this.nodes = 0;
-      this.killers = [[], [], []];
-      this.history = new Map();
+      this.nodes = 0; this.killers = []; this.history = new Map();
       this.counterMove = new Map();
-      this.stop = false;
-      this.bestMoveRoot = null;
-      this.bestScoreRoot = 0;
-      this.maxDepth = 0;
+      this.stop = false; this.bestMoveRoot = null; this.maxDepth = 0;
       this.repetitionHash = new Map();
-      this.rootMoves = [];
     }
 
     timeUp() {
-      if (this.hardLimit <= 0) return false;
-      if ((this.nodes & 511) !== 0) return false;
-      return Date.now() - this.startTime >= this.hardLimit;
-    }
-
-    softTimeUp() {
-      if (this.softLimit <= 0) return false;
-      return Date.now() - this.startTime >= this.softLimit;
+      if ((this.nodes & 2047) !== 0) return false;
+      if (this.nodeLimit && this.nodes >= this.nodeLimit) return true;
+      if (this.timeLimit <= 0) return false;
+      return Date.now() - this.startTime >= this.timeLimit;
     }
 
     repKey(state) { return state.hashLo + ":" + state.hashHi; }
-    pushRep(state) { const k = this.repKey(state); this.repetitionHash.set(k, (this.repetitionHash.get(k) || 0) + 1); }
-    popRep(state) { const k = this.repKey(state); const c = (this.repetitionHash.get(k) || 0) - 1; if (c <= 0) this.repetitionHash.delete(k); else this.repetitionHash.set(k, c); }
-    isRep(state) { return (this.repetitionHash.get(this.repKey(state)) || 0) >= 1; }
-
-    addKiller(ply, mv) {
-      const slot = this.killers[ply] || (this.killers[ply] = []);
-      if (slot[0] && slot[0][0] === mv[0] && slot[0][1] === mv[1]) return;
-      slot.unshift([mv[0], mv[1]]);
-      if (slot.length > 2) slot.pop();
+    pushRep(state) {
+      const k = this.repKey(state);
+      this.repetitionHash.set(k, (this.repetitionHash.get(k) || 0) + 1);
     }
-
-    isKiller(ply, mv) {
-      const slot = this.killers[ply];
-      if (!slot) return -1;
-      for (let i = 0; i < slot.length; i++) if (slot[i][0] === mv[0] && slot[i][1] === mv[1]) return i;
-      return -1;
+    popRep(state) {
+      const k = this.repKey(state);
+      const c = (this.repetitionHash.get(k) || 0) - 1;
+      if (c <= 0) this.repetitionHash.delete(k);
+      else this.repetitionHash.set(k, c);
     }
+    isRep(state) { return (this.repetitionHash.get(this.repKey(state)) || 0) >= 2; }
 
-    scoreMove(state, mv, ttMove, ply) {
+    scoreMove(state, mv, ttMove, ply, prevMove) {
       const [from, to, promo] = mv;
       const b = state.board;
-      if (ttMove && from === ttMove[0] && to === ttMove[1] && (promo || 0) === (ttMove[2] || 0)) return 10_000_000;
+      if (ttMove && from === ttMove[0] && to === ttMove[1] && (promo || 0) === (ttMove[2] || 0)) return 20000000;
       const victim = b[to];
       let s = 0;
       if (victim) {
-        s += 1_000_000 + SEE_VAL[typeOf(victim)] * 10 - SEE_VAL[typeOf(b[from])];
+        // MVV-LVA
+        s += 1000000 + SEE_VAL[typeOf(victim)] * 16 - SEE_VAL[typeOf(b[from])];
       }
-      if (promo) s += 500_000 + SEE_VAL[promo];
-      const kIdx = this.isKiller(ply, mv);
-      if (kIdx >= 0) s += 90_000 - kIdx * 1000;
+      if (promo) s += 900000 + SEE_VAL[promo] * 4;
+      // killers
+      for (let i = 0; i < this.killers.length; i++) {
+        const k = this.killers[i];
+        if (k && k[0] === from && k[1] === to) { s += 800000 - i * 10000; break; }
+      }
       // counter-move
-      const cmKey = from * 128 + to;
-      if (this.counterMove.has(cmKey)) s += 5000;
-      // history
-      const hKey = from * 128 + to;
-      s += Math.min(this.history.get(hKey) || 0, 8000);
-      // learning
-      if (!victim && !promo && this.learning && this.learning.enabled) {
-        s -= this.learning.getAdjustment(state, moveToUci(mv));
+      if (prevMove) {
+        const cm = this.counterMove.get(prevMove[0] * 128 + prevMove[1]);
+        if (cm && cm[0] === from && cm[1] === to) s += 700000;
       }
+      const key = from * 128 + to;
+      s += Math.min(this.history.get(key) || 0, 64000);
       return s;
     }
 
     quiescence(state, alpha, beta, ply) {
       this.nodes++;
       if (this.timeUp()) { this.stop = true; return 0; }
+
+      // In-check: كويس نولّد كل الحركات
+      const inCheck = isInCheck(state, state.turn);
+      if (inCheck) {
+        // evasion: كل الحركات القانونية
+        const pseudo = generatePseudoMoves(state);
+        const legal = [];
+        for (const mv of pseudo) {
+          applyMove(state, mv[0], mv[1], mv[2]);
+          if (!isInCheck(state, 1 - state.turn)) legal.push(mv);
+          undoMove(state);
+        }
+        if (legal.length === 0) return -MATE + ply;
+        if (ply > 40) return 0;
+        let best = -INF;
+        for (const mv of legal) {
+          applyMove(state, mv[0], mv[1], mv[2]);
+          const sc = -this.quiescence(state, -beta, -alpha, ply + 1);
+          undoMove(state);
+          if (this.stop) return 0;
+          if (sc > best) best = sc;
+          if (sc > alpha) alpha = sc;
+          if (alpha >= beta) return beta;
+        }
+        return best;
+      }
+
       const stand = evaluate(state);
       if (stand >= beta) return beta;
       if (stand > alpha) alpha = stand;
-      let moves = generatePseudoMoves(state);
-      moves = moves.filter(mv => {
+
+      const moves = generatePseudoMoves(state).filter(mv => {
         const victim = state.board[mv[1]];
-        if (!victim && !mv[2]) {
-          if (mv[1] === state.ep && typeOf(state.board[mv[0]]) === PAWN) return true;
-          return false;
-        }
-        return true;
+        if (victim) return true;
+        if (mv[2]) return true;
+        if (mv[1] === state.ep && typeOf(state.board[mv[0]]) === PAWN) return true;
+        return false;
       });
-      const scored = moves.map(mv => {
+
+      // SEE pruning + delta pruning
+      const scored = [];
+      for (const mv of moves) {
         const victim = state.board[mv[1]];
-        let s = victim ? SEE_VAL[typeOf(victim)] * 10 - SEE_VAL[typeOf(state.board[mv[0]])] : 0;
-        if (mv[2]) s += 5000;
-        return { mv, s };
-      }).sort((a, b) => b.s - a.s);
-      const us = state.turn;
+        let seVal = 0;
+        if (victim) seVal = SEE_VAL[typeOf(victim)];
+        if (mv[2]) seVal += SEE_VAL[mv[2]];
+        // delta pruning
+        if (stand + seVal + 200 < alpha) continue;
+        // SEE pruning: تجاهل الأكل الذي يخسر مادة كبيرة
+        if (victim && see(state, mv[0], mv[1]) < -50 && seVal < 900) continue;
+        scored.push({ mv, s: seVal * 16 - SEE_VAL[typeOf(state.board[mv[0]])] });
+      }
+      scored.sort((a, b) => b.s - a.s);
+
+      let best = alpha;
       for (const { mv } of scored) {
-        const victim = state.board[mv[1]];
-        const attacker = state.board[mv[0]];
-        if (victim && !mv[2] && SEE_VAL[typeOf(victim)] < SEE_VAL[typeOf(attacker)]) {
-          if (see(state, mv[0], mv[1], 0) < 0) continue;
-        }
-        // Delta pruning
-        if (!state.turn && false) {}
-        if (!mv[2] && victim && stand + SEE_VAL[typeOf(victim)] + 200 < alpha) continue;
         applyMove(state, mv[0], mv[1], mv[2]);
-        if (isInCheck(state, us)) { undoMove(state); continue; }
-        const score = -this.quiescence(state, -beta, -alpha, ply + 1);
+        const sc = -this.quiescence(state, -beta, -alpha, ply + 1);
         undoMove(state);
         if (this.stop) return 0;
-        if (score >= beta) return beta;
-        if (score > alpha) alpha = score;
+        if (sc > best) {
+          best = sc;
+          if (sc > alpha) alpha = sc;
+          if (alpha >= beta) return beta;
+        }
       }
-      return alpha;
+      return best;
     }
 
-    alphaBeta(state, depth, alpha, beta, ply, allowNull, isPV) {
+    alphaBeta(state, depth, alpha, beta, ply, allowNull, isPV, prevMove) {
       this.nodes++;
       if (this.timeUp()) { this.stop = true; return 0; }
+
       if (ply > 0) {
-        if (this.isRep(state)) return this.contempt;
+        if (this.isRep(state)) return 0;
         if (state.halfmove >= 100) return 0;
+        if (ply >= 100) return 0;
         const mAlpha = Math.max(alpha, -MATE + ply);
         const mBeta  = Math.min(beta,   MATE - ply - 1);
         if (mAlpha >= mBeta) return mAlpha;
         alpha = mAlpha; beta = mBeta;
       }
+
       const inCheck = isInCheck(state, state.turn);
       if (inCheck) depth++;
+
       if (depth <= 0) return this.quiescence(state, alpha, beta, ply);
+
       const isRoot = ply === 0;
+
       const tt = this.tt.probe(state.hashLo, state.hashHi);
       let ttMove = null;
       if (tt) {
         ttMove = tt.bestMove;
-        if (!isRoot && tt.depth >= depth) {
+        if (!isPV && tt.depth >= depth) {
           if (tt.flag === TT_EXACT) return tt.score;
           if (tt.flag === TT_LOWER && tt.score >= beta) return tt.score;
           if (tt.flag === TT_UPPER && tt.score <= alpha) return tt.score;
         }
       }
 
-      // Internal iterative deepening
-      if (!ttMove && depth >= 5 && !inCheck) {
-        this.alphaBeta(state, depth - 2, alpha, beta, ply, false, false);
+      // IID
+      if (!ttMove && depth >= 5 && !inCheck && isPV) {
+        this.alphaBeta(state, depth - 2, alpha, beta, ply, false, false, prevMove);
         const t2 = this.tt.probe(state.hashLo, state.hashHi);
         if (t2) ttMove = t2.bestMove;
       }
 
-      // Null move pruning
-      if (allowNull && !isPV && depth >= 3 && !inCheck && this.hasNonPawnMaterial(state) && beta < MATE_IN_MAX && Math.abs(beta) < MATE_IN_MAX) {
-        const savedEp = state.ep, savedCastling = state.castling, savedHalf = state.halfmove;
+      // Null-move pruning
+      if (allowNull && !isPV && !inCheck && depth >= 3 && this.hasNonPawnMaterial(state) && beta < MATE_IN_MAX) {
+        const savedEp = state.ep, savedHalf = state.halfmove;
         const savedKings = state.kings.slice();
         const savedLo = state.hashLo, savedHi = state.hashHi;
         state.turn = 1 - state.turn;
         state.ep = -1;
-        computeHash(state);
-        state.history.push({ nullMove: true });
+        state.hashLo ^= Z_TURN_LO[0] ^ Z_TURN_LO[1] ^ (savedEp >= 0 ? Z_EP_LO[savedEp] : 0);
+        state.hashHi ^= Z_TURN_HI[0] ^ Z_TURN_HI[1] ^ (savedEp >= 0 ? Z_EP_HI[savedEp] : 0);
+        state.history.push({ nullMove: true, savedEp, savedHalf, savedKings, savedLo, savedHi });
         const R = 2 + Math.floor(depth / 4);
-        const score = -this.alphaBeta(state, depth - 1 - R, -beta, -beta + 1, ply + 1, false, false);
-        state.history.pop();
+        const score = -this.alphaBeta(state, depth - 1 - R, -beta, -beta + 1, ply + 1, false, false, null);
+        const h = state.history.pop();
         state.turn = 1 - state.turn;
-        state.ep = savedEp; state.castling = savedCastling; state.halfmove = savedHalf;
-        state.kings = savedKings; state.hashLo = savedLo; state.hashHi = savedHi;
+        state.ep = h.savedEp;
+        state.halfmove = h.savedHalf;
+        state.kings = h.savedKings;
+        state.hashLo = h.savedLo; state.hashHi = h.savedHi;
         if (this.stop) return 0;
         if (score >= beta) return beta;
       }
 
-      // Reverse futility pruning
-      if (!isPV && !inCheck && depth <= 6 && Math.abs(beta) < MATE_IN_MAX) {
+      // Reverse futility
+      if (!isPV && !inCheck && depth <= 4 && Math.abs(beta) < MATE_IN_MAX) {
         const stand = evaluate(state);
-        const margin = 100 + 90 * depth;
-        if (stand - margin >= beta) return stand;
+        if (stand - 100 * depth >= beta) return stand;
+      }
+
+      // Razoring
+      if (!isPV && !inCheck && depth <= 3 && Math.abs(beta) < MATE_IN_MAX) {
+        const stand = evaluate(state);
+        if (stand + 300 * depth <= alpha) {
+          const q = this.quiescence(state, alpha, beta, ply);
+          if (q <= alpha) return q;
+        }
       }
 
       const us = state.turn;
       const moves = generatePseudoMoves(state);
-      const scored = moves.map(mv => ({ mv, s: this.scoreMove(state, mv, ttMove, ply) }));
+      const scored = moves.map(mv => ({ mv, s: this.scoreMove(state, mv, ttMove, ply, prevMove) }));
       scored.sort((a, b) => b.s - a.s);
-      let bestScore = -INF, bestMove = null, legalCount = 0;
+
+      let bestScore = -INF;
+      let bestMove = null;
+      let legalCount = 0;
       const origAlpha = alpha;
-      const staticEval = evaluate(state);
+      let donePVS = false;
 
       for (let i = 0; i < scored.length; i++) {
         const mv = scored[i].mv;
-        const victim = state.board[mv[1]];
-
-        // Late move pruning (LMP)
-        if (!isPV && !inCheck && depth <= 4 && legalCount >= 3 + depth * depth && !mv[2]) {
-          if (!victim) continue;
-        }
-
         applyMove(state, mv[0], mv[1], mv[2]);
         if (isInCheck(state, us)) { undoMove(state); continue; }
         legalCount++;
-        const isQuiet = !victim && !mv[2];
+        const isQuiet = !state.board[mv[1]] && !mv[2];
 
-        // Futility pruning
-        if (!isPV && !inCheck && depth <= 4 && legalCount > 1 && isQuiet &&
-            staticEval + 90 + 110 * depth < alpha && Math.abs(alpha) < MATE_IN_MAX) {
-          undoMove(state); continue;
+        // Futility pruning (quiet moves at shallow depth)
+        if (!isPV && !inCheck && depth <= 3 && legalCount > 1 && isQuiet &&
+            Math.abs(alpha) < MATE_IN_MAX) {
+          const futilityMargin = 100 + 120 * depth;
+          const standEval = evaluate(state) + futilityMargin;
+          if (standEval <= alpha) { undoMove(state); continue; }
         }
 
         let score;
+        this.pushRep(state);
         if (legalCount === 1) {
-          this.pushRep(state);
-          score = -this.alphaBeta(state, depth - 1, -beta, -alpha, ply + 1, true, isPV);
-          this.popRep(state);
+          score = -this.alphaBeta(state, depth - 1, -beta, -alpha, ply + 1, true, isPV, mv);
         } else {
+          // LMR
           let reduction = 0;
           if (depth >= 3 && legalCount > 3 && isQuiet && !inCheck) {
             reduction = 1;
             if (legalCount > 6) reduction++;
-            if (depth >= 6 && legalCount > 10) reduction++;
-            if (depth >= 10 && legalCount > 15) reduction++;
-            if (isPV) reduction--;
-            if (reduction < 0) reduction = 0;
+            if (depth > 6 && legalCount > 10) reduction++;
+            if (isPV) reduction = Math.max(0, reduction - 1);
             if (reduction >= depth) reduction = depth - 1;
           }
-          this.pushRep(state);
-          score = -this.alphaBeta(state, depth - 1 - reduction, -alpha - 1, -alpha, ply + 1, true, false);
-          // Re-search
+          score = -this.alphaBeta(state, depth - 1 - reduction, -alpha - 1, -alpha, ply + 1, true, false, mv);
           if (score > alpha && reduction > 0) {
-            score = -this.alphaBeta(state, depth - 1, -alpha - 1, -alpha, ply + 1, true, false);
+            score = -this.alphaBeta(state, depth - 1, -alpha - 1, -alpha, ply + 1, true, false, mv);
           }
           if (score > alpha && score < beta && isPV) {
-            score = -this.alphaBeta(state, depth - 1, -beta, -alpha, ply + 1, true, true);
+            score = -this.alphaBeta(state, depth - 1, -beta, -alpha, ply + 1, true, true, mv);
           }
-          this.popRep(state);
         }
+        this.popRep(state);
         undoMove(state);
         if (this.stop) return 0;
-        if (isRoot) this.rootMoves.push({ mv, score });
+
         if (score > bestScore) {
           bestScore = score;
           bestMove = mv;
@@ -1251,10 +1127,14 @@
             alpha = score;
             if (score >= beta) {
               if (isQuiet) {
-                this.addKiller(ply, mv);
+                // killer
+                this.killers.unshift([mv[0], mv[1]]);
+                if (this.killers.length > 2) this.killers.pop();
+                // history
                 const key = mv[0] * 128 + mv[1];
-                this.history.set(key, Math.min(8000, (this.history.get(key) || 0) + depth * depth));
-                this.counterMove.set(mv[0] * 128 + mv[1], true);
+                this.history.set(key, Math.min((this.history.get(key) || 0) + depth * depth, 32000));
+                // counter-move
+                if (prevMove) this.counterMove.set(prevMove[0] * 128 + prevMove[1], [mv[0], mv[1]]);
               }
               this.tt.store(state.hashLo, state.hashHi, depth, beta, TT_LOWER, mv);
               return beta;
@@ -1262,15 +1142,19 @@
           }
         }
       }
+
       if (legalCount === 0) return inCheck ? -MATE + ply : 0;
+
       let flag = TT_EXACT;
       if (bestScore <= origAlpha) flag = TT_UPPER;
+      else if (bestScore >= beta) flag = TT_LOWER;
       this.tt.store(state.hashLo, state.hashHi, depth, bestScore, flag, bestMove);
       return bestScore;
     }
 
     hasNonPawnMaterial(state) {
-      const b = state.board, us = state.turn;
+      const b = state.board;
+      const us = state.turn;
       for (let sq = 0; sq < 128; sq++) {
         if (!isValidSq(sq)) continue;
         const p = b[sq];
@@ -1283,91 +1167,50 @@
 
     search(state, opts = {}) {
       this.reset();
-      this.tt.newSearch();
       this.startTime = Date.now();
-      const tl = opts.timeLimit || 0;
-      this.softLimit = tl ? Math.floor(tl * 0.55) : 0;
-      this.hardLimit = tl;
-      this.maxDepth = opts.depth || 5;
-      this.useBook = opts.useBook !== undefined ? opts.useBook : true;
-      this.bookMoveChance = opts.bookChance !== undefined ? opts.bookChance : 1.0;
-      const rootVariety = opts.rootVariety !== undefined ? opts.rootVariety : 25;
-
-      // Opening book
-      if (this.useBook && state.uciHistory && state.uciHistory.length < 24) {
-        if (Math.random() < this.bookMoveChance) {
-          const bookUci = findBookMove(state, this.learning);
-          if (bookUci) {
-            const legal = generateLegalMoves(state);
-            const mv = legal.find(m => moveToUci(m) === bookUci);
-            if (mv) return { move: mv, score: 0, nodes: 0, depth: 0, time: 0, book: true };
-          }
-        }
-      }
+      this.timeLimit = opts.timeLimit || 0;
+      this.nodeLimit = opts.nodeLimit || 0;
+      const maxDepth = opts.depth || 6;
+      this.maxDepth = maxDepth;
 
       this.repetitionHash.set(this.repKey(state), 1);
-      let bestMove = null, bestScore = 0, prevScore = 0;
-      const rootLegal = generateLegalMoves(state);
-      if (rootLegal.length === 0) return { move: null, score: -MATE, nodes: 0, depth: 0, time: 0 };
-      if (rootLegal.length === 1) return { move: rootLegal[0], score: 0, nodes: 1, depth: 0, time: 0 };
 
-      for (let d = 1; d <= this.maxDepth; d++) {
-        this.killers = [[], [], []];
-        this.rootMoves = [];
+      let bestMove = null, bestScore = 0, finalDepth = 0;
+      let prevScore = 0;
+
+      for (let d = 1; d <= maxDepth; d++) {
+        this.killers = [];
         let alpha = -INF, beta = INF;
+        // Aspiration windows
         if (d >= 4 && Math.abs(prevScore) < MATE_IN_MAX) {
-          alpha = prevScore - 50;
-          beta = prevScore + 50;
-        }
-        let score = 0, failLow = false, failHigh = false;
-        let iterations = 0;
-        while (iterations < 6) {
-          iterations++;
-          this.bestMoveRoot = null;
-          score = this.alphaBeta(state, d, alpha, beta, 0, true, true);
-          if (this.stop) break;
-          if (score <= alpha) {
-            failLow = true;
-            alpha = Math.max(-INF, alpha - (failLow ? 200 : 100));
-            if (alpha === -INF) break;
-            continue;
+          let window = 25;
+          alpha = prevScore - window;
+          beta  = prevScore + window;
+          let reSearchCount = 0;
+          while (true) {
+            this.bestMoveRoot = null;
+            const s = this.alphaBeta(state, d, alpha, beta, 0, true, true, null);
+            if (this.stop) break;
+            if (s <= alpha) { alpha = Math.max(-INF, alpha - window); window *= 2; reSearchCount++; }
+            else if (s >= beta) { beta = Math.min(INF, beta + window); window *= 2; reSearchCount++; }
+            else { bestScore = s; break; }
+            if (reSearchCount > 5) { alpha = -INF; beta = INF; }
           }
-          if (score >= beta) {
-            failHigh = true;
-            beta = Math.min(INF, beta + (failHigh ? 200 : 100));
-            continue;
-          }
-          break;
+        } else {
+          bestScore = this.alphaBeta(state, d, alpha, beta, 0, true, true, null);
         }
-        if (this.stop) break;
-        if (this.bestMoveRoot) { bestMove = this.bestMoveRoot; bestScore = score; }
-        prevScore = score;
-        if (opts.onDepth) opts.onDepth(d, score, this.bestMoveRoot, this.nodes, Date.now() - this.startTime);
-        if (Math.abs(score) > MATE_IN_MAX) break;
-        // Soft time check: stop if used more than softLimit and depth >= 5
-        if (this.softLimit > 0 && d >= 5 && this.softTimeUp()) break;
-        // Also stop if estimated next iteration would exceed hard limit
-        if (this.hardLimit > 0 && d >= 4) {
-          const elapsed = Date.now() - this.startTime;
-          const estNext = elapsed * 2.5;
-          if (elapsed + estNext > this.hardLimit) break;
-        }
-      }
 
-      // Root randomization
-      if (rootVariety > 0 && this.rootMoves.length > 1 && bestMove) {
-        const candidates = this.rootMoves.filter(rm =>
-          Math.abs(rm.score - bestScore) <= rootVariety && rm.score > -MATE_IN_MAX
-        );
-        if (candidates.length > 1) {
-          // biased random selection
-          candidates.sort((a, b) => b.score - a.score);
-          const r = Math.random();
-          let idx = 0;
-          if (r > 0.5 && candidates.length > 1) idx = 1;
-          if (r > 0.85 && candidates.length > 2) idx = 2;
-          bestMove = candidates[idx].mv;
-          bestScore = candidates[idx].score;
+        if (this.stop) break;
+        if (this.bestMoveRoot) { bestMove = this.bestMoveRoot; finalDepth = d; }
+        prevScore = bestScore;
+
+        if (opts.onDepth) opts.onDepth(d, bestScore, bestMove, this.nodes, Date.now() - this.startTime);
+        if (Math.abs(bestScore) > MATE_IN_MAX) break;
+
+        // توقّف إذا استهلكنا 50%+ من الوقت ولم يتبقَّ وقت لجولة أخرى بنفس المدة
+        if (this.timeLimit > 0) {
+          const elapsed = Date.now() - this.startTime;
+          if (elapsed > this.timeLimit * 0.55) break;
         }
       }
 
@@ -1375,11 +1218,14 @@
         const tt = this.tt.probe(state.hashLo, state.hashHi);
         if (tt && tt.bestMove) bestMove = tt.bestMove;
       }
-      if (!bestMove && rootLegal.length) bestMove = rootLegal[0];
+      if (!bestMove) {
+        const legal = generateLegalMoves(state);
+        if (legal.length) bestMove = legal[0];
+      }
 
       return {
         move: bestMove, score: bestScore, nodes: this.nodes,
-        depth: this.maxDepth, time: Date.now() - this.startTime,
+        depth: finalDepth, time: Date.now() - this.startTime,
       };
     }
   }
@@ -1395,92 +1241,59 @@
     else if (promo === KNIGHT) s += "n";
     return s;
   }
-  function uciToMove(state, uci) {
-    if (!uci || uci.length < 4) return null;
-    const from = nameToSq(uci.slice(0, 2));
-    const to = nameToSq(uci.slice(2, 4));
-    let promo = 0;
-    if (uci.length > 4) {
-      const c = uci[4];
-      promo = c === "q" ? QUEEN : c === "r" ? ROOK : c === "b" ? BISHOP : c === "n" ? KNIGHT : 0;
-    }
-    const legal = generateLegalMoves(state);
-    for (const mv of legal) {
-      if (mv[0] === from && mv[1] === to && (mv[2] || 0) === promo) return mv;
-    }
-    return null;
-  }
+
+  /* ------------------------ Opening Book (mini) ---------------------- */
+  const OPENING_BOOK = {
+    // بذرة افتتاحيات شائعة (UCI)
+    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1": ["e2e4", "d2d4", "g1f3", "c2c4"],
+    "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1": ["e7e5", "c7c5", "e7e6", "c7c6"],
+    "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2": ["g1f3", "f1c4", "b1c3"],
+    "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2": ["g1f3", "b1c3", "d2d4"],
+    "rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1": ["d7d5", "g8f6", "e7e6"],
+    "rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq d6 0 2": ["c2c4", "g1f3", "b1c3"],
+  };
 
   class ChessEngine {
     constructor(opts = {}) {
-      this.ttSizeMB = opts.ttSizeMB || 64;
-      this.defaultDepth = opts.depth || 5;
-      this.learning = new LearningBook();
-      this.searcher = new Searcher(this.ttSizeMB, this.learning);
+      this.ttSizeMB = opts.ttSizeMB || 128;
+      this.defaultDepth = opts.depth || 6;
+      this.searcher = new Searcher(this.ttSizeMB);
+      this.useBook = opts.useBook !== false;
       this.ready = true;
-      this.uciHistory = [];
-      this.bookEnabled = opts.bookEnabled !== false;
     }
 
     init() { return Promise.resolve(); }
 
-    learnGame(engineColor, moves, result) {
-      for (const m of moves) {
-        try {
-          const st = parseFEN(m.fen);
-          if (colorOf(st.turn) === (engineColor === 'white' ? WHITE : BLACK)) {
-            this.learning.recordMove(st, m.uci, result === 'win' ? 'loss' : result === 'loss' ? 'win' : 'draw');
-          }
-        } catch(e) {}
-      }
-    }
-
     async getBestMove(fen, opts = {}) {
-      const state = parseFEN(fen);
-      state.uciHistory = opts.uciHistory ? opts.uciHistory.slice() : [];
+      // الكتاب
+      if (this.useBook && (opts.depth || this.defaultDepth) <= 8) {
+        const key = fen.trim();
+        const bookMoves = OPENING_BOOK[key];
+        if (bookMoves && bookMoves.length) {
+          const pick = bookMoves[Math.floor(Math.random() * bookMoves.length)];
+          return { move: pick, score: 0, nodes: 0, depth: 0, time: 0, book: true };
+        }
+      }
 
+      const state = parseFEN(fen);
       const depth = opts.depth || this.defaultDepth;
       const res = this.searcher.search(state, {
-        depth,
-        timeLimit: opts.timeLimit || 0,
-        useBook: opts.useBook !== undefined ? opts.useBook : this.bookEnabled,
-        bookChance: opts.bookChance !== undefined ? opts.bookChance : 1.0,
-        rootVariety: opts.rootVariety !== undefined ? opts.rootVariety : 25,
+        depth, timeLimit: opts.timeLimit || 0, nodeLimit: opts.nodeLimit || 0,
         onDepth: opts.onDepth,
       });
-
-      const uci = moveToUci(res.move);
-      if (uci && !opts.uciHistory) this.uciHistory.push(uci);
-
       return {
-        move: uci, score: res.score, nodes: res.nodes,
-        depth: res.depth, time: res.time, book: !!res.book,
+        move: moveToUci(res.move),
+        score: res.score, nodes: res.nodes, depth: res.depth, time: res.time,
       };
     }
 
     async analyze(fen, opts = {}) { return this.getBestMove(fen, opts); }
 
-    learnFromLoss(history) {
-      for (const h of history) {
-        try { this.learning.recordMove(parseFEN(h.fen), h.uci, 'loss'); } catch (e) {}
-      }
-    }
-    learnFromWin(history) {
-      for (const h of history) {
-        try { this.learning.recordMove(parseFEN(h.fen), h.uci, 'win'); } catch (e) {}
-      }
-    }
-    saveLearning(key = "chessEnginePro_learning") { return this.learning.saveToStorage(key); }
-    loadLearning(key = "chessEnginePro_learning") { return this.learning.loadFromStorage(key); }
-    clearLearning() { this.learning.clear(); }
-    setLearningEnabled(on) { this.learning.enabled = !!on; }
-    exportLearning() { return this.learning.export(); }
-    importLearning(data) { this.learning.import(data); }
-
     static legalMoves(fen) {
       const st = parseFEN(fen);
       return generateLegalMoves(st).map(moveToUci);
     }
+
     static perft(fen, depth) {
       const st = parseFEN(fen);
       function p(s, d) {
@@ -1495,15 +1308,23 @@
       }
       return p(st, depth);
     }
+
+    static evaluateFEN(fen) {
+      const st = parseFEN(fen);
+      return evaluate(st);
+    }
   }
 
-  const helpers = {
-    parseFEN, toFEN, generateLegalMoves, applyMove, undoMove, evaluate,
-    sqName, nameToSq, moveToUci, uciToMove, LearningBook, OPENING_BOOK
-  };
+  /* ------------------------------ Exports ---------------------------- */
+  const helpers = { parseFEN, toFEN, generateLegalMoves, applyMove, undoMove, evaluate, sqName, nameToSq, moveToUci };
 
-  if (typeof window !== "undefined") { window.ChessEngine = ChessEngine; window.ChessEngineHelpers = helpers; }
-  if (typeof module !== "undefined" && module.exports) { module.exports = ChessEngine; Object.assign(module.exports, helpers); }
+  if (typeof window !== "undefined") {
+    window.ChessEngine = ChessEngine;
+    window.ChessEngineHelpers = helpers;
+  }
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = ChessEngine;
+    Object.assign(module.exports, helpers);
+  }
   if (typeof globalThis !== "undefined") globalThis.MyChessEngine = ChessEngine;
-
 })(typeof window !== "undefined" ? window : globalThis);
