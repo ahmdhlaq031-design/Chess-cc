@@ -6,8 +6,6 @@
 <title>♛ Chess Master - AI Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-<!-- ✅ المحرك -->
-<script src="engine.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
 html{width:100%;min-height:100%;background:#04060f;overflow-x:hidden;}
@@ -262,6 +260,7 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
     .replay-board{width:min(80vw,280px)}
 }
 @media (min-width:700px){.app{max-width:560px}}
+#versionLabel{position:fixed;bottom:4px;left:50%;transform:translateX(-50%);font-size:0.6rem;color:#5a6d92;z-index:9999;pointer-events:none;background:rgba(0,0,0,0.3);padding:2px 8px;border-radius:10px;}
 </style>
 </head>
 <body>
@@ -535,6 +534,8 @@ body.day-mode .board-wrapper::before{background:conic-gradient(from 0deg,transpa
     </div>
 </div>
 
+<div id="versionLabel">v1.31.8</div>
+
 <script>
 /* =========================================================
    PIECE SVGs
@@ -591,88 +592,182 @@ let drawOfferPending = false, autosaveTimer = null, drawOfferTimeout = null, las
 let INITIAL_TIME = 10 * 60, whiteTime = INITIAL_TIME, blackTime = INITIAL_TIME, selectedTimeOption = '10';
 let bookEnabled = true;
 
-/* ========== محرك شطرنج ========== */
-let globalEngine = null;
-let engineReady = false;
+/* =========================================================
+   محرك Stockfish 18 (Web Worker) — متوافق مع
+   stockfish-18-lite-single.js + .wasm
+   ========================================================= */
+let stockfishWorker = null;
+let stockfishReady = false;
+let stockfishInitPromise = null;
+let engineResolve = null;      // callback لاستقبال أفضل حركة
+let engineCurrentInfo = { depth: 0, score: 0, nodes: 0, time: 0 };
+
 const ENGINE_INFO = {
     lastDepth: 0, lastScore: 0, lastNodes: 0, lastTime: 0, lastEvalCp: 0,
-    lastMove: null, lastBook: false, version: 'v5-strong'
+    lastMove: null, lastBook: false, version: 'SF18-lite-single'
 };
 
-function initGlobalEngine() {
-    if (globalEngine) return;
-    if (typeof window.ChessEngine === 'undefined') {
-        console.warn('⚠️ ChessEngine غير محمّل — تأكد أن engine.js موجود بجانب index.html');
+/**
+ * تهيئة عامل Stockfish — يتم التحميل مرة واحدة فقط.
+ * الملفان يجب أن يكونا في نفس مجلد index.html.
+ */
+function initStockfishWorker() {
+    if (stockfishInitPromise) return stockfishInitPromise;
+    stockfishInitPromise = new Promise((resolve, reject) => {
+        try {
+            // اسم الملف يجب أن يطابق الموجود في مجلد GitHub Pages
+            stockfishWorker = new Worker('stockfish-18-lite-single.js');
+            stockfishWorker.onmessage = (e) => {
+                const line = typeof e.data === 'string' ? e.data : (e.data && e.data.data) || '';
+                handleEngineLine(line);
+            };
+            stockfishWorker.onerror = (err) => {
+                console.error('Stockfish worker error:', err);
+                showToast('⚠️ فشل تحميل محرك Stockfish — تأكد من وجود ملفات .js و .wasm', 5000);
+                reject(err);
+            };
+            // انتظر حتى يرسل المحرك uciok
+            const onReady = (line) => {
+                if (line && line.includes('uciok')) {
+                    stockfishReady = true;
+                    stockfishWorker.postMessage('setoption name Hash value 64');
+                    stockfishWorker.postMessage('setoption name Threads value 1');
+                    resolve();
+                }
+            };
+            // مؤقت للاستماع المؤقت
+            const origHandler = stockfishWorker.onmessage;
+            stockfishWorker.onmessage = (e) => {
+                const line = typeof e.data === 'string' ? e.data : (e.data && e.data.data) || '';
+                onReady(line);
+                handleEngineLine(line);
+            };
+            stockfishWorker.postMessage('uci');
+        } catch (e) {
+            console.error(e);
+            reject(e);
+        }
+    });
+    return stockfishInitPromise;
+}
+
+/**
+ * معالجة سطور UCI الواردة من Stockfish.
+ */
+function handleEngineLine(line) {
+    if (!line) return;
+    // تحديث معلومات البحث
+    if (line.startsWith('info') && line.includes('depth')) {
+        const depthMatch = line.match(/depth (\d+)/);
+        const scoreMatch = line.match(/score cp (-?\d+)/) || line.match(/score mate (-?\d+)/);
+        const nodesMatch = line.match(/nodes (\d+)/);
+        const timeMatch = line.match(/time (\d+)/);
+        if (depthMatch) ENGINE_INFO.lastDepth = parseInt(depthMatch[1]);
+        if (scoreMatch) {
+            ENGINE_INFO.lastScore = scoreMatch[1] ? parseInt(scoreMatch[1]) : 0;
+            ENGINE_INFO.lastEvalCp = ENGINE_INFO.lastScore;
+        }
+        if (nodesMatch) ENGINE_INFO.lastNodes = parseInt(nodesMatch[1]);
+        if (timeMatch) ENGINE_INFO.lastTime = parseInt(timeMatch[1]);
+    }
+    // استلام أفضل حركة
+    if (line.startsWith('bestmove')) {
+        const parts = line.split(/\s+/);
+        const move = parts[1];
+        if (engineResolve) {
+            const resolve = engineResolve;
+            engineResolve = null;
+            resolve(move);
+        }
+    }
+}
+
+/**
+ * بديل makeEngineMove — يتصل بـ Stockfish عبر UCI.
+ */
+async function makeEngineMove() {
+    if (gameOver || gameMode !== 'computer' || turn !== 'black') return;
+    if (!stockfishReady) {
+        try { await initStockfishWorker(); }
+        catch (e) { showToast('⚠️ المحرك غير جاهز'); return; }
+    }
+    if (!stockfishWorker) return;
+
+    const cfg = STAGE_CONFIG[currentStage] || STAGE_CONFIG[3];
+    const epSquare = computeEpSquare();
+    const fen = boardToFEN(board, 'black', whiteKingMoved, blackKingMoved, whiteRookMoved, blackRookMoved, epSquare);
+
+    // إعادة تعيين معلومات البحث
+    ENGINE_INFO.lastDepth = 0;
+    ENGINE_INFO.lastNodes = 0;
+    ENGINE_INFO.lastTime = 0;
+
+    // انتظر أفضل حركة من Stockfish
+    const bestMove = await new Promise((resolve) => {
+        engineResolve = resolve;
+        // تأكد من إيقاف أي بحث سابق
+        stockfishWorker.postMessage('stop');
+        stockfishWorker.postMessage('position fen ' + fen);
+        // استخدم movetime (بالملي ثانية) للتحكم في القوة
+        stockfishWorker.postMessage(`go movetime ${cfg.maxTimeMs}`);
+        // مؤقت احتياطي
+        setTimeout(() => {
+            if (engineResolve) {
+                const r = engineResolve;
+                engineResolve = null;
+                try { stockfishWorker.postMessage('stop'); } catch(e) {}
+                r(null);
+            }
+        }, cfg.maxTimeMs + 500);
+    });
+
+    if (!bestMove || bestMove === '(none)') {
+        scheduleComputerMove();
         return;
     }
-    try {
-        globalEngine = new window.ChessEngine({ depth: 6, ttSizeMB: 128 });
-        engineReady = true;
-        console.log('✅ المحرك جاهز');
-    } catch(e) { console.warn('initGlobalEngine:', e); }
-}
 
-/* ========== Device fingerprint ========== */
-let DEVICE_FP = null;
-function getDeviceFingerprint() {
-    if (DEVICE_FP) return DEVICE_FP;
-    let saved = loadData(STORAGE_KEYS.DEVICE_FP, null);
-    if (saved) { DEVICE_FP = saved; return saved; }
-    const parts = [
-        navigator.userAgent || '',
-        navigator.language || '',
-        screen.width + 'x' + screen.height,
-        navigator.hardwareConcurrency || 0,
-        (new Date()).getTimezoneOffset()
-    ];
-    let hash = 0;
-    const str = parts.join('|');
-    for (let i = 0; i < str.length; i++) {
-        hash = ((hash << 5) - hash) + str.charCodeAt(i);
-        hash |= 0;
+    ENGINE_INFO.lastMove = bestMove;
+    ENGINE_INFO.lastBook = false;
+
+    // تحويل UCI (مثال: e2e4 أو e7e8q) إلى إحداثيات
+    const fromCol = bestMove.charCodeAt(0) - 97;
+    const fromRow = 8 - parseInt(bestMove[1]);
+    const toCol = bestMove.charCodeAt(2) - 97;
+    const toRow = 8 - parseInt(bestMove[3]);
+    const promoChar = bestMove.length > 4 ? bestMove[4] : '';
+    const promoMap = { q: 'queen', r: 'rook', b: 'bishop', n: 'knight' };
+
+    if (promoChar) {
+        const ok = makeMove(fromRow, fromCol, toRow, toCol, true);
+        if (ok && pendingPromotion) {
+            const type = promoMap[promoChar] || 'queen';
+            board[toRow][toCol] = `black_${type}`;
+            const lastRec = currentGameRecord.moves[currentGameRecord.moves.length - 1];
+            if (lastRec) lastRec.promoteTo = type;
+            pendingPromotion = null;
+            document.querySelectorAll('.promotion-overlay').forEach(el=>el.remove());
+            const st = getGameState(board, turn);
+            if(st==='checkmate') setGameOver(turn==='white'?'الأسود':'الأبيض');
+            else if(st==='stalemate'){ gameOver=true; winner='تعادل'; stopClock(); updateStats('draw','computer'); finalizeGameRecord('draw'); setTimeout(showWinnerScreen,500); }
+            renderBoard();
+        }
+    } else {
+        makeMove(fromRow, fromCol, toRow, toCol, true);
     }
-    DEVICE_FP = 'fp_' + Math.abs(hash).toString(36) + '_' + Math.random().toString(36).slice(2,6);
-    saveData(STORAGE_KEYS.DEVICE_FP, DEVICE_FP);
-    return DEVICE_FP;
 }
 
-/* ========== Game Record ========== */
-let currentGameRecord = { mode: null, stage: 1, myColor: 'white', startTime: null, endTime: null, result: null, moves: [], finalBoard: null, opponentName: null };
-function startGameRecord(mode, stage, color, oppName) {
-    currentGameRecord = { mode: mode, stage: stage || 1, myColor: color || 'white', startTime: Date.now(), endTime: null, result: null, moves: [], finalBoard: null, opponentName: oppName || null };
-}
-function recordMove(from, to, piece, capture, promoteTo) {
-    if (!currentGameRecord || currentGameRecord.result !== null) return;
-    currentGameRecord.moves.push({ from: [from[0], from[1]], to: [to[0], to[1]], piece: piece, capture: !!capture, promoteTo: promoteTo || null, timestamp: Date.now() });
-}
-function finalizeGameRecord(result) {
-    if (!currentGameRecord) return;
-    currentGameRecord.result = result;
-    currentGameRecord.endTime = Date.now();
-    currentGameRecord.finalBoard = board.map(row => row.map(p => p));
-    try {
-        const history = loadData(STORAGE_KEYS.GAME_HISTORY, []);
-        history.unshift(JSON.parse(JSON.stringify(currentGameRecord)));
-        if (history.length > 10) history.length = 10;
-        saveData(STORAGE_KEYS.GAME_HISTORY, history);
-    } catch(e) { console.warn('save history:', e); }
-}
-
-/* =========================================================
-   AI: مستويات الصعوبة + FEN + اتصال بالمحرك
-   ========================================================= */
-// عمق + ميزانية وقت لكل مرحلة — كلما زادت المرحلة صار أقوى
+/* ========== إعدادات المراحل ========== */
 const STAGE_CONFIG = {
-    1:  { depth: 2,  maxTimeMs: 120,  jitter: true,  label: 'مبتدئ' },
-    2:  { depth: 3,  maxTimeMs: 200,  jitter: true,  label: 'هاوٍ' },
-    3:  { depth: 3,  maxTimeMs: 300,  jitter: false, label: 'متوسط' },
-    4:  { depth: 4,  maxTimeMs: 450,  jitter: false, label: 'جيد' },
-    5:  { depth: 4,  maxTimeMs: 650,  jitter: false, label: 'متقدم' },
-    6:  { depth: 5,  maxTimeMs: 900,  jitter: false, label: 'خبير' },
-    7:  { depth: 5,  maxTimeMs: 1300, jitter: false, label: 'محترف' },
-    8:  { depth: 6,  maxTimeMs: 1800, jitter: false, label: 'خارق' },
-    9:  { depth: 7,  maxTimeMs: 2500, jitter: false, label: 'أسطوري' },
-    10: { depth: 8,  maxTimeMs: 3500, jitter: false, label: 'إلهي' }
+    1:  { depth: 1, maxTimeMs: 100,  label: 'مبتدئ' },
+    2:  { depth: 2, maxTimeMs: 200,  label: 'هاوٍ' },
+    3:  { depth: 3, maxTimeMs: 300,  label: 'متوسط' },
+    4:  { depth: 4, maxTimeMs: 450,  label: 'جيد' },
+    5:  { depth: 5, maxTimeMs: 650,  label: 'متقدم' },
+    6:  { depth: 6, maxTimeMs: 900,  label: 'خبير' },
+    7:  { depth: 7, maxTimeMs: 1300, label: 'محترف' },
+    8:  { depth: 8, maxTimeMs: 1800, label: 'خارق' },
+    9:  { depth: 10, maxTimeMs: 2500, label: 'أسطوري' },
+    10: { depth: 12, maxTimeMs: 3500, label: 'إلهي' }
 };
 
 function boardToFEN(currentBoard, currentTurn, wkm, bkm, wrm, brm, epSquare) {
@@ -719,77 +814,6 @@ function computeEpSquare() {
         return file + rank;
     }
     return null;
-}
-
-async function makeEngineMove() {
-    if (gameOver || gameMode !== 'computer' || turn !== 'black') return;
-    initGlobalEngine();
-    if (!globalEngine) { scheduleComputerMove(); return; }
-
-    const epSquare = computeEpSquare();
-    const fen = boardToFEN(board, 'black', whiteKingMoved, blackKingMoved, whiteRookMoved, blackRookMoved, epSquare);
-    const cfg = STAGE_CONFIG[currentStage] || STAGE_CONFIG[3];
-    const depth = cfg.depth;
-    // ~ 30% من ميزانية الوقت مقبول
-    const tStart = performance.now();
-
-    try {
-        const result = await globalEngine.getBestMove(fen, {
-            depth: depth,
-            timeLimit: cfg.maxTimeMs,
-            onDepth: (d, score, mv, nodes, elapsed) => {
-                ENGINE_INFO.lastDepth = d;
-                ENGINE_INFO.lastScore = score;
-                ENGINE_INFO.lastNodes = nodes || 0;
-                ENGINE_INFO.lastTime = elapsed || 0;
-            }
-        });
-        if (!result || !result.move) { scheduleComputerMove(); return; }
-
-        ENGINE_INFO.lastEvalCp = result.score;
-        ENGINE_INFO.lastMove = result.move;
-        ENGINE_INFO.lastBook = !!result.book;
-        ENGINE_INFO.lastNodes = result.nodes || 0;
-        ENGINE_INFO.lastTime = result.time || (performance.now() - tStart);
-        ENGINE_INFO.lastDepth = result.depth || depth;
-
-        // في المراحل المنخفضة نضيف "تذبذب" بسيط جداً (اختيار ثانٍ أحياناً) لتبدو بشرية
-        let uci = result.move;
-        if (cfg.jitter && Math.random() < 0.12) {
-            // لا نغيّر الحركة — فقط نضيف تأخيراً بسيطاً
-        }
-
-        const fromCol = uci.charCodeAt(0) - 97;
-        const fromRow = 8 - parseInt(uci[1]);
-        const toCol = uci.charCodeAt(2) - 97;
-        const toRow = 8 - parseInt(uci[3]);
-        const promoChar = uci.length > 4 ? uci[4] : '';
-        const promoMap = { q: 'queen', r: 'rook', b: 'bishop', n: 'knight' };
-
-        // التنفيذ
-        if (promoChar) {
-            // ننفذ حركة عادية، ثم نضبط الترقية
-            const ok = makeMove(fromRow, fromCol, toRow, toCol, true);
-            if (ok && pendingPromotion) {
-                const type = promoMap[promoChar] || 'queen';
-                board[toRow][toCol] = `black_${type}`;
-                const lastRec = currentGameRecord.moves[currentGameRecord.moves.length - 1];
-                if (lastRec) lastRec.promoteTo = type;
-                pendingPromotion = null;
-                document.querySelectorAll('.promotion-overlay').forEach(el=>el.remove());
-                // بعد الترقية يجب أن نتحقق من الحالة
-                const st = getGameState(board, turn);
-                if(st==='checkmate') setGameOver(turn==='white'?'الأسود':'الأبيض');
-                else if(st==='stalemate'){ gameOver=true; winner='تعادل'; stopClock(); updateStats('draw','computer'); finalizeGameRecord('draw'); setTimeout(showWinnerScreen,500); }
-                renderBoard();
-            }
-        } else {
-            makeMove(fromRow, fromCol, toRow, toCol, true);
-        }
-    } catch (e) {
-        console.error("Engine Error:", e);
-        scheduleComputerMove();
-    }
 }
 
 function scheduleComputerMove() {
@@ -1034,7 +1058,6 @@ function isValidMoveBasic(piece,fromR,fromC,toR,toC,b){
         if(dc===0&&!target&&dr===dir)return true;
         if(dc===0&&!target&&dr===2*dir&&fromR===startRow&&!b[fromR+dir][fromC])return true;
         if(Math.abs(dc)===1&&dr===dir&&target&&target.split('_')[0]!==color)return true;
-        // en passant (بسيط: يعتمد على lastMove)
         if(Math.abs(dc)===1&&dr===dir&&!target&&lastMove){
             const lmFrom = lastMove.from, lmTo = lastMove.to;
             const targetPawnRow = fromR + dir;
@@ -2096,7 +2119,6 @@ function parsePGN(pgnText) {
     let moves = [];
     const files = "abcdefgh";
     const typeMap = { 'N': 'knight', 'B': 'bishop', 'R': 'rook', 'Q': 'queen', 'K': 'king' };
-    // lastMove مؤقت لـ en passant
     let lastMoveTmp = null;
     const savedLastMove = lastMove;
     for (let i = 0; i < tokens.length; i++) {
@@ -2351,12 +2373,12 @@ function init(){
     currentLight = colors.light; currentDark = colors.dark;
     updateEloDisplay(); renderStagesButtons(); updateClockDisplay();
     getDeviceFingerprint();
-    initGlobalEngine();
-    if (!globalEngine) {
-        setTimeout(() => {
-            showToast('⚠️ المحرك لم يُحمّل — تأكد أن engine.js موجود بجانب index.html', 5000);
-        }, 1500);
-    }
+    // تهيئة Stockfish في الخلفية
+    initStockfishWorker().then(() => {
+        console.log('✅ Stockfish 18 Lite جاهز');
+    }).catch(() => {
+        showToast('⚠️ المحرك لم يُحمّل — تأكد من وجود ملفات Stockfish في نفس المجلد', 5000);
+    });
     if(!myName) askName();
     const restored = tryRestoreSavedAIGame();
     if (!restored) {
@@ -2370,6 +2392,7 @@ init();
 window.addEventListener('beforeunload', () => {
     if (conn) { try { conn.close(); } catch(e) {} }
     if (peer) { try { peer.destroy(); } catch(e) {} }
+    if (stockfishWorker) { try { stockfishWorker.terminate(); } catch(e) {} }
 });
 </script>
 </body>
